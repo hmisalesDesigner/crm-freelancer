@@ -1,13 +1,13 @@
-/* ===== Variáveis de tema ===== */
+/* ===== Variáveis de tema (paleta: preto/cinza + laranja, indicadores em verde/vermelho) ===== */
 :root {
-  --cor-fundo: #f4f5f7;
+  --cor-fundo: #f4f4f5;
   --cor-fundo-painel: #ffffff;
-  --cor-texto: #1c1c24;
-  --cor-texto-suave: #6b6b78;
-  --cor-borda: #e2e3e9;
-  --cor-primaria: #6d4ff2;
-  --cor-primaria-clara: #ede9ff;
-  --cor-destaque: #14b8a6;
+  --cor-texto: #1a1a1a;
+  --cor-texto-suave: #6b6b70;
+  --cor-borda: #e2e2e5;
+  --cor-primaria: #e8710a;
+  --cor-primaria-clara: #fde9d7;
+  --cor-destaque: #e8710a;
   --cor-sucesso: #22c55e;
   --cor-alerta: #f59e0b;
   --cor-perigo: #ef4444;
@@ -16,15 +16,15 @@
 }
 
 html[data-tema="escuro"] {
-  --cor-fundo: #14141c;
-  --cor-fundo-painel: #1c1c28;
-  --cor-texto: #f1f1f5;
-  --cor-texto-suave: #9696a6;
-  --cor-borda: #2c2c3a;
-  --cor-primaria: #8b6ff9;
-  --cor-primaria-clara: #2a2440;
-  --cor-destaque: #2dd4bf;
-  --sombra: 0 2px 10px rgba(0,0,0,0.4);
+  --cor-fundo: #121212;
+  --cor-fundo-painel: #1a1a1a;
+  --cor-texto: #f1f1f1;
+  --cor-texto-suave: #949494;
+  --cor-borda: #2c2c2c;
+  --cor-primaria: #ff7a1a;
+  --cor-primaria-clara: #3a2512;
+  --cor-destaque: #ff7a1a;
+  --sombra: 0 2px 10px rgba(0,0,0,0.5);
 }
 
 * { box-sizing: border-box; }
@@ -319,6 +319,7 @@ table.tabela tr:hover { background: var(--cor-primaria-clara); }
   border: 1px solid var(--cor-borda);
   border-radius: var(--raio);
   padding: 10px;
+  border-top: 3px solid var(--cor-etapa, var(--cor-primaria));
 }
 .kanban-coluna h4 {
   font-size: 13px;
@@ -333,10 +334,139 @@ table.tabela tr:hover { background: var(--cor-primaria-clara); }
   margin-bottom: 8px;
   cursor: grab;
   font-size: 13px;
+  display: flex;
+  gap: 10px;
+  align-items: center;
 }
-.kanban-card b { display: block; }
-.kanban-card .valor-card { color: var(--cor-destaque); font-size: 12px; }
+.kanban-card .avatar-iniciais {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  background: var(--cor-primaria-clara);
+  color: var(--cor-primaria);
+  font-weight: 700;
+  font-size: 13px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+.kanban-card .avatar-iniciais img { width: 100%; height: 100%; object-fit: cover; }
+.kanban-card .kanban-card-info { flex: 1; min-width: 0; }
+.kanban-card b { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.kanban-card span { color: var(--cor-texto-suave); font-size: 11px; }
+.kanban-card .valor-card {
+  display: inline-block;
+  margin-top: 4px;
+  background: var(--cor-primaria-clara);
+  color: var(--cor-primaria);
+  font-size: 11px;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: 20px;
+}
 .kanban-coluna.sobre-arrasto { outline: 2px dashed var(--cor-primaria); }
+
+/* Cores suaves por etapa (apenas a faixa superior da coluna, para diferenciar sem confundir) */
+.kanban-coluna[data-etapa="Prospecção"]       { --cor-etapa: #94a3b8; }
+.kanban-coluna[data-etapa="Contato"]          { --cor-etapa: #60a5fa; }
+.kanban-coluna[data-etapa="Briefing"]         { --cor-etapa: #a78bfa; }
+.kanban-coluna[data-etapa="Orçamento enviado"]{ --cor-etapa: #f59e0b; }
+.kanban-coluna[data-etapa="Fechado"]          { --cor-etapa: #22c55e; }
+.kanban-coluna[data-etapa="Em andamento"]     { --cor-etapa: var(--cor-primaria); }
+.kanban-coluna[data-etapa="Entregue"]         { --cor-etapa: #14b8a6; }
+
+/* ===== Funil de vendas em barras (painel) ===== */
+.funil-barras { display: flex; flex-direction: column; gap: 14px; margin-top: 14px; }
+.funil-barra-linha { display: flex; align-items: center; gap: 12px; }
+.funil-barra-linha .rotulo { width: 140px; font-size: 13px; color: var(--cor-texto-suave); flex-shrink: 0; }
+.funil-barra-trilha {
+  flex: 1;
+  height: 22px;
+  background: var(--cor-fundo);
+  border: 1px solid var(--cor-borda);
+  border-radius: 20px;
+  overflow: hidden;
+}
+.funil-barra-preenchimento {
+  height: 100%;
+  background: linear-gradient(90deg, #ffb37a, var(--cor-primaria));
+  border-radius: 20px;
+  transition: width .3s;
+}
+.funil-barra-linha .numero { width: 28px; text-align: right; font-weight: 700; font-size: 13px; }
+
+/* ===== Bloco em destaque (Orçamentos Recentes) ===== */
+.bloco-destaque {
+  background: var(--cor-fundo-painel);
+  border: 1px solid var(--cor-borda);
+  border-radius: var(--raio);
+  padding: 20px;
+  margin-bottom: 24px;
+}
+.bloco-destaque h3 { margin: 0 0 14px; font-size: 16px; }
+.selo {
+  display: inline-block;
+  padding: 3px 10px;
+  border-radius: 20px;
+  font-size: 11px;
+  font-weight: 700;
+}
+.selo.aceito { background: #163a24; color: #4ade80; }
+.selo.enviado { background: #3a2a12; color: #fbbf24; }
+html:not([data-tema="escuro"]) .selo.aceito { background: #dcfce7; color: #15803d; }
+html:not([data-tema="escuro"]) .selo.enviado { background: #fef3c7; color: #92400e; }
+
+/* ===== Layout de duas colunas (calculadora, formulário com painel lateral) ===== */
+.layout-duas-colunas {
+  display: grid;
+  grid-template-columns: 1fr 320px;
+  gap: 18px;
+  align-items: start;
+  max-width: 980px;
+}
+.painel-lateral-resumo {
+  background: var(--cor-fundo-painel);
+  border: 1px solid var(--cor-borda);
+  border-radius: var(--raio);
+  padding: 18px;
+  position: sticky;
+  top: 10px;
+}
+.painel-lateral-resumo h4 {
+  margin: -18px -18px 14px;
+  padding: 14px 18px;
+  background: var(--cor-primaria);
+  color: #fff;
+  border-radius: var(--raio) var(--raio) 0 0;
+  font-size: 14px;
+}
+.painel-lateral-resumo .linha-resumo { margin-bottom: 10px; }
+.painel-lateral-resumo .linha-resumo .rotulo { font-size: 11px; color: var(--cor-primaria); display: block; }
+.painel-lateral-resumo .linha-resumo .valor { font-size: 14px; display: block; }
+
+/* ===== Avatar upload no form de cliente ===== */
+.avatar-upload {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-bottom: 14px;
+}
+.avatar-upload .preview {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: var(--cor-primaria-clara);
+  color: var(--cor-primaria);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  overflow: hidden;
+  flex-shrink: 0;
+}
+.avatar-upload .preview img { width: 100%; height: 100%; object-fit: cover; }
 
 /* ===== Lista de prospecção ===== */
 .lista-prospeccao {

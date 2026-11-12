@@ -25,66 +25,73 @@ function renderizarPaginaCalculadora() {
       <div class="aba" data-modo="peca">Por Peça</div>
     </div>
 
-    <div id="bloco-modo-hora">
-      <div class="form-grid">
-        <div class="campo">
-          <label>Salário desejado por mês (R$)</label>
-          <input type="number" id="calc-salario" value="${cfg.salarioDesejado}">
+    <div class="layout-duas-colunas">
+      <div>
+        <div id="bloco-modo-hora">
+          <div class="form-grid">
+            <div class="campo">
+              <label>👤 Salário desejado por mês (R$)</label>
+              <input type="number" id="calc-salario" value="${cfg.salarioDesejado}">
+            </div>
+            <div class="campo">
+              <label>💳 Custos fixos mensais (R$)</label>
+              <input type="number" id="calc-custos" value="${cfg.custosFixosMensais}">
+            </div>
+            <div class="campo">
+              <label>🕐 Horas pagas por mês</label>
+              <input type="number" id="calc-horas" value="${cfg.horasPagasPorMes}">
+            </div>
+          </div>
         </div>
-        <div class="campo">
-          <label>Custos fixos mensais (R$)</label>
-          <input type="number" id="calc-custos" value="${cfg.custosFixosMensais}">
-        </div>
-        <div class="campo">
-          <label>Horas pagas por mês</label>
-          <input type="number" id="calc-horas" value="${cfg.horasPagasPorMes}">
-        </div>
-      </div>
-      <div class="resultado-destaque">
-        <span class="card-label">Valor mínimo da hora</span>
-        <div class="valor" id="resultado-hora">R$ 0,00</div>
-      </div>
-    </div>
 
-    <div id="bloco-modo-projeto" style="display:none">
-      <div class="form-grid">
-        <div class="campo">
-          <label>Horas estimadas do projeto</label>
-          <input type="number" id="calc-horas-projeto" value="10">
+        <div id="bloco-modo-projeto" style="display:none">
+          <div class="form-grid">
+            <div class="campo">
+              <label>🕐 Horas estimadas do projeto</label>
+              <input type="number" id="calc-horas-projeto" value="10">
+            </div>
+            <div class="campo">
+              <label>📈 Margem de segurança (%)</label>
+              <input type="number" id="calc-margem-projeto" value="20">
+            </div>
+          </div>
         </div>
-        <div class="campo">
-          <label>Margem de segurança (%)</label>
-          <input type="number" id="calc-margem-projeto" value="20">
-        </div>
-      </div>
-      <div class="resultado-destaque">
-        <span class="card-label">Valor sugerido do projeto</span>
-        <div class="valor" id="resultado-projeto">R$ 0,00</div>
-      </div>
-    </div>
 
-    <div id="bloco-modo-peca" style="display:none">
-      <div class="form-grid">
-        <div class="campo">
-          <label>Valor por peça (R$)</label>
-          <input type="number" id="calc-valor-peca" value="40">
+        <div id="bloco-modo-peca" style="display:none">
+          <div class="form-grid">
+            <div class="campo">
+              <label>💰 Valor por peça (R$)</label>
+              <input type="number" id="calc-valor-peca" value="40">
+            </div>
+            <div class="campo">
+              <label># Quantidade de peças</label>
+              <input type="number" id="calc-qtd-peca" value="5">
+            </div>
+          </div>
         </div>
-        <div class="campo">
-          <label>Quantidade de peças</label>
-          <input type="number" id="calc-qtd-peca" value="5">
+
+        <button class="botao" id="btn-salvar-config-calc" style="margin-top:18px; width:100%; max-width:700px;">Salvar como padrão</button>
+
+        <div class="aviso mei" id="aviso-mei-calc"></div>
+        <div class="aviso b3" id="aviso-b3-calc"></div>
+      </div>
+
+      <div class="painel-lateral-resumo">
+        <h4>Taxa Sugerida</h4>
+        <div id="resultado-visivel-hora">
+          <span class="card-label">Valor mínimo da hora</span>
+          <div class="valor" id="resultado-hora" style="font-size:26px; font-weight:800; color:var(--cor-primaria);">R$ 0,00</div>
         </div>
+        <div id="resultado-visivel-projeto" style="display:none">
+          <span class="card-label">Valor sugerido do projeto</span>
+          <div class="valor" id="resultado-projeto" style="font-size:26px; font-weight:800; color:var(--cor-primaria);">R$ 0,00</div>
+        </div>
+        <div id="resultado-visivel-peca" style="display:none">
+          <span class="card-label">Valor total</span>
+          <div class="valor" id="resultado-peca" style="font-size:26px; font-weight:800; color:var(--cor-primaria);">R$ 0,00</div>
+        </div>
+        <span class="card-sub">Baseado nas informações fornecidas</span>
       </div>
-      <div class="resultado-destaque">
-        <span class="card-label">Valor total</span>
-        <div class="valor" id="resultado-peca">R$ 0,00</div>
-      </div>
-    </div>
-
-    <div class="aviso mei" id="aviso-mei-calc"></div>
-    <div class="aviso b3" id="aviso-b3-calc"></div>
-
-    <div style="margin-top:18px">
-      <button class="botao" id="btn-salvar-config-calc">Salvar como padrão</button>
     </div>
   `;
 
@@ -128,6 +135,9 @@ function renderizarPaginaCalculadora() {
       document.getElementById("bloco-modo-hora").style.display = modo === "hora" ? "block" : "none";
       document.getElementById("bloco-modo-projeto").style.display = modo === "projeto" ? "block" : "none";
       document.getElementById("bloco-modo-peca").style.display = modo === "peca" ? "block" : "none";
+      document.getElementById("resultado-visivel-hora").style.display = modo === "hora" ? "block" : "none";
+      document.getElementById("resultado-visivel-projeto").style.display = modo === "projeto" ? "block" : "none";
+      document.getElementById("resultado-visivel-peca").style.display = modo === "peca" ? "block" : "none";
     });
   });
 

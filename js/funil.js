@@ -25,11 +25,18 @@ function renderizarPaginaFunil() {
       lista.innerHTML = clientesDaEtapa
         .map((c) => {
           const total = (c.historicoFinanceiro || []).reduce((s, h) => s + Number(h.valor || 0), 0);
+          const iniciais = (c.nome || "?").trim().split(/\s+/).map((p) => p[0]).slice(0, 2).join("").toUpperCase();
+          const avatar = c.foto
+            ? `<img src="${c.foto}" alt="">`
+            : iniciais;
           return `
             <div class="kanban-card" draggable="true" data-cliente-id="${c.id}">
-              <b>${c.nome}</b>
-              <span>${(c.demanda || "").slice(0, 30)}</span>
-              <div class="valor-card">${formatarMoeda(total)}</div>
+              <div class="avatar-iniciais">${avatar}</div>
+              <div class="kanban-card-info">
+                <b>${c.nome}</b>
+                <span>${(c.demanda || "").slice(0, 26)}</span>
+                <div class="valor-card">${formatarMoeda(total)}</div>
+              </div>
             </div>`;
         })
         .join("");

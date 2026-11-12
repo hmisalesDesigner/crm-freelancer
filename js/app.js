@@ -71,10 +71,37 @@ function atualizarPainel() {
 
   const resumoFunil = document.getElementById("painel-funil-resumo");
   if (resumoFunil) {
-    resumoFunil.innerHTML = ETAPAS_FUNIL.map((etapa) => {
-      const qtd = ESTADO.clientes.filter((c) => c.etapaFunil === etapa).length;
-      return `<div class="etapa"><b>${qtd}</b><span>${etapa}</span></div>`;
+    const contagens = ETAPAS_FUNIL.map((etapa) => ESTADO.clientes.filter((c) => c.etapaFunil === etapa).length);
+    const maior = Math.max(1, ...contagens);
+    resumoFunil.innerHTML = ETAPAS_FUNIL.map((etapa, i) => {
+      const qtd = contagens[i];
+      const largura = (qtd / maior) * 100;
+      return `
+        <div class="funil-barra-linha">
+          <span class="rotulo">${etapa}</span>
+          <div class="funil-barra-trilha"><div class="funil-barra-preenchimento" style="width:${largura}%"></div></div>
+          <span class="numero">${qtd}</span>
+        </div>`;
     }).join("");
+  }
+
+  const orcamentosRecentes = document.getElementById("painel-orcamentos-recentes");
+  if (orcamentosRecentes) {
+    const recentes = [...ESTADO.orcamentos]
+      .sort((a, b) => new Date(b.dataEnvio) - new Date(a.dataEnvio))
+      .slice(0, 5);
+    orcamentosRecentes.innerHTML = recentes
+      .map((o) => {
+        const cliente = ESTADO.clientes.find((c) => c.id === o.clienteId);
+        return `
+          <tr>
+            <td>${cliente ? cliente.nome : "-"}</td>
+            <td><span class="selo ${o.aceito ? "aceito" : "enviado"}">${o.aceito ? "Aprovado" : "Em negociação"}</span></td>
+            <td>${(o.descricao || "-").slice(0, 30)}</td>
+            <td>${formatarMoeda(o.valor)}</td>
+          </tr>`;
+      })
+      .join("") || `<tr><td colspan="4" style="text-align:center; color:var(--cor-texto-suave);">Nenhum orçamento ainda.</td></tr>`;
   }
 }
 
