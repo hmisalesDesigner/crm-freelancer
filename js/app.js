@@ -135,11 +135,20 @@ function renderizarPaginaConfiguracoes() {
     </div>
     <button class="botao" id="btn-salvar-config-geral" style="margin-top:14px;">Salvar configurações</button>
 
-    <h3 style="margin-top:32px;">Backup dos dados</h3>
+    <h3 style="margin-top:32px;">Backup automático no Google Drive</h3>
     <p style="color:var(--cor-texto-suave); font-size:13px; max-width:600px;">
-      Os dados ficam salvos neste navegador. Para manter uma cópia de segurança no
-      Google Drive, exporte o backup e salve o arquivo .json dentro da pasta sincronizada
-      do Drive no seu computador.
+      Conecte sua conta do Google para que os dados (clientes, orçamentos, faturamento)
+      sejam salvos automaticamente em um arquivo dentro da sua pasta do Drive, toda vez
+      que algo mudar.
+    </p>
+    <div style="display:flex; align-items:center; gap:10px; margin-top:10px;">
+      <button class="botao" id="btn-conectar-drive">🔗 Conectar ao Google Drive</button>
+      <span class="card-sub" id="drive-status-config"></span>
+    </div>
+
+    <h3 style="margin-top:28px;">Backup manual (.json)</h3>
+    <p style="color:var(--cor-texto-suave); font-size:13px; max-width:600px;">
+      Alternativa ao backup automático: exporte ou importe um arquivo .json manualmente.
     </p>
     <div style="display:flex; gap:8px; margin-top:10px;">
       <button class="botao secundario" id="btn-exportar-backup">⬇️ Exportar backup (.json)</button>
@@ -149,6 +158,14 @@ function renderizarPaginaConfiguracoes() {
       </label>
     </div>
   `;
+
+  const btnConectarDrive = document.getElementById("btn-conectar-drive");
+  if (btnConectarDrive) {
+    btnConectarDrive.addEventListener("click", conectarDrive);
+    if (typeof driveConectado === "function" && driveConectado()) {
+      document.getElementById("drive-status-config").textContent = "🔗 Conectado ao Google Drive";
+    }
+  }
 
   document.getElementById("btn-salvar-config-geral").addEventListener("click", () => {
     atualizarEstado((estado) => {

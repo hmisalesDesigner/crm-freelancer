@@ -47,6 +47,7 @@ function salvarDados(dados) {
   try {
     localStorage.setItem(CHAVE_DADOS, JSON.stringify(dados));
     atualizarStatusSalvamento("💾 Dados salvos localmente — " + new Date().toLocaleTimeString("pt-BR"));
+    if (typeof agendarSincronizacaoComDrive === "function") agendarSincronizacaoComDrive();
     return true;
   } catch (e) {
     console.error("Erro ao salvar dados.", e);
