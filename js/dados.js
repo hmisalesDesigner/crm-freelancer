@@ -27,6 +27,7 @@ const DADOS_PADRAO = {
   clientes: [],      // { id, nome, contato, cnpj, razaoSocial, capitalSocial, demanda, historicoFinanceiro, etapaFunil, criadoEm }
   orcamentos: [],     // { id, clienteId, descricao, modo, valor, dataEnvio, aceito }
   prospeccoes: [],    // { id, nome, tipo, local, contato, status, observacao }
+  demandasMensais: [], // { id, descricao, horas, data (ISO), clienteId? }
 };
 
 function carregarDados() {

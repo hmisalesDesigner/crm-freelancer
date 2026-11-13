@@ -23,6 +23,7 @@ function renderizarPaginaCalculadora() {
       <div class="aba ativa" data-modo="hora">Por Hora</div>
       <div class="aba" data-modo="projeto">Por Projeto</div>
       <div class="aba" data-modo="peca">Por Peça</div>
+      <div class="aba" data-modo="mes">Por Mês</div>
     </div>
 
     <div class="layout-duas-colunas">
@@ -70,6 +71,29 @@ function renderizarPaginaCalculadora() {
           </div>
         </div>
 
+        <div id="bloco-modo-mes" style="display:none">
+          <div class="form-grid">
+            <div class="campo">
+              <label>💳 Valor fixo mensal (R$)</label>
+              <input type="number" id="calc-valor-fixo-mes" value="${cfg.clienteFixoMensal}">
+            </div>
+          </div>
+
+          <div style="margin-top:16px; max-width:700px;">
+            <h4 style="margin-bottom:8px;">Demandas do mês</h4>
+            <div class="form-grid" style="grid-template-columns: 2fr 1fr auto;">
+              <div class="campo"><label>Descrição da demanda</label><input id="mes-nova-descricao" placeholder="Ex: Edição de 3 reels"></div>
+              <div class="campo"><label>Horas gastas</label><input type="number" id="mes-nova-horas" step="0.25" value="1"></div>
+              <div class="campo"><label>&nbsp;</label><button class="botao secundario" id="btn-add-demanda-mes">+ Adicionar</button></div>
+            </div>
+
+            <table class="tabela" style="margin-top:14px;">
+              <thead><tr><th>Demanda</th><th>Horas</th><th>% do mês</th><th>Valor equivalente</th><th></th></tr></thead>
+              <tbody id="tabela-demandas-mes-corpo"></tbody>
+            </table>
+          </div>
+        </div>
+
         <button class="botao" id="btn-salvar-config-calc" style="margin-top:18px; width:100%; max-width:700px;">Salvar como padrão</button>
 
         <div class="aviso mei" id="aviso-mei-calc"></div>
@@ -89,6 +113,14 @@ function renderizarPaginaCalculadora() {
         <div id="resultado-visivel-peca" style="display:none">
           <span class="card-label">Valor total</span>
           <div class="valor" id="resultado-peca" style="font-size:26px; font-weight:800; color:var(--cor-primaria);">R$ 0,00</div>
+        </div>
+        <div id="resultado-visivel-mes" style="display:none">
+          <span class="card-label">Valor equivalente por hora</span>
+          <div class="valor" id="resultado-mes-valor-hora" style="font-size:26px; font-weight:800; color:var(--cor-primaria);">R$ 0,00</div>
+          <div class="linha-resumo" style="margin-top:10px;">
+            <span class="rotulo">Horas lançadas no mês</span>
+            <span class="valor" id="resultado-mes-horas-total" style="font-size:14px;">0h</span>
+          </div>
         </div>
         <span class="card-sub">Baseado nas informações fornecidas</span>
       </div>
@@ -111,7 +143,54 @@ function renderizarPaginaCalculadora() {
     const qtdPeca = Number(document.getElementById("calc-qtd-peca").value) || 0;
     document.getElementById("resultado-peca").textContent = formatarMoeda(valorPeca * qtdPeca);
 
+    recalcularModoMes();
     atualizarAvisosCalculadora();
+  }
+
+  function obterDemandasDoMesAtual() {
+    const hoje = new Date();
+    return ESTADO.demandasMensais.filter((d) => {
+      const data = new Date(d.data);
+      return data.getMonth() === hoje.getMonth() && data.getFullYear() === hoje.getFullYear();
+    });
+  }
+
+  function recalcularModoMes() {
+    const valorFixo = Number(document.getElementById("calc-valor-fixo-mes")?.value) || 0;
+    const demandas = obterDemandasDoMesAtual();
+    const totalHoras = demandas.reduce((s, d) => s + Number(d.horas || 0), 0);
+    const valorHoraEquivalente = totalHoras > 0 ? valorFixo / totalHoras : 0;
+
+    const elValorHora = document.getElementById("resultado-mes-valor-hora");
+    const elHorasTotal = document.getElementById("resultado-mes-horas-total");
+    if (elValorHora) elValorHora.textContent = formatarMoeda(valorHoraEquivalente);
+    if (elHorasTotal) elHorasTotal.textContent = totalHoras.toLocaleString("pt-BR") + "h";
+
+    const corpo = document.getElementById("tabela-demandas-mes-corpo");
+    if (!corpo) return;
+    corpo.innerHTML = demandas
+      .map((d) => {
+        const percentual = totalHoras > 0 ? (d.horas / totalHoras) * 100 : 0;
+        const valorEquivalente = d.horas * valorHoraEquivalente;
+        return `
+          <tr>
+            <td>${d.descricao}</td>
+            <td>${Number(d.horas).toLocaleString("pt-BR")}h</td>
+            <td>${percentual.toFixed(1)}%</td>
+            <td>${formatarMoeda(valorEquivalente)}</td>
+            <td><button class="botao perigo pequeno" data-excluir-demanda="${d.id}">Excluir</button></td>
+          </tr>`;
+      })
+      .join("") || `<tr><td colspan="5" style="text-align:center; color:var(--cor-texto-suave);">Nenhuma demanda lançada neste mês ainda.</td></tr>`;
+
+    corpo.querySelectorAll("[data-excluir-demanda]").forEach((btn) =>
+      btn.addEventListener("click", () => {
+        atualizarEstado((estado) => {
+          estado.demandasMensais = estado.demandasMensais.filter((d) => d.id !== btn.dataset.excluirDemanda);
+        });
+        recalcularModoMes();
+      })
+    );
   }
 
   function atualizarAvisosCalculadora() {
