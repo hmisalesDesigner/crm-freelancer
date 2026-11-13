@@ -111,4 +111,14 @@ function renderizarBotaoGoogle(tentativas) {
   });
 }
 
+async function sairDoSite() {
+  if (ESTADO && ESTADO.cronometroAtivo && !confirm("Há um relógio rodando. Sair mesmo assim? (ele continua contando quando você voltar)")) return;
+  // garante que o que foi alterado chegue ao Drive antes de sair
+  try { if (typeof salvarNoDrive === "function" && driveConectado()) await salvarNoDrive(ESTADO); } catch {}
+  try { if (window.google?.accounts?.id) google.accounts.id.disableAutoSelect(); } catch {}
+  if (typeof esquecerTokenDriveLocal === "function") esquecerTokenDriveLocal();
+  sessionStorage.clear();
+  location.reload();
+}
+
 document.addEventListener("DOMContentLoaded", inicializarLogin);

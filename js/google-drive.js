@@ -17,6 +17,7 @@ const DRIVE_NOME_ARQUIVO = "crm-freelancer-dados.json";
 const DRIVE_ESCOPO = "https://www.googleapis.com/auth/drive.file";
 const CHAVE_DRIVE_ARQUIVO_ID = "crm_freelancer_drive_arquivo_id";
 const CHAVE_DRIVE_TOKEN = "crm_freelancer_drive_token";
+const CHAVE_DRIVE_AUTORIZADO = "crm_freelancer_drive_autorizado"; // usuário já conectou e não desconectou manualmente
 
 let driveTokenClient = null;
 let driveAccessToken = null;
@@ -24,6 +25,19 @@ let driveTokenExpiraEm = 0;
 let driveArquivoId = localStorage.getItem(CHAVE_DRIVE_ARQUIVO_ID) || null;
 let driveSalvandoTimeout = null;
 let driveSincronizando = false;
+let drivePendente = false;      // há alterações locais ainda não enviadas ao Drive
+let driveRenovando = null;      // promessa da renovação em andamento
+let driveMonitorIniciado = false;
+
+function driveAutorizado() { return localStorage.getItem(CHAVE_DRIVE_AUTORIZADO) === "1"; }
+function driveExpiraEmBreve() { return driveConectado() && driveTokenExpiraEm - Date.now() < 5 * 60 * 1000; }
+function emailDaSessao() {
+  try { return JSON.parse(sessionStorage.getItem("crm_freelancer_sessao_login") || "null")?.email || undefined; } catch { return undefined; }
+}
+function esquecerTokenDriveLocal() {
+  driveAccessToken = null; driveTokenExpiraEm = 0;
+  sessionStorage.removeItem(CHAVE_DRIVE_TOKEN);
+}
 
 function restaurarTokenDriveDaSessao() {
   try {
@@ -49,6 +63,28 @@ function atualizarStatusDrive(texto) {
   const elCfg = document.getElementById("drive-status-config");
   if (elCfg) elCfg.textContent = texto;
   atualizarBotaoDrive();
+  atualizarFaixaDrive();
+}
+
+function atualizarFaixaDrive() {
+  const conteudo = document.querySelector(".conteudo");
+  if (!conteudo) return;
+  let faixa = document.getElementById("faixa-drive");
+  if (!faixa) {
+    faixa = document.createElement("div");
+    faixa.id = "faixa-drive";
+    faixa.className = "faixa-drive";
+    conteudo.insertBefore(faixa, conteudo.firstChild);
+  }
+  if (driveConectado()) { faixa.classList.remove("visivel"); return; }
+  const tentando = !!driveRenovando;
+  faixa.innerHTML = `<span>${tentando ? "🔄 Reconectando ao Google Drive..." : driveAutorizado()
+    ? "⚠️ Google Drive desconectado — seus dados estão só neste navegador até reconectar."
+    : "⚠️ Google Drive não conectado — seus dados estão só neste navegador."}</span>
+    ${tentando ? "" : '<button class="botao pequeno" id="btn-faixa-drive">🔗 Conectar agora</button>'}`;
+  faixa.classList.add("visivel");
+  const b = document.getElementById("btn-faixa-drive");
+  if (b) b.addEventListener("click", conectarDrive);
 }
 
 function atualizarBotaoDrive() {
@@ -64,6 +100,7 @@ function atualizarBotaoDrive() {
 }
 
 function desconectarDrive() {
+  localStorage.removeItem(CHAVE_DRIVE_AUTORIZADO);
   const token = driveAccessToken;
   driveAccessToken = null;
   driveTokenExpiraEm = 0;
@@ -81,6 +118,7 @@ function inicializarDriveTokenClient() {
     client_id: GOOGLE_CLIENT_ID,
     scope: DRIVE_ESCOPO,
     callback: () => {}, // sobrescrito a cada chamada em conectarDrive()/garantirTokenValido()
+    error_callback: (erro) => { if (driveTokenClient && driveTokenClient.erroCb) driveTokenClient.erroCb(erro); },
   });
 }
 
@@ -98,26 +136,78 @@ function conectarDrive() {
     driveAccessToken = resposta.access_token;
     driveTokenExpiraEm = Date.now() + (resposta.expires_in - 60) * 1000;
     salvarTokenDriveNaSessao();
+    localStorage.setItem(CHAVE_DRIVE_AUTORIZADO, "1");
     atualizarStatusDrive("🔗 Conectado ao Google Drive — sincronizando...");
     sincronizarInicialComDrive();
   };
-  driveTokenClient.requestAccessToken({ prompt: "consent" });
+  driveTokenClient.erroCb = () => atualizarStatusDrive("⚠️ Não foi possível conectar ao Google Drive.");
+  driveTokenClient.requestAccessToken({ prompt: driveAutorizado() ? "" : "consent", hint: emailDaSessao() });
 }
 
-function garantirTokenValido() {
-  if (driveConectado()) return Promise.resolve(true);
-  return new Promise((resolve) => {
-    inicializarDriveTokenClient();
-    if (!driveTokenClient) return resolve(false);
+function garantirTokenValido(forcar) {
+  if (driveConectado() && !forcar) return Promise.resolve(true);
+  if (driveRenovando) return driveRenovando;
+  inicializarDriveTokenClient();
+  if (!driveTokenClient) return Promise.resolve(false);
+
+  driveRenovando = new Promise((resolve) => {
+    let terminou = false;
+    const fim = (ok) => {
+      if (terminou) return;
+      terminou = true;
+      clearTimeout(limite);
+      driveRenovando = null;
+      atualizarStatusDrive(ok ? "☁️ Conectado ao Google Drive" : "⚠️ Google Drive desconectado");
+      resolve(ok);
+    };
+    const limite = setTimeout(() => fim(false), 20000);
     driveTokenClient.callback = (resposta) => {
-      if (resposta.error) return resolve(false);
+      if (resposta.error) return fim(false);
       driveAccessToken = resposta.access_token;
       driveTokenExpiraEm = Date.now() + (resposta.expires_in - 60) * 1000;
       salvarTokenDriveNaSessao();
-      resolve(true);
+      fim(true);
     };
-    driveTokenClient.requestAccessToken({ prompt: "" });
+    driveTokenClient.erroCb = () => fim(false);
+    try { driveTokenClient.requestAccessToken({ prompt: "", hint: emailDaSessao() }); } catch { fim(false); }
   });
+  atualizarFaixaDrive();
+  return driveRenovando;
+}
+
+/**
+ * Monitor automático: confere a conexão ao abrir, a cada 30 s e ao voltar para a aba.
+ * Renova o token em segundo plano (sem clique) enquanto o Google permitir; se exigir
+ * interação, a faixa no topo oferece o botão para reconectar.
+ */
+async function verificarConexaoDrive() {
+  if (!window.google?.accounts?.oauth2 || !sessaoValida()) return;
+  if (!driveAutorizado()) { atualizarFaixaDrive(); return; }
+  if (!driveConectado() || driveExpiraEmBreve()) {
+    const ok = await garantirTokenValido(true); // renova antes de expirar
+    if (ok && drivePendente) salvarNoDrive(ESTADO);
+  }
+  atualizarFaixaDrive();
+}
+
+function iniciarMonitorDrive() {
+  if (driveMonitorIniciado) return;
+  driveMonitorIniciado = true;
+  let tentativas = 0;
+  const esperarGoogle = setInterval(() => {
+    tentativas++;
+    if (window.google?.accounts?.oauth2) {
+      clearInterval(esperarGoogle);
+      verificarConexaoDrive();
+      setInterval(verificarConexaoDrive, 30000);
+    } else if (tentativas > 40) {
+      clearInterval(esperarGoogle);
+      atualizarFaixaDrive();
+    }
+  }, 500);
+  document.addEventListener("visibilitychange", () => { if (!document.hidden) verificarConexaoDrive(); });
+  window.addEventListener("focus", verificarConexaoDrive);
+  window.addEventListener("online", verificarConexaoDrive);
 }
 
 async function localizarArquivoNoDrive() {
@@ -133,7 +223,7 @@ async function localizarArquivoNoDrive() {
 
 async function salvarNoDrive(objetoDados) {
   if (driveSincronizando) return false;
-  if (!(await garantirTokenValido())) return false;
+  if (!(await garantirTokenValido())) { drivePendente = true; atualizarFaixaDrive(); return false; }
   driveSincronizando = true;
 
   try {
@@ -163,10 +253,19 @@ async function salvarNoDrive(objetoDados) {
       body: corpo,
     });
 
+    if (resp.status === 401) { // token revogado/expirado: renova e tenta de novo
+      esquecerTokenDriveLocal();
+      driveSincronizando = false;
+      drivePendente = true;
+      if (await garantirTokenValido()) return salvarNoDrive(objetoDados);
+      return false;
+    }
     if (!resp.ok) {
+      drivePendente = true;
       atualizarStatusDrive("⚠️ Erro ao salvar no Drive");
       return false;
     }
+    drivePendente = false;
 
     const resultado = await resp.json();
     if (!driveArquivoId) {
@@ -219,9 +318,12 @@ async function sincronizarInicialComDrive() {
 }
 
 function agendarSincronizacaoComDrive() {
-  if (!driveConectado()) return;
+  if (!driveConectado() && !driveAutorizado()) return;
+  drivePendente = true;
   clearTimeout(driveSalvandoTimeout);
   driveSalvandoTimeout = setTimeout(() => salvarNoDrive(ESTADO), 1500);
 }
 
 restaurarTokenDriveDaSessao();
+if (driveConectado()) localStorage.setItem(CHAVE_DRIVE_AUTORIZADO, "1");
+document.addEventListener("DOMContentLoaded", () => { atualizarFaixaDrive(); iniciarMonitorDrive(); });

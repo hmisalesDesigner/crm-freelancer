@@ -287,6 +287,7 @@ function inicializarApp() {
     item.addEventListener("click", () => irParaPagina(item.dataset.pagina));
   });
 
+  document.getElementById("btn-sair").addEventListener("click", sairDoSite);
   document.getElementById("btn-tema").addEventListener("click", () => {
     const novoTema = ESTADO.configuracoes.tema === "escuro" ? "claro" : "escuro";
     atualizarEstado((estado) => { estado.configuracoes.tema = novoTema; });
