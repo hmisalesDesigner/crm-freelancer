@@ -35,8 +35,15 @@ function aoReceberCredencialGoogle(resposta) {
 }
 
 function liberarAcesso() {
-  document.getElementById("tela-login").style.display = "none";
+  const telaLogin = document.getElementById("tela-login");
+  if (telaLogin) telaLogin.style.display = "none";
   document.querySelector(".app").style.display = "flex";
+  esconderTelaCarregando();
+}
+
+function esconderTelaCarregando() {
+  const tela = document.getElementById("tela-carregando");
+  if (tela) tela.remove();
 }
 
 function sessaoValida() {
@@ -67,21 +74,41 @@ function inicializarLogin() {
     </div>
   `;
   document.body.appendChild(tela);
+  esconderTelaCarregando();
 
-  if (window.google && GOOGLE_CLIENT_ID.indexOf("COLOQUE_SEU") === -1) {
-    google.accounts.id.initialize({
-      client_id: GOOGLE_CLIENT_ID,
-      callback: aoReceberCredencialGoogle,
-    });
-    google.accounts.id.renderButton(document.getElementById("google-botao-login"), {
-      theme: "filled_black",
-      text: "signin_with",
-      shape: "pill",
-    });
-  } else {
-    document.getElementById("google-botao-login").innerHTML =
-      `<p style="color:var(--cor-perigo);">Configuração de login pendente: defina GOOGLE_CLIENT_ID em js/login.js</p>`;
+  renderizarBotaoGoogle();
+}
+
+function renderizarBotaoGoogle(tentativas) {
+  tentativas = tentativas || 0;
+  const alvo = document.getElementById("google-botao-login");
+  if (!alvo) return; // tela de login já não existe mais (acesso liberado nesse meio tempo)
+
+  if (GOOGLE_CLIENT_ID.indexOf("COLOQUE_SEU") !== -1) {
+    alvo.innerHTML = `<p style="color:var(--cor-perigo);">Configuração de login pendente: defina GOOGLE_CLIENT_ID em js/login.js</p>`;
+    return;
   }
+
+  if (!window.google) {
+    // O script do Google pode ainda estar carregando (ou foi bloqueado por
+    // um bloqueador de anúncios/rastreadores). Tenta de novo por alguns segundos.
+    if (tentativas < 20) {
+      setTimeout(() => renderizarBotaoGoogle(tentativas + 1), 250);
+    } else {
+      alvo.innerHTML = `<p style="color:var(--cor-perigo);">Não foi possível carregar o login do Google. Verifique se algum bloqueador de anúncios/rastreadores (ex: Brave Shields) não está bloqueando accounts.google.com, e recarregue a página.</p>`;
+    }
+    return;
+  }
+
+  google.accounts.id.initialize({
+    client_id: GOOGLE_CLIENT_ID,
+    callback: aoReceberCredencialGoogle,
+  });
+  google.accounts.id.renderButton(alvo, {
+    theme: "filled_black",
+    text: "signin_with",
+    shape: "pill",
+  });
 }
 
 document.addEventListener("DOMContentLoaded", inicializarLogin);
