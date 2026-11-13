@@ -1,6 +1,6 @@
 /**
  * pagamentos.js
- * Controle do dinheiro a receber: parcelas, vencimentos e status
+ * Controle do dinheiro a receber: adiantamento (PIX), vencimentos e status
  * (pendente / atrasado / pago), mais a mensalidade do cliente fixo.
  */
 
@@ -95,7 +95,7 @@ function renderizarPaginaPagamentos() {
     </div>
 
     <div class="bloco-destaque" style="max-width:900px;">
-      <h3>Novo pagamento / parcelamento</h3>
+      <h3>Novo pagamento (PIX)</h3>
       <div class="form-grid" style="max-width:none; grid-template-columns: repeat(3, 1fr);">
         <div class="campo">
           <label>Cliente</label>
@@ -106,8 +106,8 @@ function renderizarPaginaPagamentos() {
         </div>
         <div class="campo"><label>Descrição</label><input id="pg-descricao" placeholder="Ex: Identidade visual"></div>
         <div class="campo"><label>Valor total (R$)</label><input type="number" id="pg-valor" step="0.01"></div>
-        <div class="campo"><label>Nº de parcelas</label><input type="number" id="pg-parcelas" value="1" min="1" max="36"></div>
-        <div class="campo"><label>1º vencimento</label><input type="date" id="pg-vencimento" value="${somarDiasISO(hojeISO(), 7)}"></div>
+        <div class="campo"><label>Adiantamento (%) — 0 = sem adiantamento</label><input type="number" id="pg-adiantamento" value="0" min="0" max="100" step="5"></div>
+        <div class="campo"><label>Vencimento do restante (entrega)</label><input type="date" id="pg-vencimento" value="${somarDiasISO(hojeISO(), 7)}"></div>
         <div class="campo"><label>&nbsp;</label><button class="botao" id="btn-add-pagamento">+ Lançar</button></div>
       </div>
     </div>
@@ -178,28 +178,24 @@ function renderizarPaginaPagamentos() {
 
   document.getElementById("btn-add-pagamento").addEventListener("click", () => {
     const total = Number(document.getElementById("pg-valor").value) || 0;
-    const parcelas = Math.min(Math.max(parseInt(document.getElementById("pg-parcelas").value, 10) || 1, 1), 36);
-    const primeiro = document.getElementById("pg-vencimento").value;
+    const pct = Math.min(Math.max(Number(document.getElementById("pg-adiantamento").value) || 0, 0), 100);
+    const venc = document.getElementById("pg-vencimento").value;
     if (total <= 0) { alert("Informe o valor."); return; }
-    if (!primeiro) { alert("Informe o 1º vencimento."); return; }
+    if (!venc) { alert("Informe o vencimento."); return; }
     const clienteId = document.getElementById("pg-cliente").value || null;
     const descricao = document.getElementById("pg-descricao").value.trim();
 
     const centavos = Math.round(total * 100);
-    const base = Math.floor(centavos / parcelas);
+    const sinal = Math.round(centavos * pct / 100);
+    const novos = [];
+    if (sinal > 0 && sinal < centavos) {
+      novos.push({ descricao: `${descricao || "Pagamento"} — adiantamento (${pct}%)`, valor: sinal / 100, vencimento: hojeISO() });
+      novos.push({ descricao: `${descricao || "Pagamento"} — restante`, valor: (centavos - sinal) / 100, vencimento: venc });
+    } else {
+      novos.push({ descricao, valor: centavos / 100, vencimento: venc });
+    }
     atualizarEstado((e) => {
-      for (let i = 0; i < parcelas; i++) {
-        const valorCent = i === parcelas - 1 ? centavos - base * (parcelas - 1) : base;
-        e.pagamentos.push({
-          id: gerarId(),
-          clienteId,
-          descricao: parcelas > 1 ? `${descricao || "Parcela"} (${i + 1}/${parcelas})` : descricao,
-          valor: valorCent / 100,
-          vencimento: adicionarMesesISO(primeiro, i),
-          pago: false,
-          dataPagamento: null,
-        });
-      }
+      novos.forEach((n) => e.pagamentos.push({ id: gerarId(), clienteId, ...n, pago: false, dataPagamento: null }));
     });
     document.getElementById("pg-valor").value = "";
     document.getElementById("pg-descricao").value = "";

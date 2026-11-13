@@ -1,8 +1,8 @@
 /**
  * orcamentos.js
  * Gera orçamentos (por hora, projeto ou peça) com modelos reutilizáveis, texto pronto para
- * WhatsApp e documento em PDF. O lembrete de investimento (B3) aparece só para você,
- * nunca dentro do texto ou do PDF enviados ao cliente. Ao aceitar um orçamento, o valor
+ * WhatsApp e documento em PDF. O painel privado da B3 (lado direito) é só para você, com chave para somar a reserva ao valor;
+ * nunca aparece no texto ou no PDF enviados ao cliente. Ao aceitar um orçamento, o valor
  * entra no faturamento do cliente e uma cobrança é criada em Pagamentos.
  */
 
@@ -81,6 +81,8 @@ function renderizarPaginaOrcamentos() {
   const valorHoraSugerido = cfg.horasPagasPorMes ? Math.round(valorMinimoHora()) : 0;
 
   container.innerHTML = `
+    <div class="orc-layout">
+    <div class="orc-principal">
     <div class="form-grid" style="max-width:900px; grid-template-columns: repeat(3, 1fr);">
       <div class="campo" style="grid-column: 1 / -1;">
         <label>Modelo (preenche os campos para você)</label>
@@ -130,7 +132,22 @@ function renderizarPaginaOrcamentos() {
     <div id="orc-texto-gerado" style="display:none; margin-top:18px; max-width:700px;">
       <div class="campo"><label>Texto do orçamento (copie e envie ao cliente)</label><textarea id="orc-texto-area" style="min-height:200px;"></textarea></div>
       <button class="botao secundario" id="btn-copiar-orcamento" style="margin-top:8px;">Copiar texto</button>
-      <div class="aviso b3" id="orc-lembrete-b3" style="display:none;"></div>
+    </div>
+    </div>
+
+    <aside class="orc-privado">
+      <h4>🔒 Só para você</h4>
+      <p class="card-sub">Nada daqui vai para o texto, o PDF ou o cliente.</p>
+      <label class="chave-linha">
+        <span class="chave"><input type="checkbox" id="orc-b3-ligado"><span class="chave-trilho"></span></span>
+        <span>Somar reserva da B3 ao valor</span>
+      </label>
+      <div class="linha-resumo"><span class="rotulo">Valor base</span><span class="valor" id="orc-b3-base">R$ 0,00</span></div>
+      <div class="linha-resumo"><span class="rotulo">Reserva (<span id="orc-b3-pct">0</span>%)</span><span class="valor" id="orc-b3-extra">R$ 0,00</span></div>
+      <div class="linha-resumo"><span class="rotulo">Valor cobrado do cliente</span><span class="valor" id="orc-b3-final">R$ 0,00</span></div>
+      <div class="aviso b3" id="orc-lembrete-b3"></div>
+      <p class="card-sub">Ligada, a reserva é diluída no valor unitário e o cliente vê apenas o preço final.</p>
+    </aside>
     </div>
 
     <h3 style="margin-top:32px;">Histórico de orçamentos</h3>
@@ -142,20 +159,40 @@ function renderizarPaginaOrcamentos() {
 
   const $ = (id) => document.getElementById(id);
 
-  function calcularTotal() {
+  const pctB3 = Number(cfg.acaoB3.percentualReserva) || 0;
+  const tickerB3 = cfg.acaoB3.ticker || "sua ação na B3";
+
+  function calcularBase() {
     return (Number($("orc-quantidade").value) || 0) * (Number($("orc-valor-unitario").value) || 0);
   }
-  function atualizarTotal() { $("orc-valor-total").textContent = formatarMoeda(calcularTotal()); }
-  container.querySelectorAll("#orc-quantidade, #orc-valor-unitario").forEach((el) => el.addEventListener("input", atualizarTotal));
+  function calcularExtra() {
+    return $("orc-b3-ligado").checked ? calcularBase() * pctB3 / 100 : 0;
+  }
+  function calcularTotal() { return calcularBase() + calcularExtra(); }
+
+  function atualizarTotal() {
+    const base = calcularBase(), extra = calcularExtra(), total = base + extra;
+    $("orc-valor-total").textContent = formatarMoeda(total);
+    $("orc-b3-base").textContent = formatarMoeda(base);
+    $("orc-b3-pct").textContent = pctB3;
+    $("orc-b3-extra").textContent = extra > 0 ? "+ " + formatarMoeda(extra) : formatarMoeda(base * pctB3 / 100) + " (desligado)";
+    $("orc-b3-final").textContent = formatarMoeda(total);
+    $("orc-lembrete-b3").textContent = `💰 Ao receber ${formatarMoeda(total)}, separe ${formatarMoeda(base * pctB3 / 100)} (${pctB3}%) para comprar ${tickerB3}.`;
+  }
+  container.querySelectorAll("#orc-quantidade, #orc-valor-unitario, #orc-b3-ligado").forEach((el) => el.addEventListener("input", atualizarTotal));
+  $("orc-b3-ligado").addEventListener("change", atualizarTotal);
 
   function dadosDoFormulario() {
+    const qtd = Number($("orc-quantidade").value) || 0;
+    const total = calcularTotal();
     return {
       clienteId: $("orc-cliente").value || null,
       descricao: $("orc-descricao").value.trim(),
       modo: $("orc-modo").value,
-      quantidade: Number($("orc-quantidade").value) || 0,
-      valorUnitario: Number($("orc-valor-unitario").value) || 0,
-      total: calcularTotal(),
+      quantidade: qtd,
+      // com a reserva ligada, o valor unitário já sai diluído (o cliente não vê a reserva)
+      valorUnitario: qtd > 0 ? total / qtd : Number($("orc-valor-unitario").value) || 0,
+      total,
       data: new Date().toISOString(),
     };
   }
@@ -200,12 +237,6 @@ function renderizarPaginaOrcamentos() {
     texto += `Validade: ${validade} dias\n\nQualquer dúvida, estou à disposição!`;
     $("orc-texto-gerado").style.display = "block";
     $("orc-texto-area").value = texto;
-
-    const lembrete = $("orc-lembrete-b3");
-    const reserva = cfg.acaoB3.percentualReserva || 0;
-    const ticker = cfg.acaoB3.ticker || "sua ação na B3";
-    lembrete.style.display = "block";
-    lembrete.textContent = `💰 Só para você (não vai no texto): ao receber, separe ${reserva}% (${formatarMoeda(d.total * reserva / 100)}) para comprar ${ticker}.`;
   });
 
   $("btn-copiar-orcamento").addEventListener("click", async () => {
