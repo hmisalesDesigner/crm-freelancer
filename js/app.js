@@ -194,7 +194,31 @@ function inicializarApp() {
     aplicarTema(novoTema);
   });
 
+  const btnAtualizar = document.getElementById("btn-atualizar-site");
+  if (btnAtualizar) btnAtualizar.addEventListener("click", recarregarSiteSemCache);
+
   atualizarPainel();
+}
+
+/**
+ * Recarrega o site forçando o navegador a buscar os arquivos atualizados,
+ * em vez de usar a versão guardada em cache (equivalente a Ctrl+Shift+R).
+ */
+async function recarregarSiteSemCache() {
+  try {
+    if (window.caches) {
+      const nomes = await caches.keys();
+      await Promise.all(nomes.map((nome) => caches.delete(nome)));
+    }
+  } catch (e) {
+    console.warn("Não foi possível limpar o cache do Cache Storage.", e);
+  }
+
+  // Adiciona um parâmetro único para forçar o navegador a buscar o HTML
+  // (e, por consequência, o CSS/JS referenciados) direto do servidor.
+  const url = new URL(location.href);
+  url.searchParams.set("_v", Date.now().toString(36));
+  location.replace(url.toString());
 }
 
 document.addEventListener("DOMContentLoaded", inicializarApp);
