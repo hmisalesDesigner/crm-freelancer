@@ -25,6 +25,7 @@ let driveTokenExpiraEm = 0;
 let driveArquivoId = localStorage.getItem(CHAVE_DRIVE_ARQUIVO_ID) || null;
 let driveSalvandoTimeout = null;
 let driveSincronizando = false;
+let driveUltimoEnvio = null;    // hora do último envio bem-sucedido ao Drive
 let drivePendente = false;      // há alterações locais ainda não enviadas ao Drive
 let driveRenovando = null;      // promessa da renovação em andamento
 let driveMonitorIniciado = false;
@@ -57,11 +58,20 @@ function driveConectado() {
   return !!driveAccessToken && Date.now() < driveTokenExpiraEm;
 }
 
+function statusGeralDrive() {
+  if (driveConectado()) {
+    if (drivePendente) return "☁️ Drive conectado — enviando alterações...";
+    return driveUltimoEnvio ? "☁️ Salvo no Google Drive — " + driveUltimoEnvio : "☁️ Conectado ao Google Drive";
+  }
+  return driveAutorizado() ? "⚠️ Drive desconectado — salvo só neste navegador" : "💾 Dados salvos localmente";
+}
+
 function atualizarStatusDrive(texto) {
+  const aviso = texto && texto.startsWith("⚠️");
   const el = document.getElementById("status-drive");
-  if (el) el.textContent = texto;
+  if (el) el.textContent = aviso ? texto : statusGeralDrive();
   const elCfg = document.getElementById("drive-status-config");
-  if (elCfg) elCfg.textContent = texto;
+  if (elCfg) elCfg.textContent = driveConectado() ? "🔗 Conectado ao Google Drive" : (texto || statusGeralDrive());
   atualizarBotaoDrive();
   atualizarFaixaDrive();
 }
@@ -181,6 +191,7 @@ function garantirTokenValido(forcar) {
  * interação, a faixa no topo oferece o botão para reconectar.
  */
 async function verificarConexaoDrive() {
+  atualizarStatusDrive();
   if (!window.google?.accounts?.oauth2 || !sessaoValida()) return;
   if (!driveAutorizado()) { atualizarFaixaDrive(); return; }
   if (!driveConectado() || driveExpiraEmBreve()) {
@@ -272,7 +283,8 @@ async function salvarNoDrive(objetoDados) {
       driveArquivoId = resultado.id;
       localStorage.setItem(CHAVE_DRIVE_ARQUIVO_ID, driveArquivoId);
     }
-    atualizarStatusDrive("☁️ Salvo no Google Drive — " + new Date().toLocaleTimeString("pt-BR"));
+    driveUltimoEnvio = new Date().toLocaleTimeString("pt-BR");
+    atualizarStatusDrive();
     return true;
   } finally {
     driveSincronizando = false;
@@ -326,4 +338,4 @@ function agendarSincronizacaoComDrive() {
 
 restaurarTokenDriveDaSessao();
 if (driveConectado()) localStorage.setItem(CHAVE_DRIVE_AUTORIZADO, "1");
-document.addEventListener("DOMContentLoaded", () => { atualizarFaixaDrive(); iniciarMonitorDrive(); });
+document.addEventListener("DOMContentLoaded", () => { atualizarStatusDrive(); iniciarMonitorDrive(); });

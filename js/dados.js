@@ -89,7 +89,9 @@ function salvarDados(dados) {
 
 function atualizarStatusSalvamento(texto) {
   const el = document.getElementById("status-drive");
-  if (el) el.textContent = texto;
+  if (!el) return;
+  // erros aparecem como estão; o resto reflete o estado real do Drive
+  el.textContent = texto.startsWith("⚠️") || typeof statusGeralDrive !== "function" ? texto : statusGeralDrive();
 }
 
 function estruturaClonada(obj) {
