@@ -234,6 +234,7 @@ body {
   font-weight: 600;
 }
 .botao:hover { opacity: .9; }
+.botao.sucesso { background: var(--cor-sucesso); color: #0b1f12; }
 .botao.secundario {
   background: transparent;
   border: 1px solid var(--cor-borda);

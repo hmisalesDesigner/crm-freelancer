@@ -55,12 +55,24 @@ function atualizarBotaoDrive() {
   const btn = document.getElementById("btn-conectar-drive");
   if (!btn) return;
   if (driveConectado()) {
-    btn.textContent = "✅ Conectado — Sincronizar agora";
-    btn.classList.add("secundario");
+    btn.textContent = "Desconectar";
+    btn.classList.add("sucesso");
   } else {
     btn.textContent = "🔗 Conectar ao Google Drive";
-    btn.classList.remove("secundario");
+    btn.classList.remove("sucesso");
   }
+}
+
+function desconectarDrive() {
+  const token = driveAccessToken;
+  driveAccessToken = null;
+  driveTokenExpiraEm = 0;
+  clearTimeout(driveSalvandoTimeout);
+  sessionStorage.removeItem(CHAVE_DRIVE_TOKEN);
+  if (token && window.google?.accounts?.oauth2) {
+    google.accounts.oauth2.revoke(token, () => {});
+  }
+  atualizarStatusDrive("Desconectado do Google Drive");
 }
 
 function inicializarDriveTokenClient() {

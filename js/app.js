@@ -163,8 +163,7 @@ function renderizarPaginaConfiguracoes() {
   if (btnConectarDrive) {
     btnConectarDrive.addEventListener("click", () => {
       if (driveConectado()) {
-        atualizarStatusDrive("☁️ Sincronizando...");
-        salvarNoDrive(ESTADO);
+        desconectarDrive();
       } else {
         conectarDrive();
       }
