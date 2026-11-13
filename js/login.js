@@ -8,7 +8,7 @@
  */
 
 // ⚠️ Substitua pelo Client ID gerado no Google Cloud Console
-const GOOGLE_CLIENT_ID = "COLOQUE_SEU_CLIENT_ID_AQUI.apps.googleusercontent.com";
+const GOOGLE_CLIENT_ID = "754936832886-6och1664ibcplfr4pdp8ls9ch420dhr0.apps.googleusercontent.com";
 
 // Único e-mail autorizado a entrar
 const EMAIL_AUTORIZADO = "hmisales@protonmail.com";
