@@ -548,3 +548,102 @@ html:not([data-tema="escuro"]) .selo.enviado { background: #fef3c7; color: #9240
   .barra-lateral { width: 70px; }
   .barra-lateral .menu-item span, .logo span { display: none; }
 }
+
+/* =====================================================================
+   Novos módulos: pagamentos, tempo (relógio), follow-up, gráfico, lembretes
+   ===================================================================== */
+
+a.botao { display: inline-block; text-decoration: none; }
+.cards-resumo { grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); }
+.grade-2 { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 24px; }
+.grade-2 > .painel-grafico-funil { margin: 0; }
+.grade-2 h3, .bloco-destaque h3 { margin-top: 0; }
+@media (max-width: 900px) { .grade-2 { grid-template-columns: 1fr; } }
+
+/* Selos de status */
+.selo.pago, .selo.finalizada { background: #163a24; color: #4ade80; }
+.selo.pendente, .selo.metade { background: #3a2a12; color: #fbbf24; }
+.selo.atrasado { background: #3a1616; color: #f87171; }
+.selo.comeco { background: #1f2a3a; color: #93c5fd; }
+.selo.recusado { background: #2a2a2a; color: #9ca3af; }
+html:not([data-tema="escuro"]) .selo.pago, html:not([data-tema="escuro"]) .selo.finalizada { background: #dcfce7; color: #15803d; }
+html:not([data-tema="escuro"]) .selo.pendente, html:not([data-tema="escuro"]) .selo.metade { background: #fef3c7; color: #92400e; }
+html:not([data-tema="escuro"]) .selo.atrasado { background: #fee2e2; color: #b91c1c; }
+html:not([data-tema="escuro"]) .selo.comeco { background: #dbeafe; color: #1d4ed8; }
+html:not([data-tema="escuro"]) .selo.recusado { background: #e5e7eb; color: #4b5563; }
+
+/* Filtros (chips) */
+.filtros { display: flex; gap: 8px; flex-wrap: wrap; }
+.chip {
+  border: 1px solid var(--cor-borda); background: var(--cor-fundo-painel); color: var(--cor-texto-suave);
+  padding: 6px 14px; border-radius: 20px; font-size: 13px; cursor: pointer;
+  transition: transform .15s ease, background .15s ease, color .15s ease, border-color .15s ease;
+}
+.chip:hover { transform: translateY(-1px); border-color: var(--cor-primaria); color: var(--cor-texto); }
+.chip:active { transform: scale(.96); }
+.chip.ativo { background: var(--cor-primaria); border-color: var(--cor-primaria); color: var(--cor-texto-sobre-primaria); font-weight: 600; }
+
+.select-mini {
+  padding: 5px 8px; border: 1px solid var(--cor-borda); border-radius: 8px;
+  background: var(--cor-fundo); color: var(--cor-texto); font-size: 12px;
+}
+
+/* Alertas / follow-ups */
+.item-alerta {
+  display: flex; justify-content: space-between; align-items: center; gap: 12px;
+  padding: 10px 12px; margin-top: 10px; border: 1px solid var(--cor-borda);
+  border-left: 4px solid var(--cor-primaria); border-radius: 10px; background: var(--cor-fundo);
+  font-size: 13px;
+}
+.item-alerta.alerta { border-left-color: var(--cor-alerta); }
+.item-alerta.perigo { border-left-color: var(--cor-perigo); }
+.item-alerta b { display: block; }
+.item-alerta-detalhe { display: block; color: var(--cor-texto-suave); font-size: 12px; margin-top: 2px; }
+
+/* Relógio global (topo) */
+.cronometro-global {
+  display: inline-flex; align-items: center; gap: 10px; cursor: pointer;
+  background: var(--cor-fundo-painel); border: 1px solid var(--cor-perigo); color: var(--cor-texto);
+  padding: 6px 14px; border-radius: 20px; font-size: 13px; font-variant-numeric: tabular-nums;
+  transition: transform .15s ease, box-shadow .15s ease;
+}
+.cronometro-global:hover { transform: translateY(-1px); box-shadow: 0 4px 12px rgba(0,0,0,.3); }
+.cronometro-global-nome { color: var(--cor-texto-suave); max-width: 180px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ponto-gravando { width: 9px; height: 9px; border-radius: 50%; background: var(--cor-perigo); animation: pulsar 1.2s ease-in-out infinite; }
+@keyframes pulsar { 0%, 100% { opacity: 1; transform: scale(1); } 50% { opacity: .35; transform: scale(.75); } }
+
+/* Painel do relógio (página Tempo) */
+.relogio-painel {
+  background: var(--cor-fundo-painel); border: 1px solid var(--cor-borda); border-radius: var(--raio);
+  padding: 24px; text-align: center; max-width: 900px;
+}
+.relogio-painel.rodando { border-color: var(--cor-perigo); box-shadow: 0 0 0 1px var(--cor-perigo) inset; }
+.relogio-grande { font-size: 56px; font-weight: 800; font-variant-numeric: tabular-nums; letter-spacing: 2px; margin: 8px 0 14px; }
+.relogio-tarefa { font-size: 18px; font-weight: 600; display: flex; gap: 10px; align-items: center; justify-content: center; flex-wrap: wrap; }
+.relogio-botao { margin-top: 16px; min-width: 220px; font-size: 16px; padding: 14px 24px; }
+.relogio-painel .campo { text-align: left; }
+
+/* Janela (modal) */
+.modal-sobreposicao {
+  position: fixed; inset: 0; z-index: 3000; background: rgba(0,0,0,.6);
+  display: flex; align-items: center; justify-content: center; padding: 16px;
+  animation: aparecer .15s ease;
+}
+.modal-caixa {
+  background: var(--cor-fundo-painel); border: 1px solid var(--cor-borda); border-radius: var(--raio);
+  padding: 24px; width: 100%; max-width: 440px; text-align: center; box-shadow: var(--sombra);
+}
+.modal-caixa h3 { margin: 0 0 8px; }
+.modal-sub { color: var(--cor-texto-suave); font-size: 14px; margin: 6px 0; line-height: 1.5; }
+.modal-sub b { color: var(--cor-texto); }
+.modal-opcoes { display: flex; flex-direction: column; gap: 8px; margin-top: 14px; }
+@keyframes aparecer { from { opacity: 0; } to { opacity: 1; } }
+
+/* Gráfico de faturamento */
+.grafico-svg { width: 100%; height: auto; display: block; }
+.barra-mes { fill: var(--cor-borda); transition: fill .15s; }
+.barra-mes.atual { fill: var(--cor-primaria); }
+.grafico-svg g:hover .barra-mes { fill: var(--cor-primaria); opacity: .85; }
+.grafico-rotulo { font-size: 11px; fill: var(--cor-texto-suave); }
+.grafico-rotulo.meta { fill: var(--cor-alerta); font-weight: 600; }
+.linha-meta { stroke: var(--cor-alerta); stroke-width: 1.5; stroke-dasharray: 6 4; }

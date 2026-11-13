@@ -33,11 +33,14 @@ function renderizarPaginaClientes() {
   const container = document.getElementById("pagina-clientes");
 
   container.innerHTML = `
-    <button class="botao" id="btn-novo-cliente" style="margin-bottom:16px">+ Novo Cliente</button>
+    <div style="display:flex; gap:8px; margin-bottom:16px; flex-wrap:wrap;">
+      <button class="botao" id="btn-novo-cliente">+ Novo Cliente</button>
+      <button class="botao secundario" id="btn-copiar-link-briefing" title="Link público para o cliente responder o briefing">🔗 Copiar link do briefing</button>
+    </div>
     <table class="tabela">
       <thead>
         <tr>
-          <th>Nome</th><th>Contato</th><th>Demanda</th><th>Etapa</th><th>Total faturado</th><th></th>
+          <th>Nome</th><th>Contato</th><th>Demanda</th><th>Etapa</th><th>Próx. contato</th><th>Total faturado</th><th></th>
         </tr>
       </thead>
       <tbody id="tabela-clientes-corpo"></tbody>
@@ -66,6 +69,7 @@ function renderizarPaginaClientes() {
             </div>
             <div class="campo"><label>Razão Social</label><input id="cli-razao" readonly></div>
             <div class="campo"><label>Capital Social</label><input id="cli-capital" readonly></div>
+            <div class="campo"><label>Próximo contato (follow-up)</label><input type="date" id="cli-proximo"></div>
             <div class="campo">
               <label>Etapa no funil</label>
               <select id="cli-etapa">${ETAPAS_FUNIL.map((e) => `<option value="${e}">${e}</option>`).join("")}</select>
@@ -120,10 +124,11 @@ function renderizarPaginaClientes() {
           : `<span style="display:inline-flex;width:28px;height:28px;border-radius:50%;background:var(--cor-primaria-clara);color:var(--cor-primaria);align-items:center;justify-content:center;font-size:11px;font-weight:700;vertical-align:middle;margin-right:8px;">${iniciais}</span>`;
         return `
           <tr>
-            <td>${avatarHtml}${c.nome}</td>
-            <td>${c.contato || "-"}</td>
-            <td>${(c.demanda || "").slice(0, 40)}</td>
-            <td>${c.etapaFunil}</td>
+            <td>${avatarHtml}${escaparHtml(c.nome)}</td>
+            <td>${escaparHtml(c.contato || "-")}</td>
+            <td>${escaparHtml((c.demanda || "").slice(0, 40))}</td>
+            <td>${escaparHtml(c.etapaFunil)}</td>
+            <td>${c.proximoContato ? formatarDataBR(c.proximoContato) : "-"}</td>
             <td>${formatarMoeda(total)}</td>
             <td>
               <button class="botao secundario pequeno" data-editar="${c.id}">Editar</button>
@@ -131,7 +136,7 @@ function renderizarPaginaClientes() {
             </td>
           </tr>`;
       })
-      .join("") || `<tr><td colspan="6" style="text-align:center; color:var(--cor-texto-suave);">Nenhum cliente cadastrado ainda.</td></tr>`;
+      .join("") || `<tr><td colspan="7" style="text-align:center; color:var(--cor-texto-suave);">Nenhum cliente cadastrado ainda.</td></tr>`;
 
     corpo.querySelectorAll("[data-editar]").forEach((btn) =>
       btn.addEventListener("click", () => abrirModal(btn.dataset.editar))
@@ -162,6 +167,7 @@ function renderizarPaginaClientes() {
     document.getElementById("cli-capital").value = cliente?.capitalSocial ? formatarMoeda(cliente.capitalSocial) : "";
     document.getElementById("cli-etapa").value = cliente?.etapaFunil || "Prospecção";
     document.getElementById("cli-demanda").value = cliente?.demanda || "";
+    document.getElementById("cli-proximo").value = cliente?.proximoContato || "";
     document.getElementById("cli-cnpj-status").style.display = "none";
     fotoAtualBase64 = cliente?.foto || "";
     atualizarPreviewFoto();
@@ -169,6 +175,7 @@ function renderizarPaginaClientes() {
   }
 
   document.getElementById("btn-novo-cliente").addEventListener("click", () => abrirModal(null));
+  document.getElementById("btn-copiar-link-briefing").addEventListener("click", copiarLinkBriefing);
   document.getElementById("btn-cancelar-cliente").addEventListener("click", () => {
     document.getElementById("modal-cliente").style.display = "none";
   });
@@ -222,6 +229,7 @@ function renderizarPaginaClientes() {
           capitalSocial: capitalNumero,
           etapaFunil: document.getElementById("cli-etapa").value,
           demanda: document.getElementById("cli-demanda").value,
+          proximoContato: document.getElementById("cli-proximo").value,
           foto: fotoAtualBase64,
         });
       } else {
@@ -234,6 +242,7 @@ function renderizarPaginaClientes() {
           capitalSocial: capitalNumero,
           etapaFunil: document.getElementById("cli-etapa").value,
           demanda: document.getElementById("cli-demanda").value,
+          proximoContato: document.getElementById("cli-proximo").value,
           foto: fotoAtualBase64,
           historicoFinanceiro: [],
           criadoEm: new Date().toISOString(),

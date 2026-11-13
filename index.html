@@ -25,6 +25,8 @@
         <button class="menu-item" data-pagina="clientes">👤 Clientes</button>
         <button class="menu-item" data-pagina="funil">📋 Funil de Vendas</button>
         <button class="menu-item" data-pagina="orcamentos">📄 Orçamentos</button>
+        <button class="menu-item" data-pagina="pagamentos">💳 Pagamentos</button>
+        <button class="menu-item" data-pagina="tempo">⏱️ Tempo</button>
         <button class="menu-item" data-pagina="prospeccao">🔎 Prospecção</button>
         <button class="menu-item" data-pagina="configuracoes">⚙️ Configurações</button>
       </nav>
@@ -36,6 +38,7 @@
 
       <header class="topo">
         <h1 id="titulo-pagina">Painel</h1>
+        <button class="cronometro-global" id="cronometro-global" style="display:none" title="Ir para a tela de Tempo"></button>
         <div style="display:flex; align-items:center; gap:10px;">
           <div class="status-drive" id="status-drive">💾 Dados salvos localmente</div>
           <button class="botao secundario pequeno" id="btn-atualizar-site" title="Recarrega o site ignorando o cache do navegador"><span class="icone-girar" style="display:inline-block">🔄</span> Atualizar</button>
@@ -47,6 +50,7 @@
           <div class="card">
             <span class="card-label">Faturamento no mês</span>
             <span class="card-valor" id="painel-faturamento-mes">R$ 0,00</span>
+            <span class="card-sub" id="painel-meta-texto"></span>
           </div>
           <div class="card">
             <span class="card-label">Faturamento no ano (MEI)</span>
@@ -55,6 +59,11 @@
               <div class="barra-progresso-interna" id="painel-barra-mei"></div>
             </div>
             <span class="card-sub" id="painel-mei-texto">0% do limite de R$ 81.000,00</span>
+          </div>
+          <div class="card">
+            <span class="card-label">A receber</span>
+            <span class="card-valor" id="painel-a-receber">R$ 0,00</span>
+            <span class="card-sub" id="painel-atrasados-texto"></span>
           </div>
           <div class="card">
             <span class="card-label">Clientes ativos</span>
@@ -74,9 +83,26 @@
           </table>
         </div>
 
-        <div class="painel-grafico-funil">
-          <h3>🔻 Funil de Vendas</h3>
-          <div id="painel-funil-resumo" class="funil-barras"></div>
+        <div class="grade-2">
+          <div class="painel-grafico-funil">
+            <h3>🔻 Funil de Vendas</h3>
+            <div id="painel-funil-resumo" class="funil-barras"></div>
+          </div>
+          <div class="painel-grafico-funil">
+            <h3>📞 Follow-ups</h3>
+            <div id="painel-followups"></div>
+          </div>
+        </div>
+
+        <div class="grade-2" style="margin-top:24px;">
+          <div class="painel-grafico-funil">
+            <h3>📈 Faturamento mensal</h3>
+            <div id="painel-grafico-faturamento"></div>
+          </div>
+          <div class="painel-grafico-funil">
+            <h3>🔔 Lembretes</h3>
+            <div id="painel-lembretes"></div>
+          </div>
         </div>
       </section>
 
@@ -84,6 +110,8 @@
       <section id="pagina-clientes" class="pagina"></section>
       <section id="pagina-funil" class="pagina"></section>
       <section id="pagina-orcamentos" class="pagina"></section>
+      <section id="pagina-pagamentos" class="pagina"></section>
+      <section id="pagina-tempo" class="pagina"></section>
       <section id="pagina-prospeccao" class="pagina"></section>
       <section id="pagina-configuracoes" class="pagina"></section>
 
@@ -91,11 +119,17 @@
   </div>
 
   <script src="js/dados.js"></script>
+  <script src="js/utilitarios.js"></script>
   <script src="js/calculadora.js"></script>
   <script src="js/clientes.js"></script>
   <script src="js/funil.js"></script>
   <script src="js/orcamentos.js"></script>
   <script src="js/prospeccao.js"></script>
+  <script src="js/pagamentos.js"></script>
+  <script src="js/tempo.js"></script>
+  <script src="js/followup.js"></script>
+  <script src="js/grafico.js"></script>
+  <script src="js/lembretes.js"></script>
   <script src="js/app.js"></script>
   <script src="js/login.js"></script>
   <script src="js/google-drive.js"></script>

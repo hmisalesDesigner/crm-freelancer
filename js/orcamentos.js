@@ -1,20 +1,102 @@
 /**
  * orcamentos.js
- * Gera orçamentos formatados (modos hora/projeto/peça), com lembrete de B3 e
- * texto pronto para copiar/enviar no WhatsApp. Também registra o valor no
- * histórico financeiro do cliente quando o orçamento é marcado como aceito.
+ * Gera orçamentos (por hora, projeto ou peça) com modelos reutilizáveis, texto pronto para
+ * WhatsApp e documento em PDF. O lembrete de investimento (B3) aparece só para você,
+ * nunca dentro do texto ou do PDF enviados ao cliente. Ao aceitar um orçamento, o valor
+ * entra no faturamento do cliente e uma cobrança é criada em Pagamentos.
  */
+
+const ROTULOS_MODO = { hora: "Por hora", projeto: "Por projeto", peca: "Por peça" };
+const UNIDADES_MODO = { hora: "hora(s)", projeto: "projeto", peca: "peça(s)" };
+
+function gerarPdfOrcamento(o) {
+  const cfg = ESTADO.configuracoes;
+  const cliente = o.clienteId ? ESTADO.clientes.find((c) => c.id === o.clienteId) : null;
+  const dataEmissao = o.data ? paraDataISO(o.data) : hojeISO();
+  const validade = somarDiasISO(dataEmissao, Number(cfg.validadeOrcamentoDias) || 7);
+  const qtd = Number(o.quantidade) || 1;
+  const valorUnit = Number(o.valorUnitario) || Number(o.total) / qtd;
+
+  const w = window.open("", "_blank");
+  if (!w) { alert("O navegador bloqueou a janela do PDF. Permita pop-ups para este site e tente de novo."); return; }
+
+  w.document.write(`<!DOCTYPE html>
+<html lang="pt-BR"><head><meta charset="UTF-8"><title>Orçamento${cliente ? " - " + escaparHtml(cliente.nome) : ""}</title>
+<style>
+  * { box-sizing: border-box; }
+  body { font-family: "Segoe UI", Arial, sans-serif; color: #1a1a1a; margin: 0; padding: 40px; max-width: 800px; margin: 0 auto; }
+  .topo { display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 3px solid #e8710a; padding-bottom: 16px; }
+  h1 { margin: 0; font-size: 26px; }
+  .sub { color: #666; font-size: 13px; margin-top: 4px; }
+  .bloco { margin-top: 26px; }
+  .bloco h2 { font-size: 12px; letter-spacing: .08em; text-transform: uppercase; color: #888; margin: 0 0 6px; }
+  table { width: 100%; border-collapse: collapse; margin-top: 8px; }
+  th { text-align: left; font-size: 12px; color: #666; border-bottom: 1px solid #ddd; padding: 8px 6px; }
+  td { padding: 12px 6px; border-bottom: 1px solid #eee; font-size: 14px; }
+  td.num, th.num { text-align: right; }
+  .total { margin-top: 18px; text-align: right; font-size: 22px; font-weight: 700; }
+  .total span { color: #e8710a; }
+  .rodape { margin-top: 40px; font-size: 12px; color: #666; border-top: 1px solid #ddd; padding-top: 12px; }
+  @media print { body { padding: 0; } }
+</style></head><body>
+  <div class="topo">
+    <div>
+      <h1>Orçamento</h1>
+      <div class="sub">${escaparHtml(cfg.nomeProfissional || "")}${cfg.whatsapp ? " · WhatsApp " + escaparHtml(cfg.whatsapp) : ""}</div>
+    </div>
+    <div class="sub" style="text-align:right;">Emitido em ${formatarDataBR(dataEmissao)}<br>Válido até ${formatarDataBR(validade)}</div>
+  </div>
+
+  <div class="bloco">
+    <h2>Cliente</h2>
+    <div><b>${escaparHtml(cliente ? cliente.nome : "—")}</b></div>
+    ${cliente && cliente.razaoSocial ? `<div class="sub">${escaparHtml(cliente.razaoSocial)}${cliente.cnpj ? " · CNPJ " + escaparHtml(cliente.cnpj) : ""}</div>` : ""}
+  </div>
+
+  <div class="bloco">
+    <h2>Serviços</h2>
+    <table>
+      <thead><tr><th>Descrição</th><th class="num">Quantidade</th><th class="num">Valor unitário</th><th class="num">Total</th></tr></thead>
+      <tbody>
+        <tr>
+          <td>${escaparHtml(o.descricao || "Serviço")}<br><span class="sub">${ROTULOS_MODO[o.modo] || ""}</span></td>
+          <td class="num">${qtd.toLocaleString("pt-BR")} ${UNIDADES_MODO[o.modo] || ""}</td>
+          <td class="num">${formatarMoeda(valorUnit)}</td>
+          <td class="num">${formatarMoeda(o.total)}</td>
+        </tr>
+      </tbody>
+    </table>
+    <div class="total">Total: <span>${formatarMoeda(o.total)}</span></div>
+  </div>
+
+  <div class="rodape">Este orçamento é válido por ${Number(cfg.validadeOrcamentoDias) || 7} dias. Qualquer dúvida, estou à disposição.</div>
+  <script>window.addEventListener("load", function () { setTimeout(function () { window.print(); }, 300); });<\/script>
+</body></html>`);
+  w.document.close();
+}
 
 function renderizarPaginaOrcamentos() {
   const container = document.getElementById("pagina-orcamentos");
+  const cfg = ESTADO.configuracoes;
+  const valorHoraSugerido = cfg.horasPagasPorMes ? Math.round(valorMinimoHora()) : 0;
 
   container.innerHTML = `
-    <div class="form-grid">
+    <div class="form-grid" style="max-width:900px; grid-template-columns: repeat(3, 1fr);">
+      <div class="campo" style="grid-column: 1 / -1;">
+        <label>Modelo (preenche os campos para você)</label>
+        <div style="display:flex; gap:8px;">
+          <select id="orc-modelo" style="flex:1;">
+            <option value="">— sem modelo —</option>
+            ${ESTADO.modelosOrcamento.map((m) => `<option value="${m.id}">${escaparHtml(m.nome)}</option>`).join("")}
+          </select>
+          <button class="botao secundario pequeno" id="btn-excluir-modelo">Excluir modelo</button>
+        </div>
+      </div>
       <div class="campo">
         <label>Cliente</label>
         <select id="orc-cliente">
           <option value="">Selecione...</option>
-          ${ESTADO.clientes.map((c) => `<option value="${c.id}">${c.nome}</option>`).join("")}
+          ${ESTADO.clientes.map((c) => `<option value="${c.id}">${escaparHtml(c.nome)}</option>`).join("")}
         </select>
       </div>
       <div class="campo">
@@ -25,10 +107,10 @@ function renderizarPaginaOrcamentos() {
           <option value="peca">Por peça</option>
         </select>
       </div>
-      <div class="campo"><label>Quantidade (horas/peças) ou 1 para projeto fechado</label><input type="number" id="orc-quantidade" value="1"></div>
-      <div class="campo"><label>Valor unitário (R$)</label><input type="number" id="orc-valor-unitario" value="${ESTADO.configuracoes.horasPagasPorMes ? Math.round(calcularValorHora(ESTADO.configuracoes.salarioDesejado, ESTADO.configuracoes.custosFixosMensais, ESTADO.configuracoes.horasPagasPorMes)) : 0}"></div>
+      <div class="campo"><label>Quantidade (horas/peças) ou 1 para projeto fechado</label><input type="number" id="orc-quantidade" value="1" min="0" step="any"></div>
+      <div class="campo"><label>Valor unitário (R$)</label><input type="number" id="orc-valor-unitario" value="${valorHoraSugerido}" min="0" step="any"></div>
     </div>
-    <div class="campo coluna-unica" style="margin-top:12px; max-width:700px;">
+    <div class="campo coluna-unica" style="margin-top:12px; max-width:900px;">
       <label>Descrição do serviço</label>
       <textarea id="orc-descricao" placeholder="Ex: Edição de 5 reels para Instagram"></textarea>
     </div>
@@ -38,14 +120,17 @@ function renderizarPaginaOrcamentos() {
       <div class="valor" id="orc-valor-total">R$ 0,00</div>
     </div>
 
-    <div style="margin-top:16px; display:flex; gap:8px;">
+    <div style="margin-top:16px; display:flex; gap:8px; flex-wrap:wrap;">
       <button class="botao" id="btn-gerar-texto-orcamento">Gerar texto para WhatsApp</button>
+      <button class="botao" id="btn-gerar-pdf-orcamento">📄 Gerar PDF</button>
       <button class="botao secundario" id="btn-registrar-orcamento">Registrar orçamento</button>
+      <button class="botao secundario" id="btn-salvar-modelo">💾 Salvar como modelo</button>
     </div>
 
     <div id="orc-texto-gerado" style="display:none; margin-top:18px; max-width:700px;">
-      <div class="campo"><label>Texto do orçamento (copie e envie)</label><textarea id="orc-texto-area" style="min-height:220px;"></textarea></div>
-      <button class="botao secundario" id="btn-copiar-orcamento">Copiar texto</button>
+      <div class="campo"><label>Texto do orçamento (copie e envie ao cliente)</label><textarea id="orc-texto-area" style="min-height:200px;"></textarea></div>
+      <button class="botao secundario" id="btn-copiar-orcamento" style="margin-top:8px;">Copiar texto</button>
+      <div class="aviso b3" id="orc-lembrete-b3" style="display:none;"></div>
     </div>
 
     <h3 style="margin-top:32px;">Histórico de orçamentos</h3>
@@ -55,103 +140,160 @@ function renderizarPaginaOrcamentos() {
     </table>
   `;
 
+  const $ = (id) => document.getElementById(id);
+
   function calcularTotal() {
-    const qtd = Number(document.getElementById("orc-quantidade").value) || 0;
-    const valorUnit = Number(document.getElementById("orc-valor-unitario").value) || 0;
-    return qtd * valorUnit;
+    return (Number($("orc-quantidade").value) || 0) * (Number($("orc-valor-unitario").value) || 0);
+  }
+  function atualizarTotal() { $("orc-valor-total").textContent = formatarMoeda(calcularTotal()); }
+  container.querySelectorAll("#orc-quantidade, #orc-valor-unitario").forEach((el) => el.addEventListener("input", atualizarTotal));
+
+  function dadosDoFormulario() {
+    return {
+      clienteId: $("orc-cliente").value || null,
+      descricao: $("orc-descricao").value.trim(),
+      modo: $("orc-modo").value,
+      quantidade: Number($("orc-quantidade").value) || 0,
+      valorUnitario: Number($("orc-valor-unitario").value) || 0,
+      total: calcularTotal(),
+      data: new Date().toISOString(),
+    };
   }
 
-  function atualizarTotal() {
-    document.getElementById("orc-valor-total").textContent = formatarMoeda(calcularTotal());
-  }
-
-  container.querySelectorAll("#orc-quantidade, #orc-valor-unitario").forEach((el) =>
-    el.addEventListener("input", atualizarTotal)
-  );
-
-  function montarTextoOrcamento() {
-    const clienteId = document.getElementById("orc-cliente").value;
-    const cliente = ESTADO.clientes.find((c) => c.id === clienteId);
-    const descricao = document.getElementById("orc-descricao").value || "serviço";
-    const total = calcularTotal();
-    const reserva = ESTADO.configuracoes.acaoB3.percentualReserva || 0;
-    const ticker = ESTADO.configuracoes.acaoB3.ticker;
-
-    let texto = `Olá${cliente ? ", " + cliente.nome : ""}! Segue o orçamento:\n\n`;
-    texto += `Serviço: ${descricao}\n`;
-    texto += `Valor total: ${formatarMoeda(total)}\n\n`;
-    texto += `Qualquer dúvida, estou à disposição!`;
-
-    // Lembrete pessoal (B3) — não entra no texto enviado ao cliente
-    const lembretePessoal = ticker
-      ? `\n\n[Lembrete pessoal — não enviar ao cliente] Separar ${reserva}% (${formatarMoeda(total * reserva / 100)}) para comprar ${ticker}.`
-      : "";
-
-    return { textoCliente: texto, lembretePessoal };
-  }
-
-  document.getElementById("btn-gerar-texto-orcamento").addEventListener("click", () => {
-    const { textoCliente, lembretePessoal } = montarTextoOrcamento();
-    document.getElementById("orc-texto-gerado").style.display = "block";
-    document.getElementById("orc-texto-area").value = textoCliente + lembretePessoal;
+  /* --- modelos --- */
+  $("orc-modelo").addEventListener("change", () => {
+    const m = ESTADO.modelosOrcamento.find((x) => x.id === $("orc-modelo").value);
+    if (!m) return;
+    $("orc-descricao").value = m.descricao || "";
+    $("orc-modo").value = m.modo;
+    $("orc-quantidade").value = m.quantidade;
+    $("orc-valor-unitario").value = m.valorUnitario;
+    atualizarTotal();
+  });
+  $("btn-salvar-modelo").addEventListener("click", () => {
+    const d = dadosDoFormulario();
+    if (!d.descricao) { alert("Escreva a descrição do serviço para salvar como modelo."); return; }
+    const nome = prompt("Nome do modelo:", d.descricao.slice(0, 40));
+    if (!nome) return;
+    atualizarEstado((e) => {
+      e.modelosOrcamento.push({ id: gerarId(), nome: nome.trim(), descricao: d.descricao, modo: d.modo, quantidade: d.quantidade, valorUnitario: d.valorUnitario });
+    });
+    renderizarPaginaOrcamentos();
+  });
+  $("btn-excluir-modelo").addEventListener("click", () => {
+    const id = $("orc-modelo").value;
+    if (!id) { alert("Selecione um modelo para excluir."); return; }
+    if (!confirm("Excluir este modelo?")) return;
+    atualizarEstado((e) => { e.modelosOrcamento = e.modelosOrcamento.filter((m) => m.id !== id); });
+    renderizarPaginaOrcamentos();
   });
 
-  document.getElementById("btn-copiar-orcamento").addEventListener("click", () => {
-    const textarea = document.getElementById("orc-texto-area");
-    textarea.select();
-    document.execCommand("copy");
+  /* --- texto e PDF --- */
+  $("btn-gerar-texto-orcamento").addEventListener("click", () => {
+    const d = dadosDoFormulario();
+    const cliente = ESTADO.clientes.find((c) => c.id === d.clienteId);
+    const validade = Number(cfg.validadeOrcamentoDias) || 7;
+    let texto = `Olá${cliente ? ", " + cliente.nome : ""}! Segue o orçamento:\n\n`;
+    texto += `Serviço: ${d.descricao || "serviço"}\n`;
+    if (d.modo !== "projeto" && d.quantidade) texto += `Quantidade: ${d.quantidade} ${UNIDADES_MODO[d.modo]} × ${formatarMoeda(d.valorUnitario)}\n`;
+    texto += `Valor total: ${formatarMoeda(d.total)}\n`;
+    texto += `Validade: ${validade} dias\n\nQualquer dúvida, estou à disposição!`;
+    $("orc-texto-gerado").style.display = "block";
+    $("orc-texto-area").value = texto;
+
+    const lembrete = $("orc-lembrete-b3");
+    const reserva = cfg.acaoB3.percentualReserva || 0;
+    const ticker = cfg.acaoB3.ticker || "sua ação na B3";
+    lembrete.style.display = "block";
+    lembrete.textContent = `💰 Só para você (não vai no texto): ao receber, separe ${reserva}% (${formatarMoeda(d.total * reserva / 100)}) para comprar ${ticker}.`;
+  });
+
+  $("btn-copiar-orcamento").addEventListener("click", async () => {
+    const texto = $("orc-texto-area").value;
+    try { await navigator.clipboard.writeText(texto); }
+    catch { $("orc-texto-area").select(); document.execCommand("copy"); }
     alert("Texto copiado!");
   });
 
-  function desenharTabelaOrcamentos() {
-    const corpo = document.getElementById("tabela-orcamentos-corpo");
-    corpo.innerHTML = ESTADO.orcamentos
-      .map((o) => {
-        const cliente = ESTADO.clientes.find((c) => c.id === o.clienteId);
-        return `
-          <tr>
-            <td>${cliente ? cliente.nome : "-"}</td>
-            <td>${(o.descricao || "").slice(0, 40)}</td>
-            <td>${formatarMoeda(o.valor)}</td>
-            <td>${o.aceito ? "✅ Aceito" : "⏳ Enviado"}</td>
-            <td>${new Date(o.dataEnvio).toLocaleDateString("pt-BR")}</td>
-            <td>${!o.aceito ? `<button class="botao secundario pequeno" data-aceitar="${o.id}">Marcar aceito</button>` : ""}</td>
-          </tr>`;
-      })
-      .join("") || `<tr><td colspan="6" style="text-align:center; color:var(--cor-texto-suave);">Nenhum orçamento registrado.</td></tr>`;
+  $("btn-gerar-pdf-orcamento").addEventListener("click", () => {
+    const d = dadosDoFormulario();
+    if (!d.clienteId) { alert("Selecione um cliente."); return; }
+    gerarPdfOrcamento(d);
+  });
 
-    corpo.querySelectorAll("[data-aceitar]").forEach((btn) =>
-      btn.addEventListener("click", () => {
-        atualizarEstado((estado) => {
-          const orc = estado.orcamentos.find((o) => o.id === btn.dataset.aceitar);
-          orc.aceito = true;
-          const cliente = estado.clientes.find((c) => c.id === orc.clienteId);
-          if (cliente) {
-            cliente.historicoFinanceiro = cliente.historicoFinanceiro || [];
-            cliente.historicoFinanceiro.push({ data: new Date().toISOString(), valor: orc.valor });
-            cliente.etapaFunil = "Ativos";
-          }
-        });
-        desenharTabelaOrcamentos();
-        atualizarPainel();
-      })
-    );
+  /* --- histórico --- */
+  function desenharTabelaOrcamentos() {
+    const corpo = $("tabela-orcamentos-corpo");
+    const lista = [...ESTADO.orcamentos].sort((a, b) => new Date(b.dataEnvio) - new Date(a.dataEnvio));
+    corpo.innerHTML = lista.map((o) => {
+      const cliente = ESTADO.clientes.find((c) => c.id === o.clienteId);
+      const status = o.aceito ? '<span class="selo aceito">Aceito</span>' : o.recusado ? '<span class="selo recusado">Recusado</span>' : '<span class="selo enviado">Enviado</span>';
+      return `
+        <tr>
+          <td>${cliente ? escaparHtml(cliente.nome) : "-"}</td>
+          <td>${escaparHtml((o.descricao || "").slice(0, 40))}</td>
+          <td>${formatarMoeda(o.valor)}</td>
+          <td>${status}</td>
+          <td>${new Date(o.dataEnvio).toLocaleDateString("pt-BR")}</td>
+          <td style="white-space:nowrap;">
+            ${!o.aceito && !o.recusado ? `<button class="botao sucesso pequeno" data-aceitar="${o.id}">Aceito</button> <button class="botao secundario pequeno" data-recusar="${o.id}">Recusado</button>` : ""}
+            ${o.recusado ? `<button class="botao secundario pequeno" data-reabrir="${o.id}">Reabrir</button>` : ""}
+            <button class="botao secundario pequeno" data-pdf="${o.id}">PDF</button>
+          </td>
+        </tr>`;
+    }).join("") || `<tr><td colspan="6" style="text-align:center; color:var(--cor-texto-suave);">Nenhum orçamento registrado.</td></tr>`;
+
+    corpo.querySelectorAll("[data-aceitar]").forEach((btn) => btn.addEventListener("click", () => {
+      atualizarEstado((estado) => {
+        const orc = estado.orcamentos.find((o) => o.id === btn.dataset.aceitar);
+        orc.aceito = true;
+        orc.recusado = false;
+        const cliente = estado.clientes.find((c) => c.id === orc.clienteId);
+        if (cliente) {
+          cliente.historicoFinanceiro = cliente.historicoFinanceiro || [];
+          cliente.historicoFinanceiro.push({ data: new Date().toISOString(), valor: orc.valor, orcamentoId: orc.id });
+          cliente.etapaFunil = "Ativos";
+        }
+        criarPagamentoDeOrcamento(estado, orc);
+      });
+      desenharTabelaOrcamentos();
+      atualizarPainel();
+    }));
+    corpo.querySelectorAll("[data-recusar]").forEach((btn) => btn.addEventListener("click", () => {
+      atualizarEstado((estado) => { estado.orcamentos.find((o) => o.id === btn.dataset.recusar).recusado = true; });
+      desenharTabelaOrcamentos(); atualizarPainel();
+    }));
+    corpo.querySelectorAll("[data-reabrir]").forEach((btn) => btn.addEventListener("click", () => {
+      atualizarEstado((estado) => {
+        const o = estado.orcamentos.find((x) => x.id === btn.dataset.reabrir);
+        o.recusado = false; o.ultimoFollowUp = hojeISO();
+      });
+      desenharTabelaOrcamentos(); atualizarPainel();
+    }));
+    corpo.querySelectorAll("[data-pdf]").forEach((btn) => btn.addEventListener("click", () => {
+      const o = ESTADO.orcamentos.find((x) => x.id === btn.dataset.pdf);
+      gerarPdfOrcamento({ clienteId: o.clienteId, descricao: o.descricao, modo: o.modo, quantidade: o.quantidade, valorUnitario: o.valorUnitario, total: o.valor, data: o.dataEnvio });
+    }));
   }
 
-  document.getElementById("btn-registrar-orcamento").addEventListener("click", () => {
-    const clienteId = document.getElementById("orc-cliente").value;
-    if (!clienteId) { alert("Selecione um cliente."); return; }
+  $("btn-registrar-orcamento").addEventListener("click", () => {
+    const d = dadosDoFormulario();
+    if (!d.clienteId) { alert("Selecione um cliente."); return; }
+    if (d.total <= 0) { alert("Informe quantidade e valor maiores que zero."); return; }
     atualizarEstado((estado) => {
       estado.orcamentos.push({
         id: gerarId(),
-        clienteId,
-        descricao: document.getElementById("orc-descricao").value,
-        modo: document.getElementById("orc-modo").value,
-        valor: calcularTotal(),
-        dataEnvio: new Date().toISOString(),
+        clienteId: d.clienteId,
+        descricao: d.descricao,
+        modo: d.modo,
+        quantidade: d.quantidade,
+        valorUnitario: d.valorUnitario,
+        valor: d.total,
+        dataEnvio: d.data,
         aceito: false,
+        recusado: false,
       });
-      const cliente = estado.clientes.find((c) => c.id === clienteId);
+      const cliente = estado.clientes.find((c) => c.id === d.clienteId);
       if (cliente && cliente.etapaFunil === "Prospecção") cliente.etapaFunil = "Orçamento enviado";
     });
     desenharTabelaOrcamentos();

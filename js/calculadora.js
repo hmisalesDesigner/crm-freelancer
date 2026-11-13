@@ -80,7 +80,8 @@ function renderizarPaginaCalculadora() {
           </div>
 
           <div style="margin-top:16px; max-width:700px;">
-            <h4 style="margin-bottom:8px;">Demandas do mês</h4>
+            <h4 style="margin-bottom:4px;">Demandas do mês</h4>
+            <p class="card-sub" style="margin:0 0 8px;">As tarefas do cliente fixo medidas na aba <b>Tempo</b> aparecem aqui sozinhas. Use o campo abaixo só para lançar horas manualmente.</p>
             <div class="form-grid" style="grid-template-columns: 2fr 1fr auto;">
               <div class="campo"><label>Descrição da demanda</label><input id="mes-nova-descricao" placeholder="Ex: Edição de 3 reels"></div>
               <div class="campo"><label>Horas gastas</label><input type="number" id="mes-nova-horas" step="0.25" value="1"></div>
@@ -121,6 +122,7 @@ function renderizarPaginaCalculadora() {
             <span class="rotulo">Horas lançadas no mês</span>
             <span class="valor" id="resultado-mes-horas-total" style="font-size:14px;">0h</span>
           </div>
+          <div id="resultado-mes-comparacao" style="margin-top:10px;"></div>
         </div>
         <span class="card-sub">Baseado nas informações fornecidas</span>
       </div>
@@ -148,11 +150,16 @@ function renderizarPaginaCalculadora() {
   }
 
   function obterDemandasDoMesAtual() {
-    const hoje = new Date();
-    return ESTADO.demandasMensais.filter((d) => {
-      const data = new Date(d.data);
-      return data.getMonth() === hoje.getMonth() && data.getFullYear() === hoje.getFullYear();
-    });
+    const mes = mesAtualChave();
+    const manuais = ESTADO.demandasMensais
+      .filter((d) => chaveMes(d.data) === mes)
+      .map((d) => ({ ...d, origem: "manual" }));
+    // tarefas do cliente fixo medidas pelo relógio (aba Tempo)
+    const cronometradas = ESTADO.tarefas
+      .filter((t) => t.fixo)
+      .map((t) => ({ id: t.id, descricao: t.descricao, horas: segundosTarefa(t.id, mes) / 3600, origem: "cronometro", progresso: t.progresso }))
+      .filter((d) => d.horas > 0);
+    return [...cronometradas, ...manuais];
   }
 
   function recalcularModoMes() {
@@ -164,7 +171,17 @@ function renderizarPaginaCalculadora() {
     const elValorHora = document.getElementById("resultado-mes-valor-hora");
     const elHorasTotal = document.getElementById("resultado-mes-horas-total");
     if (elValorHora) elValorHora.textContent = formatarMoeda(valorHoraEquivalente);
-    if (elHorasTotal) elHorasTotal.textContent = totalHoras.toLocaleString("pt-BR") + "h";
+    if (elHorasTotal) elHorasTotal.textContent = totalHoras.toLocaleString("pt-BR", { maximumFractionDigits: 2 }) + "h";
+    const elComparacao = document.getElementById("resultado-mes-comparacao");
+    if (elComparacao) {
+      const minimo = valorMinimoHora();
+      if (totalHoras > 0 && minimo > 0) {
+        const acima = valorHoraEquivalente >= minimo;
+        elComparacao.innerHTML = `<span class="selo ${acima ? "pago" : "atrasado"}">${acima ? "✔ Acima" : "⚠ Abaixo"} do seu mínimo (${formatarMoeda(minimo)}/h)</span>`;
+      } else {
+        elComparacao.textContent = "";
+      }
+    }
 
     const corpo = document.getElementById("tabela-demandas-mes-corpo");
     if (!corpo) return;
@@ -172,13 +189,16 @@ function renderizarPaginaCalculadora() {
       .map((d) => {
         const percentual = totalHoras > 0 ? (d.horas / totalHoras) * 100 : 0;
         const valorEquivalente = d.horas * valorHoraEquivalente;
+        const etiqueta = d.origem === "cronometro"
+          ? ` <span class="selo ${d.progresso}">⏱ ${ROTULOS_PROGRESSO[d.progresso] || ""}</span>`
+          : "";
         return `
           <tr>
-            <td>${d.descricao}</td>
-            <td>${Number(d.horas).toLocaleString("pt-BR")}h</td>
+            <td>${escaparHtml(d.descricao)}${etiqueta}</td>
+            <td>${Number(d.horas).toLocaleString("pt-BR", { maximumFractionDigits: 2 })}h</td>
             <td>${percentual.toFixed(1)}%</td>
             <td>${formatarMoeda(valorEquivalente)}</td>
-            <td><button class="botao perigo pequeno" data-excluir-demanda="${d.id}">Excluir</button></td>
+            <td>${d.origem === "manual" ? `<button class="botao perigo pequeno" data-excluir-demanda="${d.id}">Excluir</button>` : '<span class="card-sub">pelo relógio</span>'}</td>
           </tr>`;
       })
       .join("") || `<tr><td colspan="5" style="text-align:center; color:var(--cor-texto-suave);">Nenhuma demanda lançada neste mês ainda.</td></tr>`;
@@ -257,12 +277,5 @@ function renderizarPaginaCalculadora() {
 }
 
 function calcularFaturamentoAno() {
-  const anoAtual = new Date().getFullYear();
-  return ESTADO.clientes.reduce((soma, cliente) => {
-    const historico = cliente.historicoFinanceiro || [];
-    const totalDoCliente = historico
-      .filter((h) => new Date(h.data).getFullYear() === anoAtual)
-      .reduce((s, h) => s + Number(h.valor || 0), 0);
-    return soma + totalDoCliente;
-  }, 0) + (ESTADO.configuracoes.clienteFixoMensal || 0) * (new Date().getMonth() + 1);
+  return faturamentoPorMes(new Date().getFullYear()).reduce((a, b) => a + b, 0);
 }

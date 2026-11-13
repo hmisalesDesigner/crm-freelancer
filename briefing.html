@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="pt-BR" data-tema="escuro">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex, nofollow">
+<title>Briefing</title>
+<link rel="stylesheet" href="css/estilo.css">
+<style>
+  body { display: flex; justify-content: center; padding: 24px 16px 60px; }
+  .briefing-caixa { width: 100%; max-width: 680px; }
+  .briefing-caixa h1 { font-size: 24px; margin: 0 0 6px; }
+  .briefing-caixa .intro { color: var(--cor-texto-suave); font-size: 14px; margin: 0 0 22px; line-height: 1.5; }
+  .briefing-form { display: flex; flex-direction: column; gap: 16px; }
+  .grupo-opcoes { display: flex; flex-direction: column; gap: 8px; }
+  .grupo-opcoes > span { font-size: 13px; color: var(--cor-texto-suave); }
+  .opcoes { display: flex; flex-wrap: wrap; gap: 8px; }
+  .opcao {
+    display: inline-flex; align-items: center; gap: 8px; cursor: pointer;
+    padding: 8px 12px; border: 1px solid var(--cor-borda); border-radius: 20px;
+    background: var(--cor-fundo-painel); font-size: 13px; transition: border-color .15s, background .15s;
+  }
+  .opcao:hover { border-color: var(--cor-primaria); }
+  .opcao input { accent-color: var(--cor-primaria); margin: 0; }
+  .opcao:has(input:checked) { border-color: var(--cor-primaria); background: var(--cor-primaria-clara); }
+  .acoes { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 6px; }
+  .obrigatorio { color: var(--cor-perigo); }
+  #briefing-aviso { display: none; }
+  .rodape-briefing { margin-top: 22px; font-size: 12px; color: var(--cor-texto-suave); }
+</style>
+</head>
+<body>
+<script>
+  // tema claro/escuro conforme o aparelho de quem abre o link
+  document.documentElement.dataset.tema = window.matchMedia("(prefers-color-scheme: light)").matches ? "claro" : "escuro";
+</script>
+
+<div class="briefing-caixa">
+  <h1 id="titulo">Briefing do projeto</h1>
+  <p class="intro" id="intro">Responda as perguntas abaixo para eu entender o que você precisa. Leva uns 3 minutos. Ao final, é só enviar pelo WhatsApp.</p>
+
+  <form class="briefing-form" id="form-briefing" autocomplete="off" novalidate>
+    <div class="campo"><label>Seu nome <span class="obrigatorio">*</span></label><input id="b-nome" required></div>
+    <div class="campo"><label>Empresa ou marca</label><input id="b-empresa"></div>
+
+    <div class="grupo-opcoes">
+      <span>O que você precisa? <span class="obrigatorio">*</span> (pode marcar mais de uma)</span>
+      <div class="opcoes" id="b-servicos">
+        <label class="opcao"><input type="checkbox" value="Artes/posts para redes sociais"> Artes/posts para redes sociais</label>
+        <label class="opcao"><input type="checkbox" value="Stories e Reels"> Stories e Reels</label>
+        <label class="opcao"><input type="checkbox" value="Edição de vídeo"> Edição de vídeo</label>
+        <label class="opcao"><input type="checkbox" value="Animação/motion"> Animação/motion</label>
+        <label class="opcao"><input type="checkbox" value="Logo/identidade visual"> Logo/identidade visual</label>
+        <label class="opcao"><input type="checkbox" value="Material impresso"> Material impresso</label>
+        <label class="opcao"><input type="checkbox" value="Outro"> Outro</label>
+      </div>
+    </div>
+
+    <div class="campo"><label>Qual o objetivo? O que você quer alcançar com isso?</label><textarea id="b-objetivo"></textarea></div>
+    <div class="campo"><label>Quem é o seu público?</label><textarea id="b-publico"></textarea></div>
+
+    <div class="grupo-opcoes">
+      <span>Você já tem identidade visual (logo, cores, fontes)?</span>
+      <div class="opcoes" id="b-identidade">
+        <label class="opcao"><input type="radio" name="identidade" value="Sim"> Sim</label>
+        <label class="opcao"><input type="radio" name="identidade" value="Parcialmente"> Parcialmente</label>
+        <label class="opcao"><input type="radio" name="identidade" value="Não"> Não</label>
+      </div>
+    </div>
+
+    <div class="campo"><label>Referências (links, perfis do Instagram ou estilos que você gosta)</label><textarea id="b-referencias"></textarea></div>
+
+    <div class="form-grid" style="max-width:none;">
+      <div class="campo"><label>Prazo desejado</label><input id="b-prazo" placeholder="Ex: até 20/12"></div>
+      <div class="campo"><label>Quantidade aproximada de peças/vídeos</label><input id="b-quantidade" placeholder="Ex: 8 por mês"></div>
+    </div>
+    <div class="campo"><label>Quanto pretende investir? (opcional)</label><input id="b-investimento" placeholder="Ex: R$ 1.500 por mês"></div>
+
+    <div class="campo"><label>Ficou alguma dúvida ou quer acrescentar algo?</label><textarea id="b-duvidas"></textarea></div>
+
+    <div class="aviso mei" id="briefing-aviso"></div>
+
+    <div class="acoes">
+      <button type="submit" class="botao" id="btn-enviar-whatsapp">Enviar pelo WhatsApp</button>
+      <button type="button" class="botao secundario" id="btn-copiar-respostas">Copiar respostas</button>
+    </div>
+  </form>
+
+  <p class="rodape-briefing">Suas respostas não ficam salvas neste site: elas só são enviadas por você mesmo, pelo WhatsApp.</p>
+</div>
+
+<script>
+  (function () {
+    var params = new URLSearchParams(location.search);
+    var numero = (params.get("w") || "").replace(/\D/g, "");
+    var profissional = (params.get("n") || "").trim();
+
+    if (profissional) {
+      document.getElementById("titulo").textContent = "Briefing — " + profissional;
+      document.title = "Briefing — " + profissional;
+    }
+
+    var aviso = document.getElementById("briefing-aviso");
+    function mostrarAviso(texto) { aviso.textContent = texto; aviso.style.display = "block"; }
+    function valor(id) { return document.getElementById(id).value.trim(); }
+
+    function montarMensagem() {
+      var servicos = Array.prototype.map.call(
+        document.querySelectorAll("#b-servicos input:checked"), function (i) { return i.value; }
+      );
+      var identidade = document.querySelector('input[name="identidade"]:checked');
+      var linhas = ["*Briefing do projeto*", ""];
+      function add(rotulo, texto) { if (texto) linhas.push("*" + rotulo + ":* " + texto); }
+      add("Nome", valor("b-nome"));
+      add("Empresa/marca", valor("b-empresa"));
+      add("Precisa de", servicos.join(", "));
+      add("Objetivo", valor("b-objetivo"));
+      add("Público", valor("b-publico"));
+      add("Identidade visual", identidade ? identidade.value : "");
+      add("Referências", valor("b-referencias"));
+      add("Prazo", valor("b-prazo"));
+      add("Quantidade", valor("b-quantidade"));
+      add("Investimento", valor("b-investimento"));
+      add("Dúvidas/observações", valor("b-duvidas"));
+      return linhas.join("\n");
+    }
+
+    function validar() {
+      aviso.style.display = "none";
+      if (!valor("b-nome")) { mostrarAviso("Informe o seu nome."); return false; }
+      if (!document.querySelector("#b-servicos input:checked")) { mostrarAviso("Marque pelo menos um serviço."); return false; }
+      return true;
+    }
+
+    document.getElementById("form-briefing").addEventListener("submit", function (ev) {
+      ev.preventDefault();
+      if (!validar()) return;
+      if (!numero) {
+        mostrarAviso("Este link está incompleto (sem o número de WhatsApp de destino). Use o botão \"Copiar respostas\" e envie a quem te enviou o link.");
+        return;
+      }
+      window.open("https://wa.me/" + numero + "?text=" + encodeURIComponent(montarMensagem()), "_blank");
+    });
+
+    document.getElementById("btn-copiar-respostas").addEventListener("click", function () {
+      if (!validar()) return;
+      var texto = montarMensagem();
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(texto).then(function () { mostrarAviso("Respostas copiadas! Cole na conversa com " + (profissional || "o profissional") + "."); aviso.className = "aviso b3"; });
+      } else {
+        window.prompt("Copie suas respostas:", texto);
+      }
+    });
+  })();
+</script>
+</body>
+</html>

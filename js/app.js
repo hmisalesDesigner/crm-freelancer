@@ -9,6 +9,8 @@ const RENDERIZADORES = {
   clientes: renderizarPaginaClientes,
   funil: renderizarPaginaFunil,
   orcamentos: renderizarPaginaOrcamentos,
+  pagamentos: renderizarPaginaPagamentos,
+  tempo: renderizarPaginaTempo,
   prospeccao: renderizarPaginaProspeccao,
   configuracoes: renderizarPaginaConfiguracoes,
 };
@@ -19,6 +21,8 @@ const TITULOS_PAGINA = {
   clientes: "Clientes",
   funil: "Funil de Vendas",
   orcamentos: "Orçamentos",
+  pagamentos: "Pagamentos",
+  tempo: "Tempo",
   prospeccao: "Prospecção",
   configuracoes: "Configurações",
 };
@@ -41,21 +45,23 @@ function atualizarPainel() {
   const mesAtual = hoje.getMonth();
   const anoAtual = hoje.getFullYear();
 
-  let faturamentoMes = ESTADO.configuracoes.clienteFixoMensal || 0;
-  ESTADO.clientes.forEach((c) => {
-    (c.historicoFinanceiro || []).forEach((h) => {
-      const data = new Date(h.data);
-      if (data.getMonth() === mesAtual && data.getFullYear() === anoAtual) {
-        faturamentoMes += Number(h.valor || 0);
-      }
-    });
-  });
+  const faturamentoMes = faturamentoPorMes(anoAtual)[mesAtual];
 
   const faturamentoAno = calcularFaturamentoAno();
   const limiteMei = ESTADO.configuracoes.limiteMeiAnual || 81000;
   const percentualMei = Math.min((faturamentoAno / limiteMei) * 100, 100);
 
   document.getElementById("painel-faturamento-mes").textContent = formatarMoeda(faturamentoMes);
+  const meta = Number(ESTADO.configuracoes.metaMensal || 0);
+  document.getElementById("painel-meta-texto").textContent = meta > 0
+    ? `Meta: ${formatarMoeda(meta)} (${Math.min((faturamentoMes / meta) * 100, 999).toFixed(0)}%)`
+    : "";
+
+  const totaisPg = totaisPagamentos();
+  document.getElementById("painel-a-receber").textContent = formatarMoeda(totaisPg.aReceber);
+  document.getElementById("painel-atrasados-texto").textContent = totaisPg.atrasados
+    ? `${totaisPg.atrasados} em atraso (${formatarMoeda(totaisPg.valorAtrasado)})`
+    : "Nada em atraso";
   document.getElementById("painel-faturamento-ano").textContent = formatarMoeda(faturamentoAno);
   document.getElementById("painel-mei-texto").textContent = `${percentualMei.toFixed(1)}% do limite de ${formatarMoeda(limiteMei)}`;
 
@@ -67,7 +73,7 @@ function atualizarPainel() {
     (c) => c.etapaFunil !== "Inativos"
   ).length;
 
-  document.getElementById("painel-orcamentos-abertos").textContent = ESTADO.orcamentos.filter((o) => !o.aceito).length;
+  document.getElementById("painel-orcamentos-abertos").textContent = ESTADO.orcamentos.filter((o) => !o.aceito && !o.recusado).length;
 
   const resumoFunil = document.getElementById("painel-funil-resumo");
   if (resumoFunil) {
@@ -95,14 +101,18 @@ function atualizarPainel() {
         const cliente = ESTADO.clientes.find((c) => c.id === o.clienteId);
         return `
           <tr>
-            <td>${cliente ? cliente.nome : "-"}</td>
-            <td><span class="selo ${o.aceito ? "aceito" : "enviado"}">${o.aceito ? "Aprovado" : "Em negociação"}</span></td>
-            <td>${(o.descricao || "-").slice(0, 30)}</td>
+            <td>${cliente ? escaparHtml(cliente.nome) : "-"}</td>
+            <td><span class="selo ${o.aceito ? "aceito" : o.recusado ? "recusado" : "enviado"}">${o.aceito ? "Aprovado" : o.recusado ? "Recusado" : "Em negociação"}</span></td>
+            <td>${escaparHtml((o.descricao || "-").slice(0, 30))}</td>
             <td>${formatarMoeda(o.valor)}</td>
           </tr>`;
       })
       .join("") || `<tr><td colspan="4" style="text-align:center; color:var(--cor-texto-suave);">Nenhum orçamento ainda.</td></tr>`;
   }
+
+  renderizarFollowUpsPainel();
+  renderizarGraficoFaturamento();
+  renderizarLembretes();
 }
 
 function renderizarPaginaConfiguracoes() {
@@ -120,6 +130,40 @@ function renderizarPaginaConfiguracoes() {
         <label>Limite anual MEI (R$)</label>
         <input type="number" id="cfg-limite-mei" value="${cfg.limiteMeiAnual}">
       </div>
+    </div>
+
+    <div class="form-grid" style="margin-top:14px;">
+      <div class="campo">
+        <label>Meta de faturamento mensal (R$) — 0 = sem meta</label>
+        <input type="number" id="cfg-meta-mensal" value="${cfg.metaMensal}">
+      </div>
+      <div class="campo">
+        <label>Dia em que o cliente fixo costuma pagar</label>
+        <input type="number" id="cfg-dia-fixo" min="1" max="31" value="${cfg.diaPagamentoFixo}">
+      </div>
+      <div class="campo">
+        <label>Alertar orçamento sem resposta após (dias)</label>
+        <input type="number" id="cfg-dias-followup" min="1" value="${cfg.diasFollowUp}">
+      </div>
+    </div>
+
+    <h3 style="margin-top:24px;">Dados profissionais (orçamento em PDF e briefing)</h3>
+    <div class="form-grid">
+      <div class="campo">
+        <label>Seu nome (aparece no orçamento)</label>
+        <input id="cfg-nome-prof" value="${escaparHtml(cfg.nomeProfissional)}">
+      </div>
+      <div class="campo">
+        <label>Seu WhatsApp com DDD (recebe o briefing)</label>
+        <input id="cfg-whatsapp" placeholder="44999999999" value="${escaparHtml(cfg.whatsapp)}">
+      </div>
+      <div class="campo">
+        <label>Validade do orçamento (dias)</label>
+        <input type="number" id="cfg-validade" min="1" value="${cfg.validadeOrcamentoDias}">
+      </div>
+    </div>
+    <div style="margin-top:12px;">
+      <button class="botao secundario" id="btn-copiar-link-briefing-cfg">🔗 Copiar link do briefing para clientes</button>
     </div>
 
     <h3 style="margin-top:24px;">Lembrete de investimento (B3)</h3>
@@ -180,11 +224,18 @@ function renderizarPaginaConfiguracoes() {
       estado.configuracoes.limiteMeiAnual = Number(document.getElementById("cfg-limite-mei").value) || 81000;
       estado.configuracoes.acaoB3.ticker = document.getElementById("cfg-ticker-b3").value.trim().toUpperCase();
       estado.configuracoes.acaoB3.percentualReserva = Number(document.getElementById("cfg-percentual-b3").value) || 0;
+      estado.configuracoes.metaMensal = Number(document.getElementById("cfg-meta-mensal").value) || 0;
+      estado.configuracoes.diaPagamentoFixo = Math.min(Math.max(parseInt(document.getElementById("cfg-dia-fixo").value, 10) || 5, 1), 31);
+      estado.configuracoes.diasFollowUp = Math.max(parseInt(document.getElementById("cfg-dias-followup").value, 10) || 3, 1);
+      estado.configuracoes.nomeProfissional = document.getElementById("cfg-nome-prof").value.trim();
+      estado.configuracoes.whatsapp = document.getElementById("cfg-whatsapp").value.replace(/\D/g, "");
+      estado.configuracoes.validadeOrcamentoDias = Math.max(parseInt(document.getElementById("cfg-validade").value, 10) || 7, 1);
     });
     alert("Configurações salvas!");
     atualizarPainel();
   });
 
+  document.getElementById("btn-copiar-link-briefing-cfg").addEventListener("click", copiarLinkBriefing);
   document.getElementById("btn-exportar-backup").addEventListener("click", exportarBackupJSON);
 
   document.getElementById("input-importar-backup").addEventListener("change", async (e) => {
@@ -198,6 +249,30 @@ function renderizarPaginaConfiguracoes() {
       alert("Erro ao importar backup: " + err.message);
     }
   });
+}
+
+function montarLinkBriefing() {
+  const cfg = ESTADO.configuracoes;
+  const base = location.origin + location.pathname.replace(/[^/]*$/, "") + "briefing.html";
+  const params = new URLSearchParams();
+  const numero = telefoneParaWhatsapp(cfg.whatsapp) || String(cfg.whatsapp || "").replace(/\D/g, "");
+  if (numero) params.set("w", numero);
+  if (cfg.nomeProfissional) params.set("n", cfg.nomeProfissional);
+  return base + "?" + params.toString();
+}
+
+async function copiarLinkBriefing() {
+  if (!ESTADO.configuracoes.whatsapp) {
+    alert("Informe seu WhatsApp em Configurações antes: é para lá que as respostas do briefing serão enviadas.");
+    return;
+  }
+  const link = montarLinkBriefing();
+  try {
+    await navigator.clipboard.writeText(link);
+    alert("Link do briefing copiado!\n\n" + link);
+  } catch {
+    prompt("Copie o link do briefing:", link);
+  }
 }
 
 function aplicarTema(tema) {
@@ -221,6 +296,8 @@ function inicializarApp() {
   const btnAtualizar = document.getElementById("btn-atualizar-site");
   if (btnAtualizar) btnAtualizar.addEventListener("click", recarregarSiteSemCache);
 
+  garantirMensalidadeFixa();
+  iniciarTickCronometro();
   atualizarPainel();
 }
 

@@ -23,25 +23,50 @@ const DADOS_PADRAO = {
     limiteMeiAnual: 81000,
     clienteFixoMensal: 3000,
     acaoB3: { ticker: "", percentualReserva: 10 },
+    nomeProfissional: "Henrique",
+    whatsapp: "",             // só números, com DDD (ex: 44999999999)
+    validadeOrcamentoDias: 7,
+    diasFollowUp: 3,          // dias sem resposta para alertar um orçamento enviado
+    metaMensal: 0,            // meta de faturamento mensal (0 = sem meta)
+    diaPagamentoFixo: 5,      // dia do mês em que o cliente fixo costuma pagar
+    dasPagos: [],             // meses (AAAA-MM) com DAS já pago
   },
   clientes: [],      // { id, nome, contato, cnpj, razaoSocial, capitalSocial, demanda, historicoFinanceiro, etapaFunil, criadoEm }
   orcamentos: [],     // { id, clienteId, descricao, modo, valor, dataEnvio, aceito }
   prospeccoes: [],    // { id, nome, tipo, local, contato, status, observacao }
-  demandasMensais: [], // { id, descricao, horas, data (ISO), clienteId? }
+  demandasMensais: [], // { id, descricao, horas, data (ISO), clienteId? }  (lançamentos manuais do modo "Por Mês")
+  pagamentos: [],      // { id, clienteId, orcamentoId?, descricao, valor, vencimento (AAAA-MM-DD), pago, dataPagamento, fixoMes? }
+  tarefas: [],         // { id, descricao, clienteId, orcamentoId, fixo, progresso: "comeco"|"metade"|"finalizada", criadaEm, finalizadaEm }
+  sessoesTempo: [],    // { id, tarefaId, inicio (ISO), fim (ISO), segundos }
+  cronometroAtivo: null, // { tarefaId, inicio (ISO) }
+  modelosOrcamento: [  // { id, nome, descricao, modo, quantidade, valorUnitario }
+    { id: "modelo-stories", nome: "5 stories/reels (R$ 40 por peça)", descricao: "Criação de 5 stories/reels para Instagram", modo: "peca", quantidade: 5, valorUnitario: 40 },
+  ],
 };
+
+function normalizarDados(dados) {
+  const padrao = estruturaClonada(DADOS_PADRAO);
+  const completo = { ...padrao, ...dados };
+  // mescla profunda das configurações (chaves novas aparecem em bases antigas)
+  completo.configuracoes = { ...padrao.configuracoes, ...(dados.configuracoes || {}) };
+  completo.configuracoes.acaoB3 = { ...padrao.configuracoes.acaoB3, ...((dados.configuracoes || {}).acaoB3 || {}) };
+  ["clientes", "orcamentos", "prospeccoes", "demandasMensais", "pagamentos", "tarefas", "sessoesTempo", "modelosOrcamento"].forEach((k) => {
+    if (!Array.isArray(completo[k])) completo[k] = padrao[k];
+  });
+  // migração: etapas renomeadas ("Em andamento" -> "Ativos", "Entregue" -> "Inativos")
+  completo.clientes.forEach((c) => {
+    if (c.etapaFunil === "Em andamento") c.etapaFunil = "Ativos";
+    if (c.etapaFunil === "Entregue") c.etapaFunil = "Inativos";
+  });
+  return completo;
+}
 
 function carregarDados() {
   try {
     const bruto = localStorage.getItem(CHAVE_DADOS);
     if (!bruto) return estruturaClonada(DADOS_PADRAO);
     const dados = JSON.parse(bruto);
-    // garante que chaves novas existam mesmo em bases antigas
-    const completo = { ...estruturaClonada(DADOS_PADRAO), ...dados };
-    // migração: etapas renomeadas ("Em andamento" -> "Ativos", "Entregue" -> "Inativos")
-    (completo.clientes || []).forEach((c) => {
-      if (c.etapaFunil === "Em andamento") c.etapaFunil = "Ativos";
-      if (c.etapaFunil === "Entregue") c.etapaFunil = "Inativos";
-    });
+    const completo = normalizarDados(dados);
     return completo;
   } catch (e) {
     console.error("Erro ao carregar dados, usando padrão.", e);
