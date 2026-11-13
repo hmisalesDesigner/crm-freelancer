@@ -14,7 +14,7 @@ até a entrega.
 - **CRM de clientes**: cadastro com histórico financeiro e consulta automática de
   CNPJ (razão social, capital social) via [BrasilAPI](https://brasilapi.com.br).
 - **Funil de vendas (kanban)**: Prospecção → Contato → Briefing → Orçamento enviado
-  → Fechado → Em andamento → Entregue.
+  → Fechado → Ativos → Inativos.
 - **Orçamentos**: geração de texto pronto para WhatsApp.
 - **Prospecção**: organizador de leads (clientes diretos, gráficas, freelancers parceiros),
   com busca inicial focada em Maringá-PR.

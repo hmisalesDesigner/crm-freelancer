@@ -129,7 +129,7 @@ function renderizarPaginaOrcamentos() {
           if (cliente) {
             cliente.historicoFinanceiro = cliente.historicoFinanceiro || [];
             cliente.historicoFinanceiro.push({ data: new Date().toISOString(), valor: orc.valor });
-            cliente.etapaFunil = "Em andamento";
+            cliente.etapaFunil = "Ativos";
           }
         });
         desenharTabelaOrcamentos();

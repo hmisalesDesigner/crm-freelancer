@@ -64,7 +64,7 @@ function atualizarPainel() {
   barra.className = "barra-progresso-interna" + (percentualMei > 90 ? " perigo" : percentualMei > 70 ? " alerta" : "");
 
   document.getElementById("painel-clientes-ativos").textContent = ESTADO.clientes.filter(
-    (c) => !["Entregue"].includes(c.etapaFunil)
+    (c) => c.etapaFunil !== "Inativos"
   ).length;
 
   document.getElementById("painel-orcamentos-abertos").textContent = ESTADO.orcamentos.filter((o) => !o.aceito).length;
@@ -229,6 +229,7 @@ function inicializarApp() {
  * em vez de usar a versão guardada em cache (equivalente a Ctrl+Shift+R).
  */
 async function recarregarSiteSemCache() {
+  document.getElementById("btn-atualizar-site")?.classList.add("girando");
   try {
     if (window.caches) {
       const nomes = await caches.keys();

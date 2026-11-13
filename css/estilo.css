@@ -233,7 +233,14 @@ body {
   cursor: pointer;
   font-weight: 600;
 }
-.botao:hover { opacity: .9; }
+.botao {
+  transition: transform .15s ease, box-shadow .15s ease, filter .15s ease, background .15s ease;
+  box-shadow: 0 2px 0 rgba(0,0,0,.25);
+}
+.botao:hover { filter: brightness(1.1); transform: translateY(-2px); box-shadow: 0 6px 14px rgba(0,0,0,.3); }
+.botao:active { transform: translateY(1px) scale(.97); box-shadow: 0 0 0 rgba(0,0,0,0); filter: brightness(.95); }
+.botao:focus-visible { outline: 2px solid var(--cor-primaria); outline-offset: 2px; }
+#btn-atualizar-site.girando .icone-girar { animation: girar .6s linear infinite; }
 .botao.sucesso { background: var(--cor-sucesso); color: #0b1f12; }
 .botao.secundario {
   background: transparent;
@@ -377,8 +384,8 @@ table.tabela tr:hover { background: var(--cor-primaria-clara); }
 .kanban-coluna[data-etapa="Briefing"]         { --cor-etapa: #a78bfa; }
 .kanban-coluna[data-etapa="Orçamento enviado"]{ --cor-etapa: #f59e0b; }
 .kanban-coluna[data-etapa="Fechado"]          { --cor-etapa: #22c55e; }
-.kanban-coluna[data-etapa="Em andamento"]     { --cor-etapa: var(--cor-primaria); }
-.kanban-coluna[data-etapa="Entregue"]         { --cor-etapa: #14b8a6; }
+.kanban-coluna[data-etapa="Ativos"]     { --cor-etapa: var(--cor-primaria); }
+.kanban-coluna[data-etapa="Inativos"]        { --cor-etapa: #9ca3af; }
 
 /* ===== Funil de vendas em barras (painel) ===== */
 .funil-barras { display: flex; flex-direction: column; gap: 14px; margin-top: 14px; }

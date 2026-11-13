@@ -36,7 +36,13 @@ function carregarDados() {
     if (!bruto) return estruturaClonada(DADOS_PADRAO);
     const dados = JSON.parse(bruto);
     // garante que chaves novas existam mesmo em bases antigas
-    return { ...estruturaClonada(DADOS_PADRAO), ...dados };
+    const completo = { ...estruturaClonada(DADOS_PADRAO), ...dados };
+    // migração: etapas renomeadas ("Em andamento" -> "Ativos", "Entregue" -> "Inativos")
+    (completo.clientes || []).forEach((c) => {
+      if (c.etapaFunil === "Em andamento") c.etapaFunil = "Ativos";
+      if (c.etapaFunil === "Entregue") c.etapaFunil = "Inativos";
+    });
+    return completo;
   } catch (e) {
     console.error("Erro ao carregar dados, usando padrão.", e);
     return estruturaClonada(DADOS_PADRAO);

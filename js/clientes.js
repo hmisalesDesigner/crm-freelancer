@@ -10,8 +10,8 @@ const ETAPAS_FUNIL = [
   "Briefing",
   "Orçamento enviado",
   "Fechado",
-  "Em andamento",
-  "Entregue",
+  "Ativos",
+  "Inativos",
 ];
 
 async function consultarCNPJ(cnpj) {

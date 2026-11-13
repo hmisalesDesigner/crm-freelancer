@@ -1,7 +1,7 @@
 /**
  * funil.js
  * Kanban do funil de vendas, baseado no fluxo real de briefing do Henrique:
- * Prospecção → Contato → Briefing → Orçamento enviado → Fechado → Em andamento → Entregue
+ * Prospecção → Contato → Briefing → Orçamento enviado → Fechado → Ativos → Inativos
  */
 
 function renderizarPaginaFunil() {
