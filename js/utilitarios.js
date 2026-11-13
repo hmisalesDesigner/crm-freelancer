@@ -22,6 +22,7 @@ function diasEntre(dataISOInicio, dataISOFim) {
 
 function paraDataISO(valor) {
   // aceita "AAAA-MM-DD" ou data/hora ISO completa
+  if (/^\d{4}-\d{2}-\d{2}$/.test(String(valor))) return String(valor); // só data: não converter fuso
   const d = new Date(valor);
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
 }

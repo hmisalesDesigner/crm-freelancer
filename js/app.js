@@ -190,6 +190,15 @@ function renderizarPaginaConfiguracoes() {
       <span class="card-sub" id="drive-status-config"></span>
     </div>
 
+    <h3 style="margin-top:28px;">Planilhas (.csv)</h3>
+    <p style="color:var(--cor-texto-suave); font-size:13px; max-width:600px;">Abrem no Excel ou Google Planilhas.</p>
+    <div style="display:flex; gap:8px; flex-wrap:wrap; margin-top:10px;">
+      <button class="botao secundario" data-csv="clientes">⬇️ Clientes</button>
+      <button class="botao secundario" data-csv="orcamentos">⬇️ Orçamentos</button>
+      <button class="botao secundario" data-csv="pagamentos">⬇️ Pagamentos</button>
+      <button class="botao secundario" data-csv="horas">⬇️ Horas trabalhadas</button>
+    </div>
+
     <h3 style="margin-top:28px;">Backup manual (.json)</h3>
     <p style="color:var(--cor-texto-suave); font-size:13px; max-width:600px;">
       Alternativa ao backup automático: exporte ou importe um arquivo .json manualmente.
@@ -236,6 +245,7 @@ function renderizarPaginaConfiguracoes() {
   });
 
   document.getElementById("btn-copiar-link-briefing-cfg").addEventListener("click", copiarLinkBriefing);
+  document.querySelectorAll("[data-csv]").forEach((b) => b.addEventListener("click", () => exportarCsv(b.dataset.csv)));
   document.getElementById("btn-exportar-backup").addEventListener("click", exportarBackupJSON);
 
   document.getElementById("input-importar-backup").addEventListener("change", async (e) => {

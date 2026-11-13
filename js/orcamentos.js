@@ -269,6 +269,7 @@ function renderizarPaginaOrcamentos() {
           <td style="white-space:nowrap;">
             ${!o.aceito && !o.recusado ? `<button class="botao sucesso pequeno" data-aceitar="${o.id}">Aceito</button> <button class="botao secundario pequeno" data-recusar="${o.id}">Recusado</button>` : ""}
             ${o.recusado ? `<button class="botao secundario pequeno" data-reabrir="${o.id}">Reabrir</button>` : ""}
+            ${o.aceito ? `<button class="botao secundario pequeno" data-contrato="${o.id}">📝 Contrato</button>` : ""}
             <button class="botao secundario pequeno" data-pdf="${o.id}">PDF</button>
           </td>
         </tr>`;
@@ -301,6 +302,7 @@ function renderizarPaginaOrcamentos() {
       });
       desenharTabelaOrcamentos(); atualizarPainel();
     }));
+    corpo.querySelectorAll("[data-contrato]").forEach((btn) => btn.addEventListener("click", () => gerarContratoOrcamento(ESTADO.orcamentos.find((x) => x.id === btn.dataset.contrato))));
     corpo.querySelectorAll("[data-pdf]").forEach((btn) => btn.addEventListener("click", () => {
       const o = ESTADO.orcamentos.find((x) => x.id === btn.dataset.pdf);
       gerarPdfOrcamento({ clienteId: o.clienteId, descricao: o.descricao, modo: o.modo, quantidade: o.quantidade, valorUnitario: o.valorUnitario, total: o.valor, data: o.dataEnvio });

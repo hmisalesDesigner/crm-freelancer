@@ -147,7 +147,7 @@ function renderizarPaginaPagamentos() {
           <td><span class="selo ${st}">${rotuloStatusPagamento(st)}</span></td>
           <td style="white-space:nowrap;">
             ${p.pago
-              ? `<button class="botao secundario pequeno" data-desfazer="${p.id}">Desfazer</button>`
+              ? `<button class="botao secundario pequeno" data-recibo="${p.id}">🧾 Recibo</button> <button class="botao secundario pequeno" data-desfazer="${p.id}">Desfazer</button>`
               : `<button class="botao sucesso pequeno" data-pagar="${p.id}">Marcar pago</button>`}
             ${p.fixoMes ? "" : `<button class="botao perigo pequeno" data-excluir="${p.id}">Excluir</button>`}
           </td>
@@ -158,6 +158,7 @@ function renderizarPaginaPagamentos() {
       atualizarEstado((e) => { const p = e.pagamentos.find((x) => x.id === b.dataset.pagar); p.pago = true; p.dataPagamento = hojeISO(); });
       desenhar(); atualizarPainel();
     }));
+    corpo.querySelectorAll("[data-recibo]").forEach((b) => b.addEventListener("click", () => gerarReciboPagamento(ESTADO.pagamentos.find((x) => x.id === b.dataset.recibo))));
     corpo.querySelectorAll("[data-desfazer]").forEach((b) => b.addEventListener("click", () => {
       atualizarEstado((e) => { const p = e.pagamentos.find((x) => x.id === b.dataset.desfazer); p.pago = false; p.dataPagamento = null; });
       desenhar(); atualizarPainel();
