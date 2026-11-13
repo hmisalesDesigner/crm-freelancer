@@ -4,7 +4,15 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>CRM Freelancer</title>
-<link rel="stylesheet" href="css/estilo.css">
+<script>
+  // Versão do site: muda a cada publicação (e a cada clique em "Atualizar") para o navegador nunca reaproveitar arquivos antigos.
+  window.VERSAO_SITE = "20261113a";
+  (function () {
+    var v = new URLSearchParams(location.search).get("_v") || window.VERSAO_SITE;
+    window.__v = encodeURIComponent(v);
+    document.write('<link rel="stylesheet" href="css/estilo.css?v=' + window.__v + '">');
+  })();
+</script>
 <script src="https://accounts.google.com/gsi/client" async defer></script>
 </head>
 <body>
@@ -119,22 +127,11 @@
     </main>
   </div>
 
-  <script src="js/dados.js"></script>
-  <script src="js/utilitarios.js"></script>
-  <script src="js/calculadora.js"></script>
-  <script src="js/clientes.js"></script>
-  <script src="js/funil.js"></script>
-  <script src="js/orcamentos.js"></script>
-  <script src="js/prospeccao.js"></script>
-  <script src="js/pagamentos.js"></script>
-  <script src="js/tempo.js"></script>
-  <script src="js/followup.js"></script>
-  <script src="js/grafico.js"></script>
-  <script src="js/lembretes.js"></script>
-  <script src="js/exportar.js"></script>
-<script src="js/documentos.js"></script>
-<script src="js/app.js"></script>
-  <script src="js/login.js"></script>
-  <script src="js/google-drive.js"></script>
+  <script>
+    (function () {
+      var arquivos = ["js/dados.js", "js/utilitarios.js", "js/calculadora.js", "js/clientes.js", "js/funil.js", "js/orcamentos.js", "js/prospeccao.js", "js/pagamentos.js", "js/tempo.js", "js/followup.js", "js/grafico.js", "js/lembretes.js", "js/exportar.js", "js/documentos.js", "js/app.js", "js/login.js", "js/google-drive.js"];
+      arquivos.forEach(function (a) { document.write('<script src="' + a + '?v=' + window.__v + '"><\/script>'); });
+    })();
+  </script>
 </body>
 </html>
