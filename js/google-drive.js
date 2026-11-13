@@ -337,5 +337,6 @@ function agendarSincronizacaoComDrive() {
 }
 
 restaurarTokenDriveDaSessao();
-if (driveConectado()) localStorage.setItem(CHAVE_DRIVE_AUTORIZADO, "1");
+// quem já conectou antes (arquivo do Drive conhecido) ou tem token vigente conta como autorizado
+if (driveConectado() || (driveArquivoId && localStorage.getItem(CHAVE_DRIVE_AUTORIZADO) === null)) localStorage.setItem(CHAVE_DRIVE_AUTORIZADO, "1");
 document.addEventListener("DOMContentLoaded", () => { atualizarStatusDrive(); iniciarMonitorDrive(); });
