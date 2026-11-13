@@ -161,10 +161,18 @@ function renderizarPaginaConfiguracoes() {
 
   const btnConectarDrive = document.getElementById("btn-conectar-drive");
   if (btnConectarDrive) {
-    btnConectarDrive.addEventListener("click", conectarDrive);
-    if (typeof driveConectado === "function" && driveConectado()) {
+    btnConectarDrive.addEventListener("click", () => {
+      if (driveConectado()) {
+        atualizarStatusDrive("☁️ Sincronizando...");
+        salvarNoDrive(ESTADO);
+      } else {
+        conectarDrive();
+      }
+    });
+    if (driveConectado()) {
       document.getElementById("drive-status-config").textContent = "🔗 Conectado ao Google Drive";
     }
+    atualizarBotaoDrive();
   }
 
   document.getElementById("btn-salvar-config-geral").addEventListener("click", () => {

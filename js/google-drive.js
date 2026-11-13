@@ -48,6 +48,19 @@ function atualizarStatusDrive(texto) {
   if (el) el.textContent = texto;
   const elCfg = document.getElementById("drive-status-config");
   if (elCfg) elCfg.textContent = texto;
+  atualizarBotaoDrive();
+}
+
+function atualizarBotaoDrive() {
+  const btn = document.getElementById("btn-conectar-drive");
+  if (!btn) return;
+  if (driveConectado()) {
+    btn.textContent = "✅ Conectado — Sincronizar agora";
+    btn.classList.add("secundario");
+  } else {
+    btn.textContent = "🔗 Conectar ao Google Drive";
+    btn.classList.remove("secundario");
+  }
 }
 
 function inicializarDriveTokenClient() {
