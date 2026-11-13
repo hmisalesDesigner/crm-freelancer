@@ -214,19 +214,41 @@ function renderizarPaginaCalculadora() {
       document.getElementById("bloco-modo-hora").style.display = modo === "hora" ? "block" : "none";
       document.getElementById("bloco-modo-projeto").style.display = modo === "projeto" ? "block" : "none";
       document.getElementById("bloco-modo-peca").style.display = modo === "peca" ? "block" : "none";
+      document.getElementById("bloco-modo-mes").style.display = modo === "mes" ? "block" : "none";
       document.getElementById("resultado-visivel-hora").style.display = modo === "hora" ? "block" : "none";
       document.getElementById("resultado-visivel-projeto").style.display = modo === "projeto" ? "block" : "none";
       document.getElementById("resultado-visivel-peca").style.display = modo === "peca" ? "block" : "none";
+      document.getElementById("resultado-visivel-mes").style.display = modo === "mes" ? "block" : "none";
+      if (modo === "mes") recalcularModoMes();
     });
   });
 
   container.querySelectorAll("input").forEach((input) => input.addEventListener("input", recalcular));
+
+  document.getElementById("btn-add-demanda-mes").addEventListener("click", () => {
+    const descricao = document.getElementById("mes-nova-descricao").value.trim();
+    const horasNova = Number(document.getElementById("mes-nova-horas").value) || 0;
+    if (!descricao) { alert("Descreva a demanda."); return; }
+    if (horasNova <= 0) { alert("Informe quantas horas foram gastas."); return; }
+    atualizarEstado((estado) => {
+      estado.demandasMensais.push({
+        id: gerarId(),
+        descricao,
+        horas: horasNova,
+        data: new Date().toISOString(),
+      });
+    });
+    document.getElementById("mes-nova-descricao").value = "";
+    document.getElementById("mes-nova-horas").value = "1";
+    recalcularModoMes();
+  });
 
   document.getElementById("btn-salvar-config-calc").addEventListener("click", () => {
     atualizarEstado((estado) => {
       estado.configuracoes.salarioDesejado = Number(document.getElementById("calc-salario").value) || 0;
       estado.configuracoes.custosFixosMensais = Number(document.getElementById("calc-custos").value) || 0;
       estado.configuracoes.horasPagasPorMes = Number(document.getElementById("calc-horas").value) || 0;
+      estado.configuracoes.clienteFixoMensal = Number(document.getElementById("calc-valor-fixo-mes").value) || 0;
     });
     alert("Configuração padrão salva!");
   });
