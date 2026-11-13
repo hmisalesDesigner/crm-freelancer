@@ -545,8 +545,6 @@ html:not([data-tema="escuro"]) .selo.enviado { background: #fef3c7; color: #9240
 @media (max-width: 900px) {
   .cards-resumo { grid-template-columns: repeat(2, 1fr); }
   .form-grid { grid-template-columns: 1fr; }
-  .barra-lateral { width: 70px; }
-  .barra-lateral .menu-item span, .logo span { display: none; }
 }
 
 /* =====================================================================
@@ -675,3 +673,33 @@ html:not([data-tema="escuro"]) .selo.recusado { background: #e5e7eb; color: #4b5
   margin-bottom: 16px; padding: 10px 14px; border-radius: 10px; border: 1px solid var(--cor-perigo);
   background: var(--cor-fundo-painel); font-size: 13px; }
 .faixa-drive.visivel { display: flex; }
+
+/* Funil: contagem, mover por seletor (celular) */
+.kanban-contagem { color: var(--cor-texto-suave); font-weight: 500; font-size: 12px; }
+.mover-etapa { margin-top: 6px; width: 100%; font-size: 11px; padding: 3px 4px; background: transparent;
+  color: var(--cor-texto-suave); border: 1px solid var(--cor-borda); border-radius: 6px; cursor: pointer; }
+
+/* Anotações do cliente */
+.lista-notas { display: flex; flex-direction: column; gap: 6px; margin-top: 10px; max-height: 180px; overflow-y: auto; }
+.nota-item { display: flex; align-items: flex-start; gap: 10px; padding: 8px 10px; border: 1px solid var(--cor-borda); border-radius: 8px; font-size: 13px; }
+.nota-data { color: var(--cor-texto-suave); font-size: 12px; white-space: nowrap; }
+.nota-texto { flex: 1; word-break: break-word; }
+
+/* ===== Celular ===== */
+@media (max-width: 760px) {
+  .app { flex-direction: column; }
+  .barra-lateral { width: 100%; flex-direction: row; align-items: center; gap: 6px; padding: 8px 10px; border-right: 0;
+    border-bottom: 1px solid var(--cor-borda); position: sticky; top: 0; z-index: 30; overflow-x: auto; }
+  .barra-lateral .logo { display: none; }
+  .menu { flex-direction: row; flex: none; gap: 4px; }
+  .menu-item { white-space: nowrap; padding: 8px 12px; width: auto; }
+  .barra-lateral .btn-tema { flex: none; white-space: nowrap; margin: 0; padding: 8px 10px; }
+  .conteudo { padding: 16px 14px; }
+  .topo { flex-wrap: wrap; gap: 8px; }
+  .cards-resumo { grid-template-columns: 1fr 1fr; gap: 10px; }
+  .tabela { display: block; overflow-x: auto; white-space: nowrap; }
+  .kanban { overflow-x: auto; }
+  .orc-layout { grid-template-columns: 1fr; }
+  .form-grid { grid-template-columns: 1fr !important; }
+  .resultado-destaque { max-width: none; }
+}

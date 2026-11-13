@@ -79,6 +79,14 @@ function renderizarPaginaClientes() {
             <label>Demanda</label>
             <textarea id="cli-demanda"></textarea>
           </div>
+          <div class="campo" style="margin-top:14px; max-width:700px;">
+            <label>Anotações (histórico de conversas e combinados)</label>
+            <div style="display:flex; gap:6px;">
+              <input id="cli-nota-texto" placeholder="Ex: pediu mais 2 reels; prefere falar à tarde">
+              <button class="botao secundario pequeno" id="btn-add-nota" type="button">+ Anotar</button>
+            </div>
+            <div id="cli-notas" class="lista-notas"></div>
+          </div>
           <div id="cli-cnpj-status" class="aviso" style="display:none; max-width:700px;"></div>
         </div>
 
@@ -96,6 +104,21 @@ function renderizarPaginaClientes() {
 
   let clienteEditandoId = null;
   let fotoAtualBase64 = "";
+  let notasAtuais = [];
+
+  function desenharNotas() {
+    const alvo = document.getElementById("cli-notas");
+    alvo.innerHTML = [...notasAtuais].sort((a, b) => b.data.localeCompare(a.data)).map((n) => `
+      <div class="nota-item">
+        <span class="nota-data">${new Date(n.data).toLocaleDateString("pt-BR")}</span>
+        <span class="nota-texto">${escaparHtml(n.texto)}</span>
+        <button class="botao perigo pequeno" type="button" data-del-nota="${n.id}" aria-label="Apagar anotação">✕</button>
+      </div>`).join("") || `<span class="card-sub">Nenhuma anotação ainda.</span>`;
+    alvo.querySelectorAll("[data-del-nota]").forEach((b) => b.addEventListener("click", () => {
+      notasAtuais = notasAtuais.filter((n) => n.id !== b.dataset.delNota);
+      desenharNotas();
+    }));
+  }
 
   function atualizarResumoLateral() {
     document.getElementById("resumo-cli-nome").textContent = document.getElementById("cli-nome").value || "—";
@@ -170,9 +193,23 @@ function renderizarPaginaClientes() {
     document.getElementById("cli-proximo").value = cliente?.proximoContato || "";
     document.getElementById("cli-cnpj-status").style.display = "none";
     fotoAtualBase64 = cliente?.foto || "";
+    notasAtuais = (cliente?.notas || []).map((n) => ({ ...n }));
+    document.getElementById("cli-nota-texto").value = "";
+    desenharNotas();
     atualizarPreviewFoto();
     atualizarResumoLateral();
   }
+
+  function adicionarNota() {
+    const campo = document.getElementById("cli-nota-texto");
+    const texto = campo.value.trim();
+    if (!texto) return;
+    notasAtuais.push({ id: gerarId(), data: new Date().toISOString(), texto });
+    campo.value = "";
+    desenharNotas();
+  }
+  document.getElementById("btn-add-nota").addEventListener("click", adicionarNota);
+  document.getElementById("cli-nota-texto").addEventListener("keydown", (e) => { if (e.key === "Enter") { e.preventDefault(); adicionarNota(); } });
 
   document.getElementById("btn-novo-cliente").addEventListener("click", () => abrirModal(null));
   document.getElementById("btn-copiar-link-briefing").addEventListener("click", copiarLinkBriefing);
@@ -215,6 +252,7 @@ function renderizarPaginaClientes() {
     const nome = document.getElementById("cli-nome").value.trim();
     if (!nome) { alert("Informe o nome do cliente."); return; }
 
+    adicionarNota(); // não perde a anotação digitada e ainda não adicionada
     const capitalTexto = document.getElementById("cli-capital").value;
     const capitalNumero = Number(capitalTexto.replace(/[^\d,]/g, "").replace(",", ".")) || 0;
 
@@ -231,6 +269,7 @@ function renderizarPaginaClientes() {
           demanda: document.getElementById("cli-demanda").value,
           proximoContato: document.getElementById("cli-proximo").value,
           foto: fotoAtualBase64,
+          notas: notasAtuais,
         });
       } else {
         estado.clientes.push({
@@ -245,6 +284,7 @@ function renderizarPaginaClientes() {
           proximoContato: document.getElementById("cli-proximo").value,
           foto: fotoAtualBase64,
           historicoFinanceiro: [],
+          notas: notasAtuais,
           criadoEm: new Date().toISOString(),
         });
       }

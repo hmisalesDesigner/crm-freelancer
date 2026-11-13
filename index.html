@@ -4,9 +4,13 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>CRM Freelancer</title>
+<meta name="theme-color" content="#e8710a">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icone-192.png">
+<link rel="icon" type="image/png" href="icone-192.png">
 <script>
   // Versão do site: muda a cada publicação (e a cada clique em "Atualizar") para o navegador nunca reaproveitar arquivos antigos.
-  window.VERSAO_SITE = "20261113a";
+  window.VERSAO_SITE = "20261113b";
   (function () {
     var v = new URLSearchParams(location.search).get("_v") || window.VERSAO_SITE;
     window.__v = encodeURIComponent(v);
@@ -128,6 +132,7 @@
   </div>
 
   <script>
+    if ("serviceWorker" in navigator && (location.protocol === "https:" || location.hostname === "localhost")) navigator.serviceWorker.register("sw.js").catch(function () {});
     (function () {
       var arquivos = ["js/dados.js", "js/utilitarios.js", "js/calculadora.js", "js/clientes.js", "js/funil.js", "js/orcamentos.js", "js/prospeccao.js", "js/pagamentos.js", "js/tempo.js", "js/followup.js", "js/grafico.js", "js/lembretes.js", "js/exportar.js", "js/documentos.js", "js/app.js", "js/login.js", "js/google-drive.js"];
       arquivos.forEach(function (a) { document.write('<script src="' + a + '?v=' + window.__v + '"><\/script>'); });

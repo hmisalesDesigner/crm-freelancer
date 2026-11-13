@@ -11,7 +11,7 @@ function renderizarPaginaFunil() {
     <div class="kanban" id="kanban-funil">
       ${ETAPAS_FUNIL.map((etapa) => `
         <div class="kanban-coluna" data-etapa="${etapa}">
-          <h4>${etapa}</h4>
+          <h4>${etapa} <span class="kanban-contagem" data-contagem="${etapa}"></span></h4>
           <div class="kanban-lista" data-etapa-lista="${etapa}"></div>
         </div>
       `).join("")}
@@ -22,6 +22,8 @@ function renderizarPaginaFunil() {
     ETAPAS_FUNIL.forEach((etapa) => {
       const lista = container.querySelector(`[data-etapa-lista="${etapa}"]`);
       const clientesDaEtapa = ESTADO.clientes.filter((c) => c.etapaFunil === etapa);
+      const totalEtapa = clientesDaEtapa.reduce((s, c) => s + (c.historicoFinanceiro || []).reduce((x, h) => x + Number(h.valor || 0), 0), 0);
+      container.querySelector(`[data-contagem="${etapa}"]`).textContent = clientesDaEtapa.length ? `· ${clientesDaEtapa.length}` : "";
       lista.innerHTML = clientesDaEtapa
         .map((c) => {
           const total = (c.historicoFinanceiro || []).reduce((s, h) => s + Number(h.valor || 0), 0);
@@ -33,14 +35,21 @@ function renderizarPaginaFunil() {
             <div class="kanban-card" draggable="true" data-cliente-id="${c.id}">
               <div class="avatar-iniciais">${avatar}</div>
               <div class="kanban-card-info">
-                <b>${c.nome}</b>
-                <span>${(c.demanda || "").slice(0, 26)}</span>
+                <b>${escaparHtml(c.nome)}</b>
+                <span>${escaparHtml((c.demanda || "").slice(0, 26))}</span>
                 <div class="valor-card">${formatarMoeda(total)}</div>
+                <select class="mover-etapa" data-mover="${c.id}" aria-label="Mover para etapa">
+                  ${ETAPAS_FUNIL.map((e) => `<option value="${e}" ${e === c.etapaFunil ? "selected" : ""}>${e === c.etapaFunil ? "↔ Mover…" : e}</option>`).join("")}
+                </select>
               </div>
             </div>`;
         })
         .join("");
 
+      lista.querySelectorAll("[data-mover]").forEach((sel) => sel.addEventListener("change", () => {
+        atualizarEstado((estado) => { const c = estado.clientes.find((x) => x.id === sel.dataset.mover); if (c) c.etapaFunil = sel.value; });
+        desenharKanban(); atualizarPainel();
+      }));
       lista.querySelectorAll(".kanban-card").forEach((card) => {
         card.addEventListener("dragstart", (e) => {
           e.dataTransfer.setData("text/plain", card.dataset.clienteId);
