@@ -26,6 +26,8 @@ const DADOS_PADRAO = {
     nomeProfissional: "Henrique",
     whatsapp: "",             // só números, com DDD (ex: 44999999999)
     validadeOrcamentoDias: 7,
+    leadSeguidoresMin: 500,   // faixa ideal de seguidores para o score dos leads
+    leadSeguidoresMax: 20000,
     diasFollowUp: 3,          // dias sem resposta para alertar um orçamento enviado
     metaMensal: 0,            // meta de faturamento mensal (0 = sem meta)
     diaPagamentoFixo: 5,      // dia do mês em que o cliente fixo costuma pagar
@@ -33,6 +35,7 @@ const DADOS_PADRAO = {
   },
   clientes: [],      // { id, nome, contato, cnpj, razaoSocial, capitalSocial, demanda, historicoFinanceiro, etapaFunil, criadoEm }
   orcamentos: [],     // { id, clienteId, descricao, modo, valor, dataEnvio, aceito }
+  leads: [],          // sistema de prospecção (ver prospeccao.js)
   prospeccoes: [],    // { id, nome, tipo, local, contato, status, observacao }
   demandasMensais: [], // { id, descricao, horas, data (ISO), clienteId? }  (lançamentos manuais do modo "Por Mês")
   pagamentos: [],      // { id, clienteId, orcamentoId?, descricao, valor, vencimento (AAAA-MM-DD), pago, dataPagamento, fixoMes? }
@@ -50,9 +53,25 @@ function normalizarDados(dados) {
   // mescla profunda das configurações (chaves novas aparecem em bases antigas)
   completo.configuracoes = { ...padrao.configuracoes, ...(dados.configuracoes || {}) };
   completo.configuracoes.acaoB3 = { ...padrao.configuracoes.acaoB3, ...((dados.configuracoes || {}).acaoB3 || {}) };
-  ["clientes", "orcamentos", "prospeccoes", "demandasMensais", "pagamentos", "tarefas", "sessoesTempo", "modelosOrcamento"].forEach((k) => {
+  ["clientes", "orcamentos", "prospeccoes", "leads", "demandasMensais", "pagamentos", "tarefas", "sessoesTempo", "modelosOrcamento"].forEach((k) => {
     if (!Array.isArray(completo[k])) completo[k] = padrao[k];
   });
+  // migração: leads antigos da lista simples de prospecção viram leads do novo sistema (uma vez)
+  if (!Array.isArray(dados.leads) && completo.prospeccoes.length) {
+    const digitos = (v) => String(v || "").replace(/\D/g, "");
+    const zap = (v) => { const n = digitos(v); return n.length >= 10 && n.length <= 11 ? "55" + n : n.length >= 12 && n.length <= 13 ? n : ""; };
+    const hoje = new Date(); const hojeIso = `${hoje.getFullYear()}-${String(hoje.getMonth() + 1).padStart(2, "0")}-${String(hoje.getDate()).padStart(2, "0")}`;
+    completo.leads = completo.prospeccoes.map((p) => {
+      const contato = String(p.contato || "");
+      const whatsapp = zap(contato), email = /@/.test(contato) ? contato : "";
+      return {
+        id: p.id, perfil: "", nome: p.nome, tipo: p.tipo === "Freelancer parceiro" ? "Social Media" : "Empresa", nicho: "",
+        cidade: p.local || "", seguidores: null, publicacoes: null, ultimoPost: "", postsPorSemana: null, curtidasMedias: null, visual: "",
+        whatsapp, email, site: "", status: "Novo", proximoContato: "",
+        obs: [p.observacao, !whatsapp && !email ? contato : ""].filter(Boolean).join(" · "), capturadoEm: hojeIso,
+      };
+    });
+  }
   // migração: etapas renomeadas ("Em andamento" -> "Ativos", "Entregue" -> "Inativos")
   completo.clientes.forEach((c) => {
     if (c.etapaFunil === "Em andamento") c.etapaFunil = "Ativos";
@@ -70,6 +89,8 @@ function carregarDados() {
     return completo;
   } catch (e) {
     console.error("Erro ao carregar dados, usando padrão.", e);
+    // guarda uma cópia dos dados originais para não perdê-los se o próximo salvamento sobrescrever
+    try { localStorage.setItem(CHAVE_DADOS + "_backup_erro", localStorage.getItem(CHAVE_DADOS) || ""); } catch {}
     return estruturaClonada(DADOS_PADRAO);
   }
 }

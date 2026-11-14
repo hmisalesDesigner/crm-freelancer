@@ -55,6 +55,14 @@ const EXPORTACOES_CSV = {
         rotuloStatusPagamento(statusPagamento(p)), dataCsv(p.dataPagamento)])
     ),
   },
+  leads: {
+    arquivo: "leads",
+    montar: () => gerarCsv(
+      ["@ do perfil", "Nome", "Tipo", "Nicho", "Cidade", "Seguidores", "Publicações", "Último post", "Posts/semana", "Curtidas médias", "Engajamento (%)", "Visual", "WhatsApp", "E-mail", "Site", "Score", "Prioridade", "Status", "Próximo follow-up", "Capturado em", "Observações"],
+      ESTADO.leads.map((l) => { const s = calcularScoreLead(l); return [l.perfil, l.nome, l.tipo, l.nicho, l.cidade, l.seguidores, l.publicacoes, dataCsv(l.ultimoPost),
+        l.postsPorSemana, l.curtidasMedias, numeroCsv(engajamentoLead(l)), l.visual, l.whatsapp, l.email, l.site, s, prioridadeLead(s), l.status, dataCsv(l.proximoContato), dataCsv(l.capturadoEm), l.obs]; })
+    ),
+  },
   horas: {
     arquivo: "horas-trabalhadas",
     montar: () => gerarCsv(

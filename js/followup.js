@@ -24,6 +24,18 @@ function obterFollowUps() {
     }
   });
 
+  ESTADO.leads.forEach((l) => {
+    if (STATUS_LEAD_ENCERRADOS.includes(l.status) || !l.proximoContato || l.proximoContato > hoje) return;
+    const atraso = diasEntre(l.proximoContato, hoje);
+    itens.push({
+      tipo: "lead", leadId: l.id, atraso,
+      titulo: l.nome || l.perfil,
+      detalhe: atraso === 0 ? `Lead (${l.status}): follow-up hoje` : `Lead (${l.status}): follow-up atrasado há ${atraso} dia(s)`,
+      contato: l.whatsapp,
+      mensagem: `Olá${l.nome ? ", " + l.nome : ""}! Tudo bem? Passando para saber se conseguiu ver minha mensagem sobre artes e vídeos para as redes de vocês.`,
+    });
+  });
+
   ESTADO.orcamentos.forEach((o) => {
     if (o.aceito || o.recusado) return;
     const base = o.ultimoFollowUp || paraDataISO(o.dataEnvio);
@@ -60,7 +72,7 @@ function renderizarFollowUpsPainel() {
     return `
       <div class="item-alerta">
         <div style="min-width:0;">
-          <b>${it.tipo === "contato" ? "📞" : "📄"} ${escaparHtml(it.titulo)}</b>
+          <b>${it.tipo === "contato" ? "📞" : it.tipo === "lead" ? "🔎" : "📄"} ${escaparHtml(it.titulo)}</b>
           <span class="item-alerta-detalhe">${escaparHtml(it.detalhe)}</span>
         </div>
         <div style="display:flex; gap:6px; flex-shrink:0;">
@@ -73,7 +85,10 @@ function renderizarFollowUpsPainel() {
   alvo.querySelectorAll("[data-followup]").forEach((btn) => btn.addEventListener("click", () => {
     const it = itens[Number(btn.dataset.followup)];
     atualizarEstado((e) => {
-      if (it.tipo === "contato") {
+      if (it.tipo === "lead") {
+        const l = e.leads.find((x) => x.id === it.leadId);
+        if (l) { l.ultimoContato = hojeISO(); l.proximoContato = ""; }
+      } else if (it.tipo === "contato") {
         const c = e.clientes.find((x) => x.id === it.clienteId);
         if (c) { c.ultimoContato = hojeISO(); c.proximoContato = ""; }
       } else {

@@ -196,6 +196,7 @@ function renderizarPaginaConfiguracoes() {
       <button class="botao secundario" data-csv="clientes">⬇️ Clientes</button>
       <button class="botao secundario" data-csv="orcamentos">⬇️ Orçamentos</button>
       <button class="botao secundario" data-csv="pagamentos">⬇️ Pagamentos</button>
+      <button class="botao secundario" data-csv="leads">⬇️ Leads</button>
       <button class="botao secundario" data-csv="horas">⬇️ Horas trabalhadas</button>
     </div>
 
