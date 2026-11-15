@@ -45,7 +45,6 @@ const DADOS_PADRAO = {
     { id: "desp-pc-i7-6700", descricao: "Computador Syma i7-6700 (NF-e 828503, comprado pelo pai; valor com IPI)", categoria: "Equipamento", tipo: "equipamento", valor: 5077.8, dataCompra: "2016-11-25", vidaUtilMeses: 60 },
     { id: "desp-ssd-kingston-240", descricao: "SSD Kingston 240 GB SUV400 (NF-e 828503)", categoria: "Equipamento", tipo: "equipamento", valor: 429.8, dataCompra: "2016-11-25", vidaUtilMeses: 60 },
     { id: "desp-monitor-lg-23mp55", emReserva: true, descricao: "Monitor LG 23\" 23MP55HQ IPS (NF-e 828503)", categoria: "Equipamento", tipo: "equipamento", valor: 887.9, dataCompra: "2016-11-25", vidaUtilMeses: 60 },
-    { id: "desp-memoria-8gb", descricao: "Memória 8 GB DDR4 2400 Kingston (NF-e 912373, já com desconto)", categoria: "Equipamento", tipo: "equipamento", valor: 297.79, dataCompra: "2019-09-05", vidaUtilMeses: 60 },
     { id: "desp-memoria-fury-8gb", descricao: "Memória 8 GB DDR4 2400 Kingston Fury (NF-e 912413, já com desconto)", categoria: "Equipamento", tipo: "equipamento", valor: 297.79, dataCompra: "2019-09-05", vidaUtilMeses: 60 },
     { id: "desp-wacom-intuos", emReserva: true, descricao: "Mesa digitalizadora Wacom Intuos P CTL4100 (NF-e 912373, já com desconto)", categoria: "Equipamento", tipo: "equipamento", valor: 520.21, dataCompra: "2019-09-05", vidaUtilMeses: 60 },
     { id: "desp-energia-trabalho", estimado: true, descricao: "Energia elétrica do trabalho (PC 8 h/dia + metade dos 2 ventiladores 24 h/dia, a ~R$ 1,00/kWh)", categoria: "Internet e energia", tipo: "mensal", valor: 107, dataCompra: "", vidaUtilMeses: 0 },
@@ -103,6 +102,8 @@ function normalizarDados(dados) {
     ["desp-monitor-lg-23mp55", "desp-wacom-intuos", "desp-monitor-m2470"].forEach((id) => { const d = completo.despesas.find((x) => x.id === id); if (d) d.emReserva = true; });
   }
   completo.reservaDespesasAplicada = true;
+  if (!dados.memoriaKvrRemovida) completo.despesas = completo.despesas.filter((d) => d.id !== "desp-memoria-8gb"); // KVR24N17 não está no PC (conferido via PowerShell)
+  completo.memoriaKvrRemovida = true;
   completo.sementesDespesas = padrao.despesas.map((d) => d.id);
   // migração: etapas renomeadas ("Em andamento" -> "Ativos", "Entregue" -> "Inativos")
   completo.clientes.forEach((c) => {
