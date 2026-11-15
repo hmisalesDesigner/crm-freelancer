@@ -10,6 +10,7 @@ const CATEGORIAS_DESPESA = ["Equipamento", "Software e assinaturas", "Internet e
 
 function custoMensalDespesa(d) {
   const v = Number(d.valor) || 0;
+  if (d.emReserva) return 0; // peça guardada, sem uso: conta no investido, mas não no custo mensal
   if (d.tipo === "equipamento") return v / Math.max(Number(d.vidaUtilMeses) || 60, 1);
   return v;
 }
@@ -51,6 +52,7 @@ function renderizarPaginaDespesas() {
       <div class="campo"><label id="desp-rotulo-valor">Valor por mês (R$)</label><input type="number" id="desp-valor" min="0" step="0.01"></div>
       <div class="campo" id="desp-box-data" style="display:none;"><label>Data da compra</label><input type="date" id="desp-data"></div>
       <div class="campo" id="desp-box-vida" style="display:none;"><label>Vida útil (meses)</label><input type="number" id="desp-vida" value="60" min="1"></div>
+      <div class="campo" id="desp-box-reserva" style="display:none;"><label>Em uso?</label><label style="font-weight:normal;"><input type="checkbox" id="desp-reserva"> Reserva (guardado, não uso hoje)</label></div>
     </div>
     <div style="display:flex; gap:8px; margin-top:12px;">
       <button class="botao" id="btn-salvar-despesa">Adicionar</button>
@@ -71,6 +73,7 @@ function renderizarPaginaDespesas() {
     const eq = $("desp-tipo").value === "equipamento";
     $("desp-box-data").style.display = eq ? "" : "none";
     $("desp-box-vida").style.display = eq ? "" : "none";
+    $("desp-box-reserva").style.display = eq ? "" : "none";
     $("desp-rotulo-valor").textContent = eq ? "Valor pago (R$)" : "Valor por mês (R$)";
     if (eq) $("desp-categoria").value = "Equipamento";
   }
@@ -102,9 +105,9 @@ function renderizarPaginaDespesas() {
   function tabela() {
     $("desp-corpo").innerHTML = ESTADO.despesas.map((d) => {
       const idade = d.tipo === "equipamento" ? idadeEmMeses(d.dataCompra) : null;
-      const velho = idade !== null && d.vidaUtilMeses && idade > d.vidaUtilMeses;
+      const velho = !d.emReserva && idade !== null && d.vidaUtilMeses && idade > d.vidaUtilMeses;
       return `<tr>
-        <td>${escaparHtml(d.descricao)}${d.dataCompra ? `<br><span class="card-sub">comprado em ${formatarDataBR(d.dataCompra)}${idade !== null ? ` (${Math.floor(idade / 12)} anos${velho ? " · passou da vida útil: pense em trocar" : ""})` : ""}</span>` : ""}</td>
+        <td>${escaparHtml(d.descricao)}${d.emReserva ? ' <span class="selo">Reserva · fora do custo mensal</span>' : ""}${d.dataCompra ? `<br><span class="card-sub">comprado em ${formatarDataBR(d.dataCompra)}${idade !== null ? ` (${Math.floor(idade / 12)} anos${velho ? " · passou da vida útil: pense em trocar" : ""})` : ""}</span>` : ""}</td>
         <td>${escaparHtml(d.categoria)}</td>
         <td>${formatarMoeda(d.valor)}${d.tipo === "mensal" ? "/mês" : ""}</td>
         <td>${d.tipo === "equipamento" ? d.vidaUtilMeses + " meses" : "-"}</td>
@@ -121,7 +124,7 @@ function renderizarPaginaDespesas() {
       const d = ESTADO.despesas.find((x) => x.id === b.dataset.editarDesp);
       editandoId = d.id;
       $("desp-descricao").value = d.descricao; $("desp-categoria").value = d.categoria; $("desp-tipo").value = d.tipo;
-      $("desp-valor").value = d.valor; $("desp-data").value = d.dataCompra || ""; $("desp-vida").value = d.vidaUtilMeses || 60;
+      $("desp-valor").value = d.valor; $("desp-data").value = d.dataCompra || ""; $("desp-vida").value = d.vidaUtilMeses || 60; $("desp-reserva").checked = !!d.emReserva;
       alternarTipo(); $("desp-categoria").value = d.categoria;
       $("btn-salvar-despesa").textContent = "Salvar alterações"; $("btn-cancelar-despesa").style.display = "";
       $("desp-descricao").scrollIntoView({ behavior: "smooth", block: "center" });
@@ -131,7 +134,7 @@ function renderizarPaginaDespesas() {
   function limpar() {
     editandoId = null;
     ["desp-descricao", "desp-valor", "desp-data"].forEach((id) => { $(id).value = ""; });
-    $("desp-tipo").value = "mensal"; $("desp-categoria").value = CATEGORIAS_DESPESA[1]; $("desp-vida").value = 60;
+    $("desp-tipo").value = "mensal"; $("desp-categoria").value = CATEGORIAS_DESPESA[1]; $("desp-vida").value = 60; $("desp-reserva").checked = false;
     alternarTipo();
     $("btn-salvar-despesa").textContent = "Adicionar"; $("btn-cancelar-despesa").style.display = "none";
   }
@@ -143,7 +146,8 @@ function renderizarPaginaDespesas() {
     if (!descricao || valor <= 0) { alert("Informe a descrição e um valor maior que zero."); return; }
     const tipo = $("desp-tipo").value;
     const item = { descricao, categoria: $("desp-categoria").value, tipo, valor,
-      dataCompra: tipo === "equipamento" ? $("desp-data").value : "", vidaUtilMeses: tipo === "equipamento" ? Math.max(parseInt($("desp-vida").value, 10) || 60, 1) : 0 };
+      dataCompra: tipo === "equipamento" ? $("desp-data").value : "", vidaUtilMeses: tipo === "equipamento" ? Math.max(parseInt($("desp-vida").value, 10) || 60, 1) : 0,
+      emReserva: tipo === "equipamento" && $("desp-reserva").checked };
     atualizarEstado((e) => {
       if (editandoId) Object.assign(e.despesas.find((x) => x.id === editandoId), item);
       else e.despesas.push({ id: gerarId(), ...item });

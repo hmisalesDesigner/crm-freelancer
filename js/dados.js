@@ -44,11 +44,11 @@ const DADOS_PADRAO = {
   despesas: [         // { id, descricao, categoria, tipo: "mensal"|"equipamento", valor, dataCompra, vidaUtilMeses }
     { id: "desp-pc-i7-6700", descricao: "Computador Syma i7-6700 (NF-e 828503, comprado pelo pai; valor com IPI)", categoria: "Equipamento", tipo: "equipamento", valor: 5077.8, dataCompra: "2016-11-25", vidaUtilMeses: 60 },
     { id: "desp-ssd-kingston-240", descricao: "SSD Kingston 240 GB SUV400 (NF-e 828503)", categoria: "Equipamento", tipo: "equipamento", valor: 429.8, dataCompra: "2016-11-25", vidaUtilMeses: 60 },
-    { id: "desp-monitor-lg-23mp55", descricao: "Monitor LG 23\" 23MP55HQ IPS (NF-e 828503)", categoria: "Equipamento", tipo: "equipamento", valor: 887.9, dataCompra: "2016-11-25", vidaUtilMeses: 60 },
+    { id: "desp-monitor-lg-23mp55", emReserva: true, descricao: "Monitor LG 23\" 23MP55HQ IPS (NF-e 828503)", categoria: "Equipamento", tipo: "equipamento", valor: 887.9, dataCompra: "2016-11-25", vidaUtilMeses: 60 },
     { id: "desp-memoria-8gb", descricao: "Memória 8 GB DDR4 2400 Kingston (NF-e 912373, já com desconto)", categoria: "Equipamento", tipo: "equipamento", valor: 297.79, dataCompra: "2019-09-05", vidaUtilMeses: 60 },
-    { id: "desp-wacom-intuos", descricao: "Mesa digitalizadora Wacom Intuos P CTL4100 (NF-e 912373, já com desconto)", categoria: "Equipamento", tipo: "equipamento", valor: 520.21, dataCompra: "2019-09-05", vidaUtilMeses: 60 },
+    { id: "desp-wacom-intuos", emReserva: true, descricao: "Mesa digitalizadora Wacom Intuos P CTL4100 (NF-e 912373, já com desconto)", categoria: "Equipamento", tipo: "equipamento", valor: 520.21, dataCompra: "2019-09-05", vidaUtilMeses: 60 },
     { id: "desp-monitor-24p1u", descricao: "Monitor AOC 24P1U 23,8\"", categoria: "Equipamento", tipo: "equipamento", valor: 920, dataCompra: "2020-11-27", vidaUtilMeses: 60 },
-    { id: "desp-monitor-m2470", descricao: "Monitor AOC M2470SWD 23,6\" (valor da NF cancelada: confirmar)", categoria: "Equipamento", tipo: "equipamento", valor: 739, dataCompra: "2020-11-27", vidaUtilMeses: 60 },
+    { id: "desp-monitor-m2470", emReserva: true, descricao: "Monitor AOC M2470SWD 23,6\" (valor da NF cancelada: confirmar)", categoria: "Equipamento", tipo: "equipamento", valor: 739, dataCompra: "2020-11-27", vidaUtilMeses: 60 },
     { id: "desp-cabo-usb", descricao: "Cabo extensor USB 3.0 1,8 m", categoria: "Equipamento", tipo: "equipamento", valor: 45, dataCompra: "2020-10-16", vidaUtilMeses: 36 },
     { id: "desp-microfone-c3tech", descricao: "Microfone Gamer C3Tech MI-G10BK (NF-e 1027139)", categoria: "Equipamento", tipo: "equipamento", valor: 56.3, dataCompra: "2023-06-06", vidaUtilMeses: 36 },
   ],
@@ -90,6 +90,10 @@ function normalizarDados(dados) {
   padrao.despesas.forEach((d) => {
     if (!jaOferecidas.includes(d.id) && !completo.despesas.some((x) => x.id === d.id)) completo.despesas.push(d);
   });
+  if (!dados.reservaDespesasAplicada) {
+    ["desp-monitor-lg-23mp55", "desp-wacom-intuos", "desp-monitor-m2470"].forEach((id) => { const d = completo.despesas.find((x) => x.id === id); if (d) d.emReserva = true; });
+  }
+  completo.reservaDespesasAplicada = true;
   completo.sementesDespesas = padrao.despesas.map((d) => d.id);
   // migração: etapas renomeadas ("Em andamento" -> "Ativos", "Entregue" -> "Inativos")
   completo.clientes.forEach((c) => {
