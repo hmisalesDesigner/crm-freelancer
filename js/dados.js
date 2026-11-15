@@ -53,6 +53,7 @@ const DADOS_PADRAO = {
     { id: "desp-ssd-sa400", estimado: true, descricao: "SSD Kingston SA400 240 GB (usado, disco do sistema)", categoria: "Equipamento", tipo: "equipamento", valor: 100, dataCompra: "2026-09-01", vidaUtilMeses: 60 },
     { id: "desp-teclado-satellite", estimado: true, descricao: "Teclado USB Satellite AK-XP1", categoria: "Equipamento", tipo: "equipamento", valor: 60, dataCompra: "2020-01-01", vidaUtilMeses: 36 },
     { id: "desp-memoria-shopee-2026", descricao: "Memória 8 GB DDR4 Kingston HyperX Fury 2133 (Shopee, Pix)", categoria: "Equipamento", tipo: "equipamento", valor: 221.71, dataCompra: "2026-10-01", vidaUtilMeses: 60 },
+    { id: "desp-mouse-vertical-inland", descricao: "Mouse vertical ergonômico Inland Sounds USB, óptico LED, preto", categoria: "Equipamento", tipo: "equipamento", valor: 79.39, dataCompra: "2026-11-15", vidaUtilMeses: 36 },
     { id: "desp-monitor-24p1u", descricao: "Monitor AOC 24P1U 23,8\"", categoria: "Equipamento", tipo: "equipamento", valor: 920, dataCompra: "2020-11-27", vidaUtilMeses: 60 },
     { id: "desp-monitor-m2470", emReserva: true, descricao: "Monitor AOC M2470SWD 23,6\" (valor da NF cancelada: confirmar)", categoria: "Equipamento", tipo: "equipamento", valor: 739, dataCompra: "2020-11-27", vidaUtilMeses: 60 },
     { id: "desp-cabo-usb", descricao: "Cabo extensor USB 3.0 1,8 m", categoria: "Equipamento", tipo: "equipamento", valor: 45, dataCompra: "2020-10-16", vidaUtilMeses: 36 },
