@@ -143,7 +143,7 @@ function renderizarPaginaOrcamentos() {
         <span>Somar reserva da B3 ao valor</span>
       </label>
       <div class="linha-resumo"><span class="rotulo">Valor base</span><span class="valor" id="orc-b3-base">R$ 0,00</span></div>
-      <div class="linha-resumo"><span class="rotulo">Reserva (<span id="orc-b3-pct">0</span>%)</span><span class="valor" id="orc-b3-extra">R$ 0,00</span></div>
+      <div class="linha-resumo"><span class="rotulo">Reserva (faixa R$ <span id="orc-b3-pct">25 a 60</span>)</span><span class="valor" id="orc-b3-extra">R$ 0,00</span></div>
       <div class="linha-resumo"><span class="rotulo">Valor cobrado do cliente</span><span class="valor" id="orc-b3-final">R$ 0,00</span></div>
       <div class="aviso b3" id="orc-lembrete-b3"></div>
       <p class="card-sub">Ligada, a reserva é diluída no valor unitário e o cliente vê apenas o preço final.</p>
@@ -159,14 +159,13 @@ function renderizarPaginaOrcamentos() {
 
   const $ = (id) => document.getElementById(id);
 
-  const pctB3 = Number(cfg.acaoB3.percentualReserva) || 0;
-  const tickerB3 = cfg.acaoB3.ticker || "sua ação na B3";
+  const tickerB3 = cfg.acaoB3.ticker ? ` (ex: ${cfg.acaoB3.ticker})` : "";
 
   function calcularBase() {
     return (Number($("orc-quantidade").value) || 0) * (Number($("orc-valor-unitario").value) || 0);
   }
   function calcularExtra() {
-    return $("orc-b3-ligado").checked ? calcularBase() * pctB3 / 100 : 0;
+    return $("orc-b3-ligado").checked ? reservaB3(calcularBase()) : 0;
   }
   function calcularTotal() { return calcularBase() + calcularExtra(); }
 
@@ -174,10 +173,10 @@ function renderizarPaginaOrcamentos() {
     const base = calcularBase(), extra = calcularExtra(), total = base + extra;
     $("orc-valor-total").textContent = formatarMoeda(total);
     $("orc-b3-base").textContent = formatarMoeda(base);
-    $("orc-b3-pct").textContent = pctB3;
-    $("orc-b3-extra").textContent = extra > 0 ? "+ " + formatarMoeda(extra) : formatarMoeda(base * pctB3 / 100) + " (desligado)";
+    $("orc-b3-pct").textContent = `${cfg.acaoB3.valorMinimo || 25} a ${cfg.acaoB3.valorMaximo || 60}`;
+    $("orc-b3-extra").textContent = extra > 0 ? "+ " + formatarMoeda(extra) : formatarMoeda(reservaB3(base)) + " (desligado)";
     $("orc-b3-final").textContent = formatarMoeda(total);
-    $("orc-lembrete-b3").textContent = `💰 Ao receber ${formatarMoeda(total)}, separe ${formatarMoeda(base * pctB3 / 100)} (${pctB3}%) para comprar ${tickerB3}.`;
+    $("orc-lembrete-b3").textContent = `💰 Ao receber ${formatarMoeda(total)}, separe ${formatarMoeda(reservaB3(base))} para investir na B3${tickerB3}.`;
   }
   container.querySelectorAll("#orc-quantidade, #orc-valor-unitario, #orc-b3-ligado").forEach((el) => el.addEventListener("input", atualizarTotal));
   $("orc-b3-ligado").addEventListener("change", atualizarTotal);

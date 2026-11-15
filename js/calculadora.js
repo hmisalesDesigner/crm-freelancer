@@ -220,10 +220,9 @@ function renderizarPaginaCalculadora() {
     const elMei = document.getElementById("aviso-mei-calc");
     elMei.textContent = `📌 Faturamento acumulado no ano: ${formatarMoeda(faturamentoAno)} (${percentual.toFixed(1)}% do limite MEI de ${formatarMoeda(limite)})`;
 
-    const reserva = ESTADO.configuracoes.acaoB3.percentualReserva || 0;
-    const ticker = ESTADO.configuracoes.acaoB3.ticker || "sua ação na B3";
+    const b3 = ESTADO.configuracoes.acaoB3;
     const elB3 = document.getElementById("aviso-b3-calc");
-    elB3.textContent = `💰 Lembrete: ao receber, separe ${reserva}% desse valor para comprar ${ticker} e reforçar sua carteira de dividendos.`;
+    elB3.textContent = `💰 Lembrete: ao receber, separe ${b3.percentualReserva || 0}% do valor para investir na B3 (sempre entre ${formatarMoeda(b3.valorMinimo || 25)} e ${formatarMoeda(b3.valorMaximo || 60)})${b3.ticker ? ", por exemplo " + b3.ticker : ""}.`;
   }
 
   container.querySelectorAll("#abas-modo-calculo .aba").forEach((aba) => {

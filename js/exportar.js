@@ -55,6 +55,14 @@ const EXPORTACOES_CSV = {
         rotuloStatusPagamento(statusPagamento(p)), dataCsv(p.dataPagamento)])
     ),
   },
+  despesas: {
+    arquivo: "despesas",
+    montar: () => gerarCsv(
+      ["Descrição", "Categoria", "Tipo", "Valor (R$)", "Data da compra", "Vida útil (meses)", "Custo mensal (R$)"],
+      ESTADO.despesas.map((d) => [d.descricao, d.categoria, d.tipo === "equipamento" ? "Equipamento" : "Mensal", numeroCsv(d.valor),
+        dataCsv(d.dataCompra), d.vidaUtilMeses || "", numeroCsv(custoMensalDespesa(d))])
+    ),
+  },
   leads: {
     arquivo: "leads",
     montar: () => gerarCsv(

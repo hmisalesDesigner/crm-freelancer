@@ -94,3 +94,19 @@ function faturamentoPorMes(ano) {
   for (let m = 0; m <= ultimoMes; m++) meses[m] += Number(ESTADO.configuracoes.clienteFixoMensal || 0);
   return meses;
 }
+
+/**
+ * Reserva sugerida para investir na B3 a partir de um valor recebido:
+ * % do valor, ajustada para a faixa [mínimo, máximo] (padrão R$ 25 a R$ 60),
+ * sem nunca passar de 50% do valor recebido (para trabalhos muito pequenos).
+ */
+function reservaB3(valor) {
+  const cfg = (ESTADO.configuracoes.acaoB3) || {};
+  const v = Number(valor) || 0;
+  const pct = Number(cfg.percentualReserva) || 0;
+  if (v <= 0 || pct <= 0) return 0;
+  const min = Number(cfg.valorMinimo) || 25;
+  const max = Math.max(Number(cfg.valorMaximo) || 60, min);
+  const ajustado = Math.min(Math.max(v * pct / 100, min), max);
+  return Math.round(Math.min(ajustado, v * 0.5) * 100) / 100;
+}

@@ -11,6 +11,7 @@ const RENDERIZADORES = {
   orcamentos: renderizarPaginaOrcamentos,
   pagamentos: renderizarPaginaPagamentos,
   tempo: renderizarPaginaTempo,
+  despesas: renderizarPaginaDespesas,
   prospeccao: renderizarPaginaProspeccao,
   configuracoes: renderizarPaginaConfiguracoes,
 };
@@ -23,6 +24,7 @@ const TITULOS_PAGINA = {
   orcamentos: "Orçamentos",
   pagamentos: "Pagamentos",
   tempo: "Tempo",
+  despesas: "Despesas",
   prospeccao: "Prospecção",
   configuracoes: "Configurações",
 };
@@ -169,11 +171,19 @@ function renderizarPaginaConfiguracoes() {
     <h3 style="margin-top:24px;">Lembrete de investimento (B3)</h3>
     <div class="form-grid">
       <div class="campo">
-        <label>Ticker da ação (ex: TAEE11)</label>
+        <label>Sugestão de ativo (opcional, ex: TAEE11)</label>
         <input id="cfg-ticker-b3" value="${cfg.acaoB3.ticker}">
       </div>
       <div class="campo">
-        <label>% do valor recebido a reservar</label>
+        <label>Investir no mínimo (R$)</label>
+        <input type="number" id="cfg-minimo-b3" min="0" value="${cfg.acaoB3.valorMinimo}">
+      </div>
+      <div class="campo">
+        <label>Investir no máximo (R$)</label>
+        <input type="number" id="cfg-maximo-b3" min="0" value="${cfg.acaoB3.valorMaximo}">
+      </div>
+      <div class="campo">
+        <label>% do valor recebido (ajustada à faixa)</label>
         <input type="number" id="cfg-percentual-b3" value="${cfg.acaoB3.percentualReserva}">
       </div>
     </div>
@@ -196,6 +206,7 @@ function renderizarPaginaConfiguracoes() {
       <button class="botao secundario" data-csv="clientes">⬇️ Clientes</button>
       <button class="botao secundario" data-csv="orcamentos">⬇️ Orçamentos</button>
       <button class="botao secundario" data-csv="pagamentos">⬇️ Pagamentos</button>
+      <button class="botao secundario" data-csv="despesas">⬇️ Despesas</button>
       <button class="botao secundario" data-csv="leads">⬇️ Leads</button>
       <button class="botao secundario" data-csv="horas">⬇️ Horas trabalhadas</button>
     </div>
@@ -234,6 +245,8 @@ function renderizarPaginaConfiguracoes() {
       estado.configuracoes.limiteMeiAnual = Number(document.getElementById("cfg-limite-mei").value) || 81000;
       estado.configuracoes.acaoB3.ticker = document.getElementById("cfg-ticker-b3").value.trim().toUpperCase();
       estado.configuracoes.acaoB3.percentualReserva = Number(document.getElementById("cfg-percentual-b3").value) || 0;
+      estado.configuracoes.acaoB3.valorMinimo = Number(document.getElementById("cfg-minimo-b3").value) || 25;
+      estado.configuracoes.acaoB3.valorMaximo = Math.max(Number(document.getElementById("cfg-maximo-b3").value) || 60, estado.configuracoes.acaoB3.valorMinimo);
       estado.configuracoes.metaMensal = Number(document.getElementById("cfg-meta-mensal").value) || 0;
       estado.configuracoes.diaPagamentoFixo = Math.min(Math.max(parseInt(document.getElementById("cfg-dia-fixo").value, 10) || 5, 1), 31);
       estado.configuracoes.diasFollowUp = Math.max(parseInt(document.getElementById("cfg-dias-followup").value, 10) || 3, 1);

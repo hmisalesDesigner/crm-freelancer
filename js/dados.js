@@ -22,7 +22,7 @@ const DADOS_PADRAO = {
     horasPagasPorMes: 100,
     limiteMeiAnual: 81000,
     clienteFixoMensal: 3000,
-    acaoB3: { ticker: "", percentualReserva: 10 },
+    acaoB3: { ticker: "", percentualReserva: 10, valorMinimo: 25, valorMaximo: 60 }, // reserva ajustada à faixa [mín, máx]
     nomeProfissional: "Henrique",
     whatsapp: "",             // só números, com DDD (ex: 44999999999)
     validadeOrcamentoDias: 7,
@@ -41,6 +41,11 @@ const DADOS_PADRAO = {
   pagamentos: [],      // { id, clienteId, orcamentoId?, descricao, valor, vencimento (AAAA-MM-DD), pago, dataPagamento, fixoMes? }
   tarefas: [],         // { id, descricao, clienteId, orcamentoId, fixo, progresso: "comeco"|"metade"|"finalizada", criadaEm, finalizadaEm }
   sessoesTempo: [],    // { id, tarefaId, inicio (ISO), fim (ISO), segundos }
+  despesas: [         // { id, descricao, categoria, tipo: "mensal"|"equipamento", valor, dataCompra, vidaUtilMeses }
+    { id: "desp-monitor-24p1u", descricao: "Monitor AOC 24P1U 23,8\"", categoria: "Equipamento", tipo: "equipamento", valor: 920, dataCompra: "2020-11-27", vidaUtilMeses: 60 },
+    { id: "desp-monitor-m2470", descricao: "Monitor AOC M2470SWD 23,6\" (valor da NF cancelada: confirmar)", categoria: "Equipamento", tipo: "equipamento", valor: 739, dataCompra: "2020-11-27", vidaUtilMeses: 60 },
+    { id: "desp-cabo-usb", descricao: "Cabo extensor USB 3.0 1,8 m", categoria: "Equipamento", tipo: "equipamento", valor: 45, dataCompra: "2020-10-16", vidaUtilMeses: 36 },
+  ],
   cronometroAtivo: null, // { tarefaId, inicio (ISO) }
   modelosOrcamento: [  // { id, nome, descricao, modo, quantidade, valorUnitario }
     { id: "modelo-stories", nome: "5 stories/reels (R$ 40 por peça)", descricao: "Criação de 5 stories/reels para Instagram", modo: "peca", quantidade: 5, valorUnitario: 40 },
@@ -53,7 +58,7 @@ function normalizarDados(dados) {
   // mescla profunda das configurações (chaves novas aparecem em bases antigas)
   completo.configuracoes = { ...padrao.configuracoes, ...(dados.configuracoes || {}) };
   completo.configuracoes.acaoB3 = { ...padrao.configuracoes.acaoB3, ...((dados.configuracoes || {}).acaoB3 || {}) };
-  ["clientes", "orcamentos", "prospeccoes", "leads", "demandasMensais", "pagamentos", "tarefas", "sessoesTempo", "modelosOrcamento"].forEach((k) => {
+  ["clientes", "orcamentos", "prospeccoes", "leads", "demandasMensais", "pagamentos", "tarefas", "sessoesTempo", "modelosOrcamento", "despesas"].forEach((k) => {
     if (!Array.isArray(completo[k])) completo[k] = padrao[k];
   });
   // migração: leads antigos da lista simples de prospecção viram leads do novo sistema (uma vez)
