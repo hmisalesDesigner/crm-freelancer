@@ -49,10 +49,13 @@ const DADOS_PADRAO = {
     { id: "desp-wacom-intuos", emReserva: true, descricao: "Mesa digitalizadora Wacom Intuos P CTL4100 (NF-e 912373, já com desconto)", categoria: "Equipamento", tipo: "equipamento", valor: 520.21, dataCompra: "2019-09-05", vidaUtilMeses: 60 },
     { id: "desp-energia-trabalho", estimado: true, descricao: "Energia elétrica do trabalho (PC 8 h/dia + metade dos 2 ventiladores 24 h/dia, a ~R$ 1,00/kWh)", categoria: "Internet e energia", tipo: "mensal", valor: 107, dataCompra: "", vidaUtilMeses: 0 },
     { id: "desp-internet-fibra", estimado: true, descricao: "Internet fibra R$ 99,90/mês (934 Mbps) — 50% para o trabalho (PC no cabo; 3 celulares no Wi-Fi)", categoria: "Internet e energia", tipo: "mensal", valor: 49.95, dataCompra: "", vidaUtilMeses: 0 },
+    { id: "desp-servico-2025-12-21", descricao: "Serviço 21/12/2025: limpeza e formatação do PC", categoria: "Outros", tipo: "equipamento", valor: 43.9, dataCompra: "2025-12-21", vidaUtilMeses: 12 },
+    { id: "desp-servico-2026-02-09", descricao: "Serviço 09/02/2026: limpeza do PC", categoria: "Outros", tipo: "equipamento", valor: 30, dataCompra: "2026-02-09", vidaUtilMeses: 12 },
+    { id: "desp-servico-2026-05-07", descricao: "Serviço 07/05/2026: formatação e instalação do Windows 11 (com limpeza)", categoria: "Outros", tipo: "equipamento", valor: 35, dataCompra: "2026-05-07", vidaUtilMeses: 12 },
     { id: "desp-manutencao-2026-10", descricao: "Manutenção 30/10/2026: limpeza, ajustes, inversão dos coolers, cabo HDMI e extensão de energia curta", categoria: "Outros", tipo: "equipamento", valor: 94.9, dataCompra: "2026-10-30", vidaUtilMeses: 12 },
     { id: "desp-gtx960", estimado: true, descricao: "Placa de vídeo Zotac GTX 960 4 GB", categoria: "Equipamento", tipo: "equipamento", valor: 900, dataCompra: "2017-01-01", vidaUtilMeses: 60 },
     { id: "desp-hdd-seagate-2tb", estimado: true, descricao: "HDD Seagate 2 TB ST2000DM001", categoria: "Equipamento", tipo: "equipamento", valor: 350, dataCompra: "2016-12-01", vidaUtilMeses: 60 },
-    { id: "desp-ssd-sa400", estimado: true, descricao: "SSD Kingston SA400 240 GB (usado, disco do sistema)", categoria: "Equipamento", tipo: "equipamento", valor: 100, dataCompra: "2026-09-01", vidaUtilMeses: 60 },
+    { id: "desp-ssd-sa400", descricao: "SSD Kingston SA400 240 GB, usado de notebook (instalado em 14/08/2026 com 99% de vida; hoje 98%)", categoria: "Equipamento", tipo: "equipamento", valor: 309, dataCompra: "2026-08-14", vidaUtilMeses: 60 },
     { id: "desp-teclado-satellite", estimado: true, descricao: "Teclado USB Satellite AK-XP1", categoria: "Equipamento", tipo: "equipamento", valor: 60, dataCompra: "2020-01-01", vidaUtilMeses: 36 },
     { id: "desp-memoria-shopee-2026", descricao: "Memória 8 GB DDR4 Kingston HyperX Fury 2133 (Shopee, Pix)", categoria: "Equipamento", tipo: "equipamento", valor: 221.71, dataCompra: "2026-10-01", vidaUtilMeses: 60 },
     { id: "desp-mouse-vertical-inland", descricao: "Mouse vertical ergonômico Inland Sounds USB, óptico LED, preto", categoria: "Equipamento", tipo: "equipamento", valor: 79.39, dataCompra: "2026-11-15", vidaUtilMeses: 36 },
@@ -105,6 +108,11 @@ function normalizarDados(dados) {
   completo.reservaDespesasAplicada = true;
   if (!dados.memoriaKvrRemovida) completo.despesas = completo.despesas.filter((d) => d.id !== "desp-memoria-8gb"); // KVR24N17 não está no PC (conferido via PowerShell)
   completo.memoriaKvrRemovida = true;
+  if (!dados.ssdSa400Corrigido) { // valor real do SSD SA400 (antes estimado)
+    const velho = completo.despesas.find((d) => d.id === "desp-ssd-sa400"), novo = padrao.despesas.find((d) => d.id === "desp-ssd-sa400");
+    if (velho && novo) Object.assign(velho, novo);
+  }
+  completo.ssdSa400Corrigido = true;
   completo.sementesDespesas = padrao.despesas.map((d) => d.id);
   // migração: etapas renomeadas ("Em andamento" -> "Ativos", "Entregue" -> "Inativos")
   completo.clientes.forEach((c) => {
