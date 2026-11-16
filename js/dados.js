@@ -66,7 +66,8 @@ const DADOS_PADRAO = {
     { id: "desp-cabo-usb", descricao: "Cabo extensor USB 3.0 1,8 m", categoria: "Equipamento", tipo: "equipamento", valor: 45, dataCompra: "2020-10-16", vidaUtilMeses: 36 },
     { id: "desp-microfone-c3tech", descricao: "Microfone Gamer C3Tech MI-G10BK (NF-e 1027139)", categoria: "Equipamento", tipo: "equipamento", valor: 56.3, dataCompra: "2023-06-06", vidaUtilMeses: 36 },
   ],
-  demandas: [],        // { id, cliente, titulo, data (AAAA-MM-DD), status: "fazer"|"andamento"|"concluida", semana? }
+  demandas: [],        // { id, cliente, titulo, data (AAAA-MM-DD), status: "fazer"|"andamento"|"concluida", semana?, categoria? }
+  avaliacoesGoogle: [], // { id, data (AAAA-MM-DD), tipo: "positiva"|"negativa", quantidade }
   cronometroAtivo: null, // { tarefaId, inicio (ISO) }
   modelosOrcamento: [  // { id, nome, descricao, modo, quantidade, valorUnitario }
     { id: "modelo-stories", nome: "5 stories/reels (R$ 40 por peça)", descricao: "Criação de 5 stories/reels para Instagram", modo: "peca", quantidade: 5, valorUnitario: 40 },
@@ -83,7 +84,7 @@ function normalizarDados(dados) {
   // mescla profunda das configurações (chaves novas aparecem em bases antigas)
   completo.configuracoes = { ...padrao.configuracoes, ...(dados.configuracoes || {}) };
   completo.configuracoes.acaoB3 = { ...padrao.configuracoes.acaoB3, ...((dados.configuracoes || {}).acaoB3 || {}) };
-  ["clientes", "orcamentos", "prospeccoes", "leads", "demandasMensais", "pagamentos", "tarefas", "sessoesTempo", "modelosOrcamento", "despesas", "demandas"].forEach((k) => {
+  ["clientes", "orcamentos", "prospeccoes", "leads", "demandasMensais", "pagamentos", "tarefas", "sessoesTempo", "modelosOrcamento", "despesas", "demandas", "avaliacoesGoogle"].forEach((k) => {
     if (!Array.isArray(completo[k])) completo[k] = padrao[k];
   });
   // migração: leads antigos da lista simples de prospecção viram leads do novo sistema (uma vez)
@@ -151,6 +152,14 @@ function normalizarDados(dados) {
     );
   }
   completo.universidadeVesporSeed2026 = true;
+  if (!dados.categoriasVesporAplicadas2026 && window.CATEGORIA_POR_TITULO_VESPOR) { // categorias (Arte, Vídeo/Áudio, Suporte, Revisão) do histórico de atividades
+    completo.demandas.forEach((d) => { if (!d.categoria && window.CATEGORIA_POR_TITULO_VESPOR[d.titulo]) d.categoria = window.CATEGORIA_POR_TITULO_VESPOR[d.titulo]; });
+  }
+  completo.categoriasVesporAplicadas2026 = true;
+  if (!dados.avaliacoesGoogleSeed2026 && window.AVALIACOES_GOOGLE_SEED) { // ponto de partida: avaliações do Google já respondidas, extraídas do histórico
+    window.AVALIACOES_GOOGLE_SEED.forEach((x, i) => completo.avaliacoesGoogle.push({ id: "av-" + i, data: x[0], tipo: x[1], quantidade: x[2] }));
+  }
+  completo.avaliacoesGoogleSeed2026 = true;
   if (!dados.mod9Corrigido2026) { // Henrique avisou: Módulo 9 ainda está em edição, não concluído
     const m9 = completo.demandas.find((d) => d.id === "vp-mod9");
     if (m9) { m9.status = "andamento"; m9.data = hojeISOLocal(); }

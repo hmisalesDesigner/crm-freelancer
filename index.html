@@ -10,7 +10,7 @@
 <link rel="icon" type="image/png" href="icone-192.png">
 <script>
   // Versão do site: muda a cada publicação (e a cada clique em "Atualizar") para o navegador nunca reaproveitar arquivos antigos.
-  window.VERSAO_SITE = "20261116k";
+  window.VERSAO_SITE = "20261116l";
   (function () {
     var v = new URLSearchParams(location.search).get("_v") || window.VERSAO_SITE;
     window.__v = encodeURIComponent(v);
@@ -102,6 +102,11 @@
           <div id="painel-demandas"></div>
         </div>
 
+        <div class="painel-grafico-funil" style="margin-bottom:16px;">
+          <h3>⭐ Avaliações Google <span class="card-sub" style="display:inline;">(Varejocar)</span></h3>
+          <div id="painel-avaliacoes"></div>
+        </div>
+
         <div class="grade-2">
           <div class="painel-grafico-funil">
             <h3>🔻 Funil de Vendas</h3>
@@ -141,7 +146,7 @@
   <script>
     if ("serviceWorker" in navigator && (location.protocol === "https:" || location.hostname === "localhost")) navigator.serviceWorker.register("sw.js").catch(function () {});
     (function () {
-      var arquivos = ["js/demandas-seed.js", "js/dados.js", "js/utilitarios.js", "js/calculadora.js", "js/clientes.js", "js/funil.js", "js/orcamentos.js", "js/prospeccao.js", "js/pagamentos.js", "js/tempo.js", "js/despesas.js", "js/demandas.js", "js/followup.js", "js/grafico.js", "js/lembretes.js", "js/exportar.js", "js/documentos.js", "js/app.js", "js/login.js", "js/google-drive.js"];
+      var arquivos = ["js/demandas-seed.js", "js/dados.js", "js/utilitarios.js", "js/calculadora.js", "js/clientes.js", "js/funil.js", "js/orcamentos.js", "js/prospeccao.js", "js/pagamentos.js", "js/tempo.js", "js/despesas.js", "js/demandas.js", "js/avaliacoes.js", "js/followup.js", "js/grafico.js", "js/lembretes.js", "js/exportar.js", "js/documentos.js", "js/app.js", "js/login.js", "js/google-drive.js"];
       arquivos.forEach(function (a) { document.write('<script src="' + a + '?v=' + window.__v + '"><\/script>'); });
     })();
   </script>
