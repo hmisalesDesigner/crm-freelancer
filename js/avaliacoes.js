@@ -3,8 +3,8 @@
  * Avaliações do Google Meu Negócio (Varejocar/Vespor) respondidas por dia,
  * positivas e negativas, com totais e gráfico mensal (SVG, sem bibliotecas).
  */
-function totaisAvaliacoesGoogle() {
-  const lista = ESTADO.avaliacoesGoogle || [];
+function totaisAvaliacoesGoogle(lista) {
+  lista = lista || ESTADO.avaliacoesGoogle || [];
   let positivas = 0, negativas = 0;
   const mes = mesAtualChave();
   let positivasMes = 0, negativasMes = 0;
@@ -17,8 +17,8 @@ function totaisAvaliacoesGoogle() {
 }
 
 /** Últimos N meses (AAAA-MM) terminando no mês atual, com totais positiva/negativa. */
-function avaliacoesPorMes(meses = 6) {
-  const lista = ESTADO.avaliacoesGoogle || [];
+function avaliacoesPorMes(meses = 6, lista) {
+  lista = lista || ESTADO.avaliacoesGoogle || [];
   const chaves = [];
   const hoje = new Date();
   for (let i = meses - 1; i >= 0; i--) {
@@ -33,10 +33,10 @@ function avaliacoesPorMes(meses = 6) {
   });
 }
 
-function renderizarGraficoAvaliacoes(alvoId) {
+function renderizarGraficoAvaliacoes(alvoId, lista) {
   const alvo = document.getElementById(alvoId);
   if (!alvo) return;
-  const dados = avaliacoesPorMes(6);
+  const dados = avaliacoesPorMes(6, lista);
   const maximo = Math.max(...dados.map((d) => Math.max(d.positiva, d.negativa)), 1) * 1.2;
   const L = 560, A = 180, margemE = 8, margemB = 26, margemT = 14;
   const areaA = A - margemB - margemT;
@@ -77,7 +77,8 @@ function renderizarPaginaAvaliacoes() {
       <div class="card"><span class="card-label">Negativas respondidas</span><span class="card-valor" style="color:var(--cor-perigo)">${t.negativas}</span><span class="card-sub">${t.negativasMes} neste mês</span></div>
       <div class="card"><span class="card-label">Registrar avaliações de hoje</span>
         <div style="display:flex; gap:6px; margin-top:6px; flex-wrap:wrap;">
-          <input type="date" id="av-data" value="${hojeISO()}" style="flex:1; min-width:120px;">
+          <input id="av-cliente" placeholder="Cliente" value="Vespor" style="width:100px;">
+          <input type="date" id="av-data" value="${hojeISO()}" style="flex:1; min-width:110px;">
           <input type="number" id="av-positivas" placeholder="Positivas" min="0" style="width:90px;">
           <input type="number" id="av-negativas" placeholder="Negativas" min="0" style="width:90px;">
           <button class="botao pequeno" id="av-add">+</button>
@@ -94,13 +95,14 @@ function renderizarPaginaAvaliacoes() {
   renderizarGraficoAvaliacoes("grafico-avaliacoes");
 
   document.getElementById("av-add").addEventListener("click", () => {
+    const cliente = document.getElementById("av-cliente").value.trim() || "Vespor";
     const data = document.getElementById("av-data").value || hojeISO();
     const pos = Math.max(parseInt(document.getElementById("av-positivas").value, 10) || 0, 0);
     const neg = Math.max(parseInt(document.getElementById("av-negativas").value, 10) || 0, 0);
     if (pos <= 0 && neg <= 0) { alert("Informe ao menos uma quantidade."); return; }
     atualizarEstado((e) => {
-      if (pos > 0) e.avaliacoesGoogle.push({ id: gerarId(), data, tipo: "positiva", quantidade: pos });
-      if (neg > 0) e.avaliacoesGoogle.push({ id: gerarId(), data, tipo: "negativa", quantidade: neg });
+      if (pos > 0) e.avaliacoesGoogle.push({ id: gerarId(), data, tipo: "positiva", quantidade: pos, cliente });
+      if (neg > 0) e.avaliacoesGoogle.push({ id: gerarId(), data, tipo: "negativa", quantidade: neg, cliente });
     });
     renderizarPaginaAvaliacoes();
   });

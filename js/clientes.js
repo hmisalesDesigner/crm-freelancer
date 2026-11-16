@@ -147,7 +147,7 @@ function renderizarPaginaClientes() {
           : `<span style="display:inline-flex;width:28px;height:28px;border-radius:50%;background:var(--cor-primaria-clara);color:var(--cor-primaria);align-items:center;justify-content:center;font-size:11px;font-weight:700;vertical-align:middle;margin-right:8px;">${iniciais}</span>`;
         return `
           <tr>
-            <td>${avatarHtml}${escaparHtml(c.nome)}</td>
+            <td>${avatarHtml}<button type="button" class="link-cliente" data-ver="${c.id}" title="Ver painel deste cliente">${escaparHtml(c.nome)}</button></td>
             <td>${escaparHtml(c.contato || "-")}</td>
             <td>${escaparHtml((c.demanda || "").slice(0, 40))}</td>
             <td>${escaparHtml(c.etapaFunil)}</td>
@@ -163,6 +163,9 @@ function renderizarPaginaClientes() {
 
     corpo.querySelectorAll("[data-editar]").forEach((btn) =>
       btn.addEventListener("click", () => abrirModal(btn.dataset.editar))
+    );
+    corpo.querySelectorAll("[data-ver]").forEach((btn) =>
+      btn.addEventListener("click", () => abrirPainelCliente(btn.dataset.ver))
     );
     corpo.querySelectorAll("[data-excluir]").forEach((btn) =>
       btn.addEventListener("click", () => {

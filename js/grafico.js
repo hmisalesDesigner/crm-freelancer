@@ -51,3 +51,39 @@ function renderizarGraficoFaturamento() {
       ${meta > 0 ? "" : "Defina uma meta mensal em Configurações para ver a linha de meta."}
     </p>`;
 }
+
+/** Mesmo gráfico de barras, mas só com o faturamento de UM cliente (sem linha de meta). */
+function renderizarGraficoFaturamentoCliente(alvoId, cliente) {
+  const alvo = document.getElementById(alvoId);
+  if (!alvo) return;
+
+  const ano = new Date().getFullYear();
+  const mesAtual = new Date().getMonth();
+  const valores = faturamentoPorMesCliente(ano, cliente);
+  const maximo = Math.max(...valores, 1) * 1.15;
+
+  const L = 560, A = 180, margemE = 8, margemB = 26, margemT = 14;
+  const areaA = A - margemB - margemT;
+  const larguraBarra = (L - margemE * 2) / 12;
+  const y = (v) => margemT + areaA - (v / maximo) * areaA;
+
+  const barras = valores.map((v, i) => {
+    const x = margemE + i * larguraBarra + larguraBarra * 0.16;
+    const w = larguraBarra * 0.68;
+    const yTopo = y(v);
+    const h = margemT + areaA - yTopo;
+    const atual = i === mesAtual;
+    return `
+      <g>
+        <title>${nomeMesCurto(i)}: ${formatarMoeda(v)}</title>
+        <rect x="${x.toFixed(1)}" y="${yTopo.toFixed(1)}" width="${w.toFixed(1)}" height="${Math.max(h, 0).toFixed(1)}" rx="4"
+              class="${atual ? "barra-mes atual" : "barra-mes"}" ${v === 0 ? 'style="opacity:.25"' : ""}></rect>
+        <text x="${(x + w / 2).toFixed(1)}" y="${A - 8}" text-anchor="middle" class="grafico-rotulo">${nomeMesCurto(i)}</text>
+      </g>`;
+  }).join("");
+
+  const total = valores.reduce((a, b) => a + b, 0);
+  alvo.innerHTML = `
+    <svg viewBox="0 0 ${L} ${A}" class="grafico-svg" role="img" aria-label="Faturamento mensal de ${ano} com ${escaparHtml(cliente.nome)}">${barras}</svg>
+    <p class="card-sub" style="margin:6px 0 0;">${ano}: ${formatarMoeda(total)} faturados com este cliente.</p>`;
+}

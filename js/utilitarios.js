@@ -110,3 +110,48 @@ function reservaB3(valor) {
   const ajustado = Math.min(Math.max(v * pct / 100, min), max);
   return Math.round(Math.min(ajustado, v * 0.5) * 100) / 100;
 }
+
+/* ---------- Painel por cliente ---------- */
+
+function normalizarNome(s) {
+  return (s || "").trim().toLowerCase();
+}
+
+/** Demandas de um cliente: por clienteId (vínculo exato) ou, nas antigas, pelo nome em texto. */
+function demandasDoCliente(cliente) {
+  const nome = normalizarNome(cliente.nome);
+  return (ESTADO.demandas || []).filter((d) => d.clienteId === cliente.id || (!d.clienteId && normalizarNome(d.cliente) === nome));
+}
+
+/** Avaliações do Google de um cliente, casando pelo nome em texto (mesma lógica das demandas). */
+function avaliacoesDoCliente(cliente) {
+  const nome = normalizarNome(cliente.nome);
+  return (ESTADO.avaliacoesGoogle || []).filter((a) => normalizarNome(a.cliente) === nome);
+}
+
+/** Faturamento por mês de um cliente específico (inclui o cliente fixo, se for este o vinculado). */
+function faturamentoPorMesCliente(ano, cliente) {
+  const meses = new Array(12).fill(0);
+  (cliente.historicoFinanceiro || []).forEach((h) => {
+    const d = new Date(h.data);
+    if (d.getFullYear() === ano) meses[d.getMonth()] += Number(h.valor || 0);
+  });
+  if (ESTADO.configuracoes.clienteFixoId === cliente.id) {
+    const hoje = new Date();
+    const ultimoMes = ano < hoje.getFullYear() ? 11 : ano === hoje.getFullYear() ? hoje.getMonth() : -1;
+    for (let m = 0; m <= ultimoMes; m++) meses[m] += Number(ESTADO.configuracoes.clienteFixoMensal || 0);
+  }
+  return meses;
+}
+
+/** Horas trabalhadas para um cliente: tarefas vinculadas direto, por orçamento dele, e o cliente fixo (se for este). */
+function horasDoCliente(cliente, mes) {
+  const idsOrcamentos = (ESTADO.orcamentos || []).filter((o) => o.clienteId === cliente.id).map((o) => o.id);
+  let segundos = (ESTADO.tarefas || [])
+    .filter((t) => t.clienteId === cliente.id || idsOrcamentos.includes(t.orcamentoId))
+    .reduce((s, t) => s + segundosTarefa(t.id, mes), 0);
+  if (ESTADO.configuracoes.clienteFixoId === cliente.id) {
+    segundos += (ESTADO.tarefas || []).filter((t) => t.fixo).reduce((s, t) => s + segundosTarefa(t.id, mes), 0);
+  }
+  return segundos;
+}

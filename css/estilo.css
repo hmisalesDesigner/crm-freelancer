@@ -223,6 +223,14 @@ body {
 }
 .campo textarea { resize: vertical; min-height: 70px; }
 
+.link-cliente {
+  background: none; border: none; padding: 0; cursor: pointer;
+  color: var(--cor-primaria); font-weight: 600; font-size: 14px;
+  text-decoration: underline; text-decoration-color: transparent;
+  vertical-align: middle;
+}
+.link-cliente:hover { text-decoration-color: var(--cor-primaria); }
+
 .botao {
   background: var(--cor-primaria);
   color: var(--cor-texto-sobre-primaria);

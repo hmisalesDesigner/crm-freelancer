@@ -10,7 +10,7 @@
 <link rel="icon" type="image/png" href="icone-192.png">
 <script>
   // Versão do site: muda a cada publicação (e a cada clique em "Atualizar") para o navegador nunca reaproveitar arquivos antigos.
-  window.VERSAO_SITE = "20261116m";
+  window.VERSAO_SITE = "20261116n";
   (function () {
     var v = new URLSearchParams(location.search).get("_v") || window.VERSAO_SITE;
     window.__v = encodeURIComponent(v);
@@ -133,6 +133,7 @@
       <section id="pagina-pagamentos" class="pagina"></section>
       <section id="pagina-despesas" class="pagina"></section>
       <section id="pagina-avaliacoes" class="pagina"></section>
+      <section id="pagina-cliente-detalhe" class="pagina"></section>
       <section id="pagina-tempo" class="pagina"></section>
       <section id="pagina-prospeccao" class="pagina"></section>
       <section id="pagina-configuracoes" class="pagina"></section>
@@ -143,7 +144,7 @@
   <script>
     if ("serviceWorker" in navigator && (location.protocol === "https:" || location.hostname === "localhost")) navigator.serviceWorker.register("sw.js").catch(function () {});
     (function () {
-      var arquivos = ["js/demandas-seed.js", "js/dados.js", "js/utilitarios.js", "js/calculadora.js", "js/clientes.js", "js/funil.js", "js/orcamentos.js", "js/prospeccao.js", "js/pagamentos.js", "js/tempo.js", "js/despesas.js", "js/demandas.js", "js/avaliacoes.js", "js/followup.js", "js/grafico.js", "js/lembretes.js", "js/exportar.js", "js/documentos.js", "js/app.js", "js/login.js", "js/google-drive.js"];
+      var arquivos = ["js/demandas-seed.js", "js/dados.js", "js/utilitarios.js", "js/calculadora.js", "js/clientes.js", "js/funil.js", "js/orcamentos.js", "js/prospeccao.js", "js/pagamentos.js", "js/tempo.js", "js/despesas.js", "js/demandas.js", "js/avaliacoes.js", "js/followup.js", "js/grafico.js", "js/lembretes.js", "js/exportar.js", "js/documentos.js", "js/painel-cliente.js", "js/app.js", "js/login.js", "js/google-drive.js"];
       arquivos.forEach(function (a) { document.write('<script src="' + a + '?v=' + window.__v + '"><\/script>'); });
     })();
   </script>

@@ -32,6 +32,7 @@ const DADOS_PADRAO = {
     metaMensal: 0,            // meta de faturamento mensal (0 = sem meta)
     diaPagamentoFixo: 5,      // dia do mês em que o cliente fixo costuma pagar
     dasPagos: [],             // meses (AAAA-MM) com DAS já pago
+    clienteFixoId: null,      // qual cliente cadastrado corresponde ao "cliente fixo" mensal (para aparecer no painel dele)
   },
   clientes: [],      // { id, nome, contato, cnpj, razaoSocial, capitalSocial, demanda, historicoFinanceiro, etapaFunil, criadoEm }
   orcamentos: [],     // { id, clienteId, descricao, modo, valor, dataEnvio, aceito }
@@ -66,8 +67,8 @@ const DADOS_PADRAO = {
     { id: "desp-cabo-usb", descricao: "Cabo extensor USB 3.0 1,8 m", categoria: "Equipamento", tipo: "equipamento", valor: 45, dataCompra: "2020-10-16", vidaUtilMeses: 36 },
     { id: "desp-microfone-c3tech", descricao: "Microfone Gamer C3Tech MI-G10BK (NF-e 1027139)", categoria: "Equipamento", tipo: "equipamento", valor: 56.3, dataCompra: "2023-06-06", vidaUtilMeses: 36 },
   ],
-  demandas: [],        // { id, cliente, titulo, data (AAAA-MM-DD), status: "fazer"|"andamento"|"concluida", semana?, categoria? }
-  avaliacoesGoogle: [], // { id, data (AAAA-MM-DD), tipo: "positiva"|"negativa", quantidade }
+  demandas: [],        // { id, cliente (nome em texto), clienteId?, titulo, data (AAAA-MM-DD), status: "fazer"|"andamento"|"concluida", semana?, categoria? }
+  avaliacoesGoogle: [], // { id, data (AAAA-MM-DD), tipo: "positiva"|"negativa", quantidade, cliente (nome em texto) }
   cronometroAtivo: null, // { tarefaId, inicio (ISO) }
   modelosOrcamento: [  // { id, nome, descricao, modo, quantidade, valorUnitario }
     { id: "modelo-stories", nome: "5 stories/reels (R$ 40 por peça)", descricao: "Criação de 5 stories/reels para Instagram", modo: "peca", quantidade: 5, valorUnitario: 40 },
@@ -174,6 +175,10 @@ function normalizarDados(dados) {
     );
   }
   completo.vesporModulosAtualizados2026 = true;
+  if (!dados.avaliacoesClienteVespor2026) { // avaliações do histórico pertencem ao cliente Vespor (marca Varejocar)
+    completo.avaliacoesGoogle.forEach((a) => { if (!a.cliente) a.cliente = "Vespor"; });
+  }
+  completo.avaliacoesClienteVespor2026 = true;
   // migração: etapas renomeadas ("Em andamento" -> "Ativos", "Entregue" -> "Inativos")
   completo.clientes.forEach((c) => {
     if (c.etapaFunil === "Em andamento") c.etapaFunil = "Ativos";
