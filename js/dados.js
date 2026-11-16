@@ -110,7 +110,7 @@ function normalizarDados(dados) {
   completo.memoriaKvrRemovida = true;
   if (!dados.ssdSa400Corrigido) { // valor real do SSD SA400 (antes estimado)
     const velho = completo.despesas.find((d) => d.id === "desp-ssd-sa400"), novo = padrao.despesas.find((d) => d.id === "desp-ssd-sa400");
-    if (velho && novo) Object.assign(velho, novo);
+    if (velho && novo) { delete velho.estimado; Object.assign(velho, novo); }
   }
   completo.ssdSa400Corrigido = true;
   completo.sementesDespesas = padrao.despesas.map((d) => d.id);
