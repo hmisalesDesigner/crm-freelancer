@@ -156,6 +156,15 @@ function normalizarDados(dados) {
     if (m9) { m9.status = "andamento"; m9.data = hojeISOLocal(); }
   }
   completo.mod9Corrigido2026 = true;
+  if (!dados.vesporModulosAtualizados2026) { // Henrique: módulos 9, 10 e 11 ainda em edição (arquivos diferentes); faltam 13, 14 e 15 para fechar o projeto
+    ["vp-mod9", "vp-mod10", "vp-mod11"].forEach((id) => { const m = completo.demandas.find((d) => d.id === id); if (m) { m.status = "andamento"; m.data = hojeISOLocal(); } });
+    completo.demandas.push(
+      { id: "vp-mod13", cliente: "Vespor", titulo: "Módulo 13 — Boas Práticas (Universidade Vespor)", data: hojeISOLocal(), status: "fazer" },
+      { id: "vp-mod14", cliente: "Vespor", titulo: "Módulo 14 — Erros Mais Comuns (Universidade Vespor)", data: hojeISOLocal(), status: "fazer" },
+      { id: "vp-mod15", cliente: "Vespor", titulo: "Módulo 15 — Encerramento (Universidade Vespor)", data: hojeISOLocal(), status: "fazer" }
+    );
+  }
+  completo.vesporModulosAtualizados2026 = true;
   // migração: etapas renomeadas ("Em andamento" -> "Ativos", "Entregue" -> "Inativos")
   completo.clientes.forEach((c) => {
     if (c.etapaFunil === "Em andamento") c.etapaFunil = "Ativos";
