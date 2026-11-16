@@ -129,6 +129,10 @@ function normalizarDados(dados) {
     completo.configuracoes.horasPagasPorMes = 173; // 8h/dia x 5 dias x ~4,33 semanas/mês
   }
   completo.calculadoraAjustada2026 = true;
+  if (!dados.horasAjustadas2026b) { // 16/11/2026: Henrique trabalha quase todo dia, incluindo domingos (menos) e feriados
+    completo.configuracoes.horasPagasPorMes = 224; // ~26 dias x 8h + ~4 domingos x 4h
+  }
+  completo.horasAjustadas2026b = true;
   // migração: etapas renomeadas ("Em andamento" -> "Ativos", "Entregue" -> "Inativos")
   completo.clientes.forEach((c) => {
     if (c.etapaFunil === "Em andamento") c.etapaFunil = "Ativos";
