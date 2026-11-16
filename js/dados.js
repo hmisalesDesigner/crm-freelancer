@@ -151,6 +151,11 @@ function normalizarDados(dados) {
     );
   }
   completo.universidadeVesporSeed2026 = true;
+  if (!dados.mod9Corrigido2026) { // Henrique avisou: Módulo 9 ainda está em edição, não concluído
+    const m9 = completo.demandas.find((d) => d.id === "vp-mod9");
+    if (m9) { m9.status = "andamento"; m9.data = hojeISOLocal(); }
+  }
+  completo.mod9Corrigido2026 = true;
   // migração: etapas renomeadas ("Em andamento" -> "Ativos", "Entregue" -> "Inativos")
   completo.clientes.forEach((c) => {
     if (c.etapaFunil === "Em andamento") c.etapaFunil = "Ativos";
