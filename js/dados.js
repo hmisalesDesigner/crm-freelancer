@@ -121,6 +121,14 @@ function normalizarDados(dados) {
   }
   completo.demandasVespor = true;
   completo.sementesDespesas = padrao.despesas.map((d) => d.id);
+  // ajuste de preço pedido pelo Henrique (16/11/2026): salário desejado, custos reais e horas de dedicação (8h/dia, seg a sex)
+  if (!dados.calculadoraAjustada2026) {
+    const custoMensalLocal = (d) => (d.emReserva ? 0 : d.tipo === "equipamento" ? (Number(d.valor) || 0) / Math.max(Number(d.vidaUtilMeses) || 60, 1) : Number(d.valor) || 0);
+    completo.configuracoes.salarioDesejado = 4000;
+    completo.configuracoes.custosFixosMensais = Math.round(completo.despesas.reduce((s, d) => s + custoMensalLocal(d), 0) * 100) / 100;
+    completo.configuracoes.horasPagasPorMes = 173; // 8h/dia x 5 dias x ~4,33 semanas/mês
+  }
+  completo.calculadoraAjustada2026 = true;
   // migração: etapas renomeadas ("Em andamento" -> "Ativos", "Entregue" -> "Inativos")
   completo.clientes.forEach((c) => {
     if (c.etapaFunil === "Em andamento") c.etapaFunil = "Ativos";
