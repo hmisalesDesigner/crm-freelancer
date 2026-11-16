@@ -716,3 +716,10 @@ a.chip { text-decoration: none; }
 .previa-score { max-width: 700px; margin-top: 10px; padding: 10px 14px; border: 1px dashed var(--cor-primaria); border-radius: 10px; font-size: 14px; }
 .tabela select { background: var(--cor-fundo-painel); color: var(--cor-texto); border: 1px solid var(--cor-borda); border-radius: 6px; padding: 4px 6px; font-size: 12px; }
 .selo { white-space: nowrap; }
+
+/* Demandas Vespor (painel) */
+.demanda-lista { list-style: none; margin: 0; padding: 0; }
+.demanda-item { display: flex; align-items: center; gap: 10px; padding: 8px 0; border-bottom: 1px solid var(--cor-borda, #eee); font-size: 14px; }
+.demanda-titulo { flex: 1; min-width: 0; overflow-wrap: anywhere; }
+.demanda-acoes { display: flex; gap: 6px; flex-shrink: 0; }
+@media (max-width: 760px) { .demanda-item { flex-wrap: wrap; } .demanda-acoes { width: 100%; } #painel-demandas .cards-resumo { grid-template-columns: repeat(2, 1fr) !important; } }

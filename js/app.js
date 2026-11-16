@@ -43,6 +43,7 @@ function irParaPagina(pagina) {
 }
 
 function atualizarPainel() {
+  if (typeof renderizarDemandasPainel === "function") renderizarDemandasPainel();
   const hoje = new Date();
   const mesAtual = hoje.getMonth();
   const anoAtual = hoje.getFullYear();

@@ -65,6 +65,7 @@ const DADOS_PADRAO = {
     { id: "desp-cabo-usb", descricao: "Cabo extensor USB 3.0 1,8 m", categoria: "Equipamento", tipo: "equipamento", valor: 45, dataCompra: "2020-10-16", vidaUtilMeses: 36 },
     { id: "desp-microfone-c3tech", descricao: "Microfone Gamer C3Tech MI-G10BK (NF-e 1027139)", categoria: "Equipamento", tipo: "equipamento", valor: 56.3, dataCompra: "2023-06-06", vidaUtilMeses: 36 },
   ],
+  demandas: [],        // { id, cliente, titulo, data (AAAA-MM-DD), status: "fazer"|"andamento"|"concluida", semana? }
   cronometroAtivo: null, // { tarefaId, inicio (ISO) }
   modelosOrcamento: [  // { id, nome, descricao, modo, quantidade, valorUnitario }
     { id: "modelo-stories", nome: "5 stories/reels (R$ 40 por peça)", descricao: "Criação de 5 stories/reels para Instagram", modo: "peca", quantidade: 5, valorUnitario: 40 },
@@ -79,7 +80,7 @@ function normalizarDados(dados) {
   // mescla profunda das configurações (chaves novas aparecem em bases antigas)
   completo.configuracoes = { ...padrao.configuracoes, ...(dados.configuracoes || {}) };
   completo.configuracoes.acaoB3 = { ...padrao.configuracoes.acaoB3, ...((dados.configuracoes || {}).acaoB3 || {}) };
-  ["clientes", "orcamentos", "prospeccoes", "leads", "demandasMensais", "pagamentos", "tarefas", "sessoesTempo", "modelosOrcamento", "despesas"].forEach((k) => {
+  ["clientes", "orcamentos", "prospeccoes", "leads", "demandasMensais", "pagamentos", "tarefas", "sessoesTempo", "modelosOrcamento", "despesas", "demandas"].forEach((k) => {
     if (!Array.isArray(completo[k])) completo[k] = padrao[k];
   });
   // migração: leads antigos da lista simples de prospecção viram leads do novo sistema (uma vez)
@@ -114,6 +115,10 @@ function normalizarDados(dados) {
     if (velho && novo) { delete velho.estimado; Object.assign(velho, novo); }
   }
   completo.ssdSa400Corrigido = true;
+  if (!dados.demandasVespor && Array.isArray(window.DEMANDAS_VESPOR_SEED)) { // histórico da planilha entra uma vez como "Concluída"
+    window.DEMANDAS_VESPOR_SEED.forEach((x, i) => completo.demandas.push({ id: "vp-" + i, cliente: "Vespor", titulo: x[2], data: x[0] || "", semana: x[1], status: "concluida" }));
+  }
+  completo.demandasVespor = true;
   completo.sementesDespesas = padrao.despesas.map((d) => d.id);
   // migração: etapas renomeadas ("Em andamento" -> "Ativos", "Entregue" -> "Inativos")
   completo.clientes.forEach((c) => {
@@ -126,7 +131,7 @@ function normalizarDados(dados) {
 function carregarDados() {
   try {
     const bruto = localStorage.getItem(CHAVE_DADOS);
-    if (!bruto) return estruturaClonada(DADOS_PADRAO);
+    if (!bruto) return normalizarDados({});
     const dados = JSON.parse(bruto);
     const completo = normalizarDados(dados);
     return completo;
