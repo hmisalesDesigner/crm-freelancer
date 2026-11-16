@@ -8,6 +8,16 @@ function renderizarPaginaFunil() {
   const container = document.getElementById("pagina-funil");
 
   container.innerHTML = `
+    <div class="grade-2" style="margin-bottom:20px;">
+      <div class="painel-grafico-funil">
+        <h3>🔻 Resumo do funil</h3>
+        <div id="painel-funil-resumo" class="funil-barras"></div>
+      </div>
+      <div class="painel-grafico-funil">
+        <h3>📞 Follow-ups</h3>
+        <div id="painel-followups"></div>
+      </div>
+    </div>
     <div class="kanban" id="kanban-funil">
       ${ETAPAS_FUNIL.map((etapa) => `
         <div class="kanban-coluna" data-etapa="${etapa}">
@@ -17,6 +27,9 @@ function renderizarPaginaFunil() {
       `).join("")}
     </div>
   `;
+
+  renderizarResumoFunilPainel();
+  renderizarFollowUpsPainel();
 
   function desenharKanban() {
     ETAPAS_FUNIL.forEach((etapa) => {

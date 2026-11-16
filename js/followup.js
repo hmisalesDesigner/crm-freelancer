@@ -60,6 +60,7 @@ function obterFollowUps() {
 function renderizarFollowUpsPainel() {
   const alvo = document.getElementById("painel-followups");
   if (!alvo) return;
+
   const itens = obterFollowUps();
 
   if (!itens.length) {

@@ -80,18 +80,30 @@ function nomeMesCurto(indiceMes) {
   return ["Jan", "Fev", "Mar", "Abr", "Mai", "Jun", "Jul", "Ago", "Set", "Out", "Nov", "Dez"][indiceMes];
 }
 
+/** Ano e mês (0-11) de uma data, sem o deslocamento de fuso horário de "new Date('AAAA-MM-DD')". */
+function anoMesDe(valor) {
+  const [ano, mes] = chaveMes(valor).split("-").map(Number);
+  return { ano, mesIndice: mes - 1 };
+}
+
 /** Faturamento (valor cobrado) por mês no ano informado, incluindo o cliente fixo. Retorna array de 12 números. */
 function faturamentoPorMes(ano) {
   const meses = new Array(12).fill(0);
   ESTADO.clientes.forEach((c) => {
     (c.historicoFinanceiro || []).forEach((h) => {
-      const d = new Date(h.data);
-      if (d.getFullYear() === ano) meses[d.getMonth()] += Number(h.valor || 0);
+      const { ano: anoH, mesIndice } = anoMesDe(h.data);
+      if (anoH === ano) meses[mesIndice] += Number(h.valor || 0);
     });
   });
   const hoje = new Date();
   const ultimoMes = ano < hoje.getFullYear() ? 11 : ano === hoje.getFullYear() ? hoje.getMonth() : -1;
-  for (let m = 0; m <= ultimoMes; m++) meses[m] += Number(ESTADO.configuracoes.clienteFixoMensal || 0);
+  // o cliente fixo só entra nos meses em que ele mesmo não tem um lançamento próprio (senão soma em dobro)
+  const fixo = ESTADO.clientes.find((c) => c.id === ESTADO.configuracoes.clienteFixoId);
+  const mesesComRegistroFixo = new Set((fixo?.historicoFinanceiro || [])
+    .map((h) => anoMesDe(h.data))
+    .filter((x) => x.ano === ano)
+    .map((x) => x.mesIndice));
+  for (let m = 0; m <= ultimoMes; m++) if (!mesesComRegistroFixo.has(m)) meses[m] += Number(ESTADO.configuracoes.clienteFixoMensal || 0);
   return meses;
 }
 
@@ -117,29 +129,35 @@ function normalizarNome(s) {
   return (s || "").trim().toLowerCase();
 }
 
+/** Compara nomes "por conteúdo": bate exato ou se um contém o outro (ex: "Vespor" e "Vespor Automotive"). */
+function nomesCorrespondemCliente(nomeTexto, nomeCliente) {
+  const a = normalizarNome(nomeTexto), b = normalizarNome(nomeCliente);
+  if (!a || !b) return false;
+  return a === b || a.includes(b) || b.includes(a);
+}
+
 /** Demandas de um cliente: por clienteId (vínculo exato) ou, nas antigas, pelo nome em texto. */
 function demandasDoCliente(cliente) {
-  const nome = normalizarNome(cliente.nome);
-  return (ESTADO.demandas || []).filter((d) => d.clienteId === cliente.id || (!d.clienteId && normalizarNome(d.cliente) === nome));
+  return (ESTADO.demandas || []).filter((d) => d.clienteId === cliente.id || (!d.clienteId && nomesCorrespondemCliente(d.cliente, cliente.nome)));
 }
 
 /** Avaliações do Google de um cliente, casando pelo nome em texto (mesma lógica das demandas). */
 function avaliacoesDoCliente(cliente) {
-  const nome = normalizarNome(cliente.nome);
-  return (ESTADO.avaliacoesGoogle || []).filter((a) => normalizarNome(a.cliente) === nome);
+  return (ESTADO.avaliacoesGoogle || []).filter((a) => nomesCorrespondemCliente(a.cliente, cliente.nome));
 }
 
-/** Faturamento por mês de um cliente específico (inclui o cliente fixo, se for este o vinculado). */
+/** Faturamento por mês de um cliente específico. O cliente fixo só entra nos meses sem lançamento próprio, pra não somar em dobro. */
 function faturamentoPorMesCliente(ano, cliente) {
   const meses = new Array(12).fill(0);
+  const mesesComRegistro = new Set();
   (cliente.historicoFinanceiro || []).forEach((h) => {
-    const d = new Date(h.data);
-    if (d.getFullYear() === ano) meses[d.getMonth()] += Number(h.valor || 0);
+    const { ano: anoH, mesIndice } = anoMesDe(h.data);
+    if (anoH === ano) { meses[mesIndice] += Number(h.valor || 0); mesesComRegistro.add(mesIndice); }
   });
   if (ESTADO.configuracoes.clienteFixoId === cliente.id) {
     const hoje = new Date();
     const ultimoMes = ano < hoje.getFullYear() ? 11 : ano === hoje.getFullYear() ? hoje.getMonth() : -1;
-    for (let m = 0; m <= ultimoMes; m++) meses[m] += Number(ESTADO.configuracoes.clienteFixoMensal || 0);
+    for (let m = 0; m <= ultimoMes; m++) if (!mesesComRegistro.has(m)) meses[m] += Number(ESTADO.configuracoes.clienteFixoMensal || 0);
   }
   return meses;
 }

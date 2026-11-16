@@ -10,7 +10,7 @@
 <link rel="icon" type="image/png" href="icone-192.png">
 <script>
   // Versão do site: muda a cada publicação (e a cada clique em "Atualizar") para o navegador nunca reaproveitar arquivos antigos.
-  window.VERSAO_SITE = "20261116o";
+  window.VERSAO_SITE = "20261116p";
   (function () {
     var v = new URLSearchParams(location.search).get("_v") || window.VERSAO_SITE;
     window.__v = encodeURIComponent(v);
@@ -33,8 +33,8 @@
       <div class="logo">CRM <span>Freelancer</span></div>
       <nav class="menu">
         <button class="menu-item ativo" data-pagina="painel">📊 Painel</button>
-        <button class="menu-item" data-pagina="calculadora">🧮 Calculadora</button>
         <button class="menu-item" data-pagina="clientes">👤 Clientes</button>
+        <button class="menu-item" data-pagina="calculadora">🧮 Calculadora</button>
         <button class="menu-item" data-pagina="funil">📋 Funil de Vendas</button>
         <button class="menu-item" data-pagina="orcamentos">📄 Orçamentos</button>
         <button class="menu-item" data-pagina="pagamentos">💳 Pagamentos</button>
@@ -61,10 +61,13 @@
 
       <section id="pagina-painel" class="pagina ativa">
         <div class="cards-resumo">
-          <div class="card">
-            <span class="card-label">Faturamento no mês</span>
-            <span class="card-valor" id="painel-faturamento-mes">R$ 0,00</span>
-            <span class="card-sub" id="painel-meta-texto"></span>
+          <div class="card" style="display:flex; justify-content:space-between; align-items:flex-start; gap:8px;">
+            <div>
+              <span class="card-label">Faturamento no mês</span>
+              <span class="card-valor" id="painel-faturamento-mes">R$ 0,00</span>
+              <span class="card-sub" id="painel-meta-texto"></span>
+            </div>
+            <div id="painel-sparkline-faturamento" style="width:90px; flex-shrink:0;"></div>
           </div>
           <div class="card">
             <span class="card-label">Faturamento no ano (MEI)</span>
@@ -102,26 +105,9 @@
           <div id="painel-demandas"></div>
         </div>
 
-        <div class="grade-2">
-          <div class="painel-grafico-funil">
-            <h3>🔻 Funil de Vendas</h3>
-            <div id="painel-funil-resumo" class="funil-barras"></div>
-          </div>
-          <div class="painel-grafico-funil">
-            <h3>📞 Follow-ups</h3>
-            <div id="painel-followups"></div>
-          </div>
-        </div>
-
-        <div class="grade-2" style="margin-top:24px;">
-          <div class="painel-grafico-funil">
-            <h3>📈 Faturamento mensal</h3>
-            <div id="painel-grafico-faturamento"></div>
-          </div>
-          <div class="painel-grafico-funil">
-            <h3>🔔 Lembretes</h3>
-            <div id="painel-lembretes"></div>
-          </div>
+        <div class="painel-grafico-funil">
+          <h3>🔔 Lembretes</h3>
+          <div id="painel-lembretes"></div>
         </div>
       </section>
 

@@ -78,21 +78,7 @@ function atualizarPainel() {
 
   document.getElementById("painel-orcamentos-abertos").textContent = ESTADO.orcamentos.filter((o) => !o.aceito && !o.recusado).length;
 
-  const resumoFunil = document.getElementById("painel-funil-resumo");
-  if (resumoFunil) {
-    const contagens = ETAPAS_FUNIL.map((etapa) => ESTADO.clientes.filter((c) => c.etapaFunil === etapa).length);
-    const maior = Math.max(1, ...contagens);
-    resumoFunil.innerHTML = ETAPAS_FUNIL.map((etapa, i) => {
-      const qtd = contagens[i];
-      const largura = (qtd / maior) * 100;
-      return `
-        <div class="funil-barra-linha">
-          <span class="rotulo">${etapa}</span>
-          <div class="funil-barra-trilha"><div class="funil-barra-preenchimento" style="width:${largura}%"></div></div>
-          <span class="numero">${qtd}</span>
-        </div>`;
-    }).join("");
-  }
+  renderizarResumoFunilPainel();
 
   const orcamentosRecentes = document.getElementById("painel-orcamentos-recentes");
   if (orcamentosRecentes) {
@@ -114,8 +100,25 @@ function atualizarPainel() {
   }
 
   renderizarFollowUpsPainel();
-  renderizarGraficoFaturamento();
+  renderizarSparklineFaturamento();
   renderizarLembretes();
+}
+
+function renderizarResumoFunilPainel() {
+  const resumoFunil = document.getElementById("painel-funil-resumo");
+  if (!resumoFunil) return;
+  const contagens = ETAPAS_FUNIL.map((etapa) => ESTADO.clientes.filter((c) => c.etapaFunil === etapa).length);
+  const maior = Math.max(1, ...contagens);
+  resumoFunil.innerHTML = ETAPAS_FUNIL.map((etapa, i) => {
+    const qtd = contagens[i];
+    const largura = (qtd / maior) * 100;
+    return `
+      <div class="funil-barra-linha">
+        <span class="rotulo">${etapa}</span>
+        <div class="funil-barra-trilha"><div class="funil-barra-preenchimento" style="width:${largura}%"></div></div>
+        <span class="numero">${qtd}</span>
+      </div>`;
+  }).join("");
 }
 
 function renderizarPaginaConfiguracoes() {

@@ -52,6 +52,25 @@ function renderizarGraficoFaturamento() {
     </p>`;
 }
 
+/** Mini gráfico (sparkline) do faturamento dos últimos meses, para caber dentro do card "Faturamento no mês". */
+function renderizarSparklineFaturamento() {
+  const alvo = document.getElementById("painel-sparkline-faturamento");
+  if (!alvo) return;
+  const ano = new Date().getFullYear();
+  const mesAtual = new Date().getMonth();
+  const valores = faturamentoPorMes(ano).slice(0, mesAtual + 1).slice(-6); // até 6 últimos meses com dado
+  const maximo = Math.max(...valores, 1) * 1.1;
+  const L = 90, A = 32, larguraBarra = L / Math.max(valores.length, 1);
+  const barras = valores.map((v, i) => {
+    const h = Math.max((v / maximo) * A, v > 0 ? 2 : 0);
+    const x = i * larguraBarra + larguraBarra * 0.15;
+    const w = larguraBarra * 0.7;
+    const atual = i === valores.length - 1;
+    return `<rect x="${x.toFixed(1)}" y="${(A - h).toFixed(1)}" width="${w.toFixed(1)}" height="${h.toFixed(1)}" rx="1.5" fill="${atual ? "var(--cor-primaria)" : "var(--cor-texto-suave)"}" ${atual ? "" : 'style="opacity:.45"'}></rect>`;
+  }).join("");
+  alvo.innerHTML = `<svg viewBox="0 0 ${L} ${A}" style="width:100%; height:32px; display:block;" role="img" aria-label="Faturamento dos últimos meses"><title>Faturamento mensal (${ano})</title>${barras}</svg>`;
+}
+
 /** Mesmo gráfico de barras, mas só com o faturamento de UM cliente (sem linha de meta). */
 function renderizarGraficoFaturamentoCliente(alvoId, cliente) {
   const alvo = document.getElementById(alvoId);

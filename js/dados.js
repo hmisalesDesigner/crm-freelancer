@@ -179,6 +179,26 @@ function normalizarDados(dados) {
     completo.avaliacoesGoogle.forEach((a) => { if (!a.cliente) a.cliente = "Vespor"; });
   }
   completo.avaliacoesClienteVespor2026 = true;
+  if (!dados.pagamentosVespor2026) { // histórico de pagamentos da Vespor (cliente fixo R$ 3.000/mês), informado pelo Henrique
+    const PAGAMENTOS_VESPOR_2026 = ["2026-01-05", "2026-02-02", "2026-03-02", "2026-04-01", "2026-05-04", "2026-06-01", "2026-07-01", "2026-08-03", "2026-09-01", "2026-10-01", "2026-11-05"];
+    let cliente = completo.clientes.find((c) => (c.nome || "").toLowerCase().includes("vespor"));
+    if (!cliente) {
+      cliente = { id: "cliente-vespor-seed", nome: "Vespor", contato: "", cnpj: "", razaoSocial: "", capitalSocial: 0, etapaFunil: "Ativos", demanda: "Cliente fixo mensal (Vespor Automotive / Varejocar)", proximoContato: "", foto: "", historicoFinanceiro: [], notas: [], criadoEm: hojeISOLocal() };
+      completo.clientes.push(cliente);
+    }
+    cliente.historicoFinanceiro = cliente.historicoFinanceiro || [];
+    PAGAMENTOS_VESPOR_2026.forEach((data) => {
+      if (!cliente.historicoFinanceiro.some((h) => (h.data || "").slice(0, 10) === data)) {
+        cliente.historicoFinanceiro.push({ data, valor: 3000, descricao: "Pagamento mensal fixo (Vespor)" });
+      }
+    });
+    cliente.notas = cliente.notas || [];
+    if (!cliente.notas.some((n) => n.texto.includes("MEI"))) {
+      cliente.notas.push({ id: "nota-vespor-mei", data: new Date().toISOString(), texto: "Cliente fixo desde a abertura do MEI (07/08/2023). Só há datas exatas de pagamento a partir de 2026 — pedir as de 2023–2025 se quiser no histórico." });
+    }
+    if (!completo.configuracoes.clienteFixoId) completo.configuracoes.clienteFixoId = cliente.id;
+  }
+  completo.pagamentosVespor2026 = true;
   // migração: etapas renomeadas ("Em andamento" -> "Ativos", "Entregue" -> "Inativos")
   completo.clientes.forEach((c) => {
     if (c.etapaFunil === "Em andamento") c.etapaFunil = "Ativos";
