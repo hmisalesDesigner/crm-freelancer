@@ -133,6 +133,13 @@ function normalizarDados(dados) {
     completo.configuracoes.horasPagasPorMes = 224; // ~26 dias x 8h + ~4 domingos x 4h
   }
   completo.horasAjustadas2026b = true;
+  if (!dados.configPreenchida2026) { // 16/11/2026: Henrique pediu para preencher WhatsApp, nome e meta, e salvar margem de 30% para avulsos
+    completo.configuracoes.whatsapp = "44997742036";
+    completo.configuracoes.nomeProfissional = "Henrique Designer e Editor de vídeos";
+    completo.configuracoes.metaMensal = 4000;
+    completo.configuracoes.margemAvulsos = 30;
+  }
+  completo.configPreenchida2026 = true;
   // migração: etapas renomeadas ("Em andamento" -> "Ativos", "Entregue" -> "Inativos")
   completo.clientes.forEach((c) => {
     if (c.etapaFunil === "Em andamento") c.etapaFunil = "Ativos";

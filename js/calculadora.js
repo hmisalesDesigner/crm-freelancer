@@ -42,6 +42,10 @@ function renderizarPaginaCalculadora() {
               <label>🕐 Horas pagas por mês</label>
               <input type="number" id="calc-horas" value="${cfg.horasPagasPorMes}">
             </div>
+            <div class="campo">
+              <label>📈 Margem para clientes avulsos (%)</label>
+              <input type="number" id="calc-margem-avulso" value="${cfg.margemAvulsos ?? 30}">
+            </div>
           </div>
         </div>
 
@@ -104,8 +108,12 @@ function renderizarPaginaCalculadora() {
       <div class="painel-lateral-resumo">
         <h4>Taxa Sugerida</h4>
         <div id="resultado-visivel-hora">
-          <span class="card-label">Valor mínimo da hora</span>
+          <span class="card-label">Valor mínimo da hora (equilíbrio)</span>
           <div class="valor" id="resultado-hora" style="font-size:26px; font-weight:800; color:var(--cor-primaria);">R$ 0,00</div>
+          <div class="linha-resumo" style="margin-top:10px;">
+            <span class="rotulo">Com margem (clientes avulsos)</span>
+            <span class="valor" id="resultado-hora-avulso" style="font-size:18px; font-weight:700; color:var(--cor-sucesso);">R$ 0,00</span>
+          </div>
         </div>
         <div id="resultado-visivel-projeto" style="display:none">
           <span class="card-label">Valor sugerido do projeto</span>
@@ -135,6 +143,8 @@ function renderizarPaginaCalculadora() {
     const horas = Number(document.getElementById("calc-horas").value) || 0;
     const valorHora = calcularValorHora(salario, custos, horas);
     document.getElementById("resultado-hora").textContent = formatarMoeda(valorHora);
+    const margemAvulso = Number(document.getElementById("calc-margem-avulso").value) || 0;
+    document.getElementById("resultado-hora-avulso").textContent = formatarMoeda(valorHora * (1 + margemAvulso / 100));
 
     const horasProjeto = Number(document.getElementById("calc-horas-projeto").value) || 0;
     const margem = Number(document.getElementById("calc-margem-projeto").value) || 0;
@@ -267,6 +277,7 @@ function renderizarPaginaCalculadora() {
       estado.configuracoes.salarioDesejado = Number(document.getElementById("calc-salario").value) || 0;
       estado.configuracoes.custosFixosMensais = Number(document.getElementById("calc-custos").value) || 0;
       estado.configuracoes.horasPagasPorMes = Number(document.getElementById("calc-horas").value) || 0;
+      estado.configuracoes.margemAvulsos = Number(document.getElementById("calc-margem-avulso").value) || 0;
       estado.configuracoes.clienteFixoMensal = Number(document.getElementById("calc-valor-fixo-mes").value) || 0;
     });
     alert("Configuração padrão salva!");
