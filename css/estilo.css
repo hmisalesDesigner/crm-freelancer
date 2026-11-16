@@ -632,10 +632,23 @@ html:not([data-tema="escuro"]) .selo.recusado { background: #e5e7eb; color: #4b5
   padding: 24px; text-align: center; max-width: 900px;
 }
 .relogio-painel.rodando { border-color: var(--cor-perigo); box-shadow: 0 0 0 1px var(--cor-perigo) inset; }
-.relogio-grande { font-size: 56px; font-weight: 800; font-variant-numeric: tabular-nums; letter-spacing: 2px; margin: 8px 0 14px; }
-.relogio-tarefa { font-size: 18px; font-weight: 600; display: flex; gap: 10px; align-items: center; justify-content: center; flex-wrap: wrap; }
-.relogio-botao { margin-top: 16px; min-width: 220px; font-size: 16px; padding: 14px 24px; }
+.relogio-tarefa { font-size: 18px; font-weight: 600; display: flex; gap: 10px; align-items: center; justify-content: center; flex-wrap: wrap; margin-bottom: 6px; }
 .relogio-painel .campo { text-align: left; }
+
+/* Interruptor estilo Apple (liga/desliga o relógio, sem números correndo) */
+.interruptor-wrap { display: flex; align-items: center; justify-content: center; gap: 12px; margin-top: 20px; }
+.interruptor {
+  width: 56px; height: 32px; border-radius: 16px; background: var(--cor-borda); border: none;
+  position: relative; cursor: pointer; padding: 0; flex-shrink: 0;
+  transition: background .2s ease;
+}
+.interruptor-bolinha {
+  position: absolute; top: 3px; left: 3px; width: 26px; height: 26px; border-radius: 50%;
+  background: #fff; box-shadow: 0 1px 3px rgba(0,0,0,.3); transition: transform .2s ease;
+}
+.interruptor.ativo { background: var(--cor-perigo); }
+.interruptor.ativo .interruptor-bolinha { transform: translateX(24px); }
+.interruptor-rotulo { font-size: 15px; font-weight: 600; color: var(--cor-texto-suave); }
 
 /* Janela (modal) */
 .modal-sobreposicao {

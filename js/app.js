@@ -326,7 +326,7 @@ function inicializarApp() {
   if (btnAtualizar) btnAtualizar.addEventListener("click", recarregarSiteSemCache);
 
   garantirMensalidadeFixa();
-  iniciarTickCronometro();
+  iniciarIndicadorCronometro();
   atualizarPainel();
 }
 

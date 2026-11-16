@@ -52,7 +52,7 @@ function iniciarCronometro(tarefaId) {
     return;
   }
   atualizarEstado((e) => { e.cronometroAtivo = { tarefaId, inicio: new Date().toISOString() }; });
-  atualizarTickCronometro();
+  atualizarIndicadorCronometro();
   renderizarPaginaTempo();
 }
 
@@ -72,7 +72,7 @@ async function pararCronometro() {
     if (t) { t.progresso = progresso; t.finalizadaEm = progresso === "finalizada" ? fim : null; }
     e.cronometroAtivo = null;
   });
-  atualizarTickCronometro();
+  atualizarIndicadorCronometro();
   renderizarPaginaTempo();
   atualizarPainel();
 }
@@ -107,30 +107,27 @@ function perguntarProgresso(tarefa, segundos) {
   });
 }
 
-function atualizarTickCronometro() {
+/** Mostra só que está gravando (sem números correndo) — no título da aba e no indicador global. */
+function atualizarIndicadorCronometro() {
   const a = ESTADO.cronometroAtivo;
   const global = document.getElementById("cronometro-global");
-  const relogio = document.getElementById("tempo-relogio");
   if (a) {
     const t = tarefaPorId(a.tarefaId);
-    const dur = formatarDuracao(segundosAtivoAgora());
     if (global) {
       global.style.display = "inline-flex";
-      global.innerHTML = `<span class="ponto-gravando"></span><span>${dur}</span><span class="cronometro-global-nome">${escaparHtml(t ? t.descricao : "Tarefa")}</span>`;
+      global.innerHTML = `<span class="ponto-gravando"></span><span class="cronometro-global-nome">${escaparHtml(t ? t.descricao : "Tarefa")}</span>`;
     }
-    if (relogio) relogio.textContent = dur;
-    document.title = `⏱ ${dur} · CRM Freelancer`;
+    document.title = "● Gravando · CRM Freelancer";
   } else {
     if (global) global.style.display = "none";
     document.title = "CRM Freelancer";
   }
 }
 
-function iniciarTickCronometro() {
+function iniciarIndicadorCronometro() {
   const global = document.getElementById("cronometro-global");
   if (global) global.addEventListener("click", () => irParaPagina("tempo"));
-  atualizarTickCronometro();
-  setInterval(atualizarTickCronometro, 1000);
+  atualizarIndicadorCronometro();
 }
 
 /* ---------- Página ---------- */
@@ -147,17 +144,20 @@ function renderizarPaginaTempo() {
   const blocoRelogio = ativo
     ? `
       <div class="relogio-painel rodando">
-        <span class="card-label">Tarefa em andamento</span>
+        <span class="card-label">Gravando</span>
         <div class="relogio-tarefa">${escaparHtml(tarefaAtiva ? tarefaAtiva.descricao : "Tarefa")}
           <span class="selo ${tarefaAtiva ? tarefaAtiva.progresso : "comeco"}">${ROTULOS_PROGRESSO[tarefaAtiva ? tarefaAtiva.progresso : "comeco"]}</span>
         </div>
-        <div class="relogio-grande" id="tempo-relogio">${formatarDuracao(segundosAtivoAgora())}</div>
-        <button class="botao perigo relogio-botao" id="btn-parar-relogio">■ Parar e registrar</button>
+        <div class="interruptor-wrap">
+          <button class="interruptor ativo" id="btn-alternar-relogio" role="switch" aria-checked="true" title="Parar e registrar">
+            <span class="interruptor-bolinha"></span>
+          </button>
+          <span class="interruptor-rotulo">Gravando tempo… toque para parar</span>
+        </div>
       </div>`
     : `
       <div class="relogio-painel">
         <span class="card-label">Relógio parado</span>
-        <div class="relogio-grande" style="opacity:.35">00:00:00</div>
         <div class="form-grid" style="max-width:640px; margin: 0 auto;">
           <div class="campo" style="grid-column: 1 / -1;">
             <label>Tarefa</label>
@@ -188,7 +188,12 @@ function renderizarPaginaTempo() {
             </div>
           </div>
         </div>
-        <button class="botao relogio-botao" id="btn-iniciar-relogio">▶ Iniciar</button>
+        <div class="interruptor-wrap">
+          <button class="interruptor" id="btn-alternar-relogio" role="switch" aria-checked="false" title="Iniciar">
+            <span class="interruptor-bolinha"></span>
+          </button>
+          <span class="interruptor-rotulo">Toque para iniciar</span>
+        </div>
       </div>`;
 
   container.innerHTML = `
@@ -266,9 +271,9 @@ function renderizarPaginaTempo() {
     renderizarPaginaTempo(); atualizarPainel();
   }));
 
-  /* --- controles do relógio --- */
+  /* --- controles do relógio (um interruptor só: liga/desliga) --- */
   if (ativo) {
-    document.getElementById("btn-parar-relogio").addEventListener("click", pararCronometro);
+    document.getElementById("btn-alternar-relogio").addEventListener("click", pararCronometro);
   } else {
     const selTarefa = document.getElementById("tp-tarefa");
     const selVinculo = document.getElementById("tp-vinculo");
@@ -281,7 +286,7 @@ function renderizarPaginaTempo() {
     selVinculo.addEventListener("change", alternar);
     alternar();
 
-    document.getElementById("btn-iniciar-relogio").addEventListener("click", () => {
+    document.getElementById("btn-alternar-relogio").addEventListener("click", () => {
       if (selTarefa.value !== "__nova__") { iniciarCronometro(selTarefa.value); return; }
       const descricao = document.getElementById("tp-descricao").value.trim();
       if (!descricao) { alert("Descreva a tarefa."); return; }
