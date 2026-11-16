@@ -4,6 +4,18 @@
  * A fazer -> Em andamento -> Concluída. O histórico da planilha entra como "Concluída".
  */
 const STATUS_DEMANDA = { fazer: "A fazer", andamento: "Em andamento", concluida: "Concluída" };
+const CATEGORIA_DEMANDA = {
+  "Arte": { classe: "cat-arte", cor: "#a78bfa" },
+  "Suporte": { classe: "cat-suporte", cor: "#60a5fa" },
+  "Vídeo/Áudio": { classe: "cat-video", cor: "#2dd4bf" },
+  "Revisão": { classe: "cat-revisao", cor: "#f472b6" },
+};
+
+function seloCategoria(categoria) {
+  const c = CATEGORIA_DEMANDA[categoria];
+  if (!c) return "";
+  return ` <span class="selo ${c.classe}">${categoria}</span>`;
+}
 
 function renderizarDemandasPainel() {
   const alvo = document.getElementById("painel-demandas");
@@ -23,10 +35,19 @@ function renderizarDemandasPainel() {
   concluidas.forEach((d) => { if (d.titulo) contagem.set(d.titulo, (contagem.get(d.titulo) || 0) + 1); });
   const sugestoes = [...contagem.entries()].sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0])).slice(0, 150);
 
+  const porCategoria = {};
+  lista.forEach((d) => { if (d.categoria) porCategoria[d.categoria] = (porCategoria[d.categoria] || 0) + 1; });
+  const totalCategorizado = Object.values(porCategoria).reduce((a, b) => a + b, 0);
+  const ordemCategorias = Object.keys(CATEGORIA_DEMANDA).filter((c) => porCategoria[c]);
+  const barraCategorias = totalCategorizado
+    ? `<div class="barra-categorias">${ordemCategorias.map((c) => `<span style="width:${((porCategoria[c] / totalCategorizado) * 100).toFixed(1)}%; background:${CATEGORIA_DEMANDA[c].cor}" title="${c}: ${porCategoria[c]}"></span>`).join("")}</div>
+       <div class="legenda-categorias">${ordemCategorias.map((c) => `<span><span class="ponto" style="background:${CATEGORIA_DEMANDA[c].cor}"></span>${c}: ${porCategoria[c]}</span>`).join("")}</div>`
+    : "";
+
   const linha = (d) => `
     <li class="demanda-item">
       <span class="selo ${d.status === "andamento" ? "enviado" : "pendente"}">${STATUS_DEMANDA[d.status]}</span>
-      <span class="demanda-titulo">${escaparHtml(d.titulo)}</span>
+      <span class="demanda-titulo">${escaparHtml(d.titulo)}</span>${seloCategoria(d.categoria)}
       <span class="demanda-acoes">
         ${d.status === "fazer" ? `<button class="botao secundario pequeno" data-dem="andamento" data-id="${d.id}">Iniciar</button>` : ""}
         <button class="botao sucesso pequeno" data-dem="concluida" data-id="${d.id}">Concluir</button>
@@ -54,10 +75,11 @@ function renderizarDemandasPainel() {
         <button class="botao secundario pequeno" id="dem-repetir-add">+ Adicionar como A fazer</button>
       </div>
     </div>
+    ${barraCategorias}
     <h4 style="margin:12px 0 6px;">Em aberto (${abertas.length})</h4>
     <ul class="demanda-lista">${abertas.length ? abertas.map(linha).join("") : `<li class="demanda-item" style="color:var(--cor-texto-suave)">Nada em aberto. Adicione uma nova demanda acima.</li>`}</ul>
     <h4 style="margin:12px 0 6px;">Concluídas recentemente</h4>
-    <ul class="demanda-lista">${recentes.map((d) => `<li class="demanda-item"><span class="selo aceito">Concluída</span><span class="demanda-titulo">${escaparHtml(d.titulo)}</span><span class="card-sub">${d.data ? formatarDataBR(d.data) : ""}</span></li>`).join("") || `<li class="demanda-item" style="color:var(--cor-texto-suave)">Nenhuma ainda.</li>`}</ul>`;
+    <ul class="demanda-lista">${recentes.map((d) => `<li class="demanda-item"><span class="selo aceito">Concluída</span><span class="demanda-titulo">${escaparHtml(d.titulo)}</span>${seloCategoria(d.categoria)}<span class="card-sub">${d.data ? formatarDataBR(d.data) : ""}</span></li>`).join("") || `<li class="demanda-item" style="color:var(--cor-texto-suave)">Nenhuma ainda.</li>`}</ul>`;
 
   const adicionar = (texto, status) => {
     const t = (texto ?? document.getElementById("dem-novo").value).trim();

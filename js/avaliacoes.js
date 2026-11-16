@@ -63,13 +63,16 @@ function renderizarGraficoAvaliacoes(alvoId) {
     <p class="card-sub" style="margin:6px 0 0;"><span style="color:var(--cor-sucesso)">●</span> Positivas &nbsp; <span style="color:var(--cor-perigo)">●</span> Negativas</p>`;
 }
 
-function renderizarAvaliacoesPainel() {
-  const alvo = document.getElementById("painel-avaliacoes");
+function renderizarPaginaAvaliacoes() {
+  const alvo = document.getElementById("pagina-avaliacoes");
   if (!alvo) return;
   const t = totaisAvaliacoesGoogle();
+  const lista = [...(ESTADO.avaliacoesGoogle || [])].sort((a, b) => (b.data || "").localeCompare(a.data || ""));
+  const recentes = lista.slice(0, 10);
 
   alvo.innerHTML = `
-    <div class="cards-resumo" style="grid-template-columns: repeat(3, 1fr); margin-bottom:10px;">
+    <p class="card-sub" style="margin:0 0 12px;">Avaliações do Google Meu Negócio respondidas (cliente Vespor / Varejocar).</p>
+    <div class="cards-resumo" style="grid-template-columns: repeat(3, 1fr); margin-bottom:16px;">
       <div class="card"><span class="card-label">Positivas respondidas</span><span class="card-valor" style="color:var(--cor-sucesso)">${t.positivas}</span><span class="card-sub">${t.positivasMes} neste mês</span></div>
       <div class="card"><span class="card-label">Negativas respondidas</span><span class="card-valor" style="color:var(--cor-perigo)">${t.negativas}</span><span class="card-sub">${t.negativasMes} neste mês</span></div>
       <div class="card"><span class="card-label">Registrar avaliações de hoje</span>
@@ -81,9 +84,14 @@ function renderizarAvaliacoesPainel() {
         </div>
       </div>
     </div>
-    <div id="painel-grafico-avaliacoes"></div>`;
+    <div class="painel-grafico-funil" style="margin-bottom:16px;">
+      <h3>Evolução mensal</h3>
+      <div id="grafico-avaliacoes"></div>
+    </div>
+    <h4 style="margin:12px 0 6px;">Últimos registros</h4>
+    <ul class="demanda-lista">${recentes.map((a) => `<li class="demanda-item"><span class="selo ${a.tipo === "positiva" ? "aceito" : "atrasado"}">${a.tipo === "positiva" ? "Positiva" : "Negativa"}</span><span class="demanda-titulo">${a.quantidade} avaliaç${a.quantidade === 1 ? "ão" : "ões"}</span><span class="card-sub">${formatarDataBR(a.data)}</span></li>`).join("") || `<li class="demanda-item" style="color:var(--cor-texto-suave)">Nenhum registro ainda.</li>`}</ul>`;
 
-  renderizarGraficoAvaliacoes("painel-grafico-avaliacoes");
+  renderizarGraficoAvaliacoes("grafico-avaliacoes");
 
   document.getElementById("av-add").addEventListener("click", () => {
     const data = document.getElementById("av-data").value || hojeISO();
@@ -94,8 +102,6 @@ function renderizarAvaliacoesPainel() {
       if (pos > 0) e.avaliacoesGoogle.push({ id: gerarId(), data, tipo: "positiva", quantidade: pos });
       if (neg > 0) e.avaliacoesGoogle.push({ id: gerarId(), data, tipo: "negativa", quantidade: neg });
     });
-    document.getElementById("av-positivas").value = "";
-    document.getElementById("av-negativas").value = "";
-    renderizarAvaliacoesPainel();
+    renderizarPaginaAvaliacoes();
   });
 }

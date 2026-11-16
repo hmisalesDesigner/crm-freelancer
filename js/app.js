@@ -12,6 +12,7 @@ const RENDERIZADORES = {
   pagamentos: renderizarPaginaPagamentos,
   tempo: renderizarPaginaTempo,
   despesas: renderizarPaginaDespesas,
+  avaliacoes: renderizarPaginaAvaliacoes,
   prospeccao: renderizarPaginaProspeccao,
   configuracoes: renderizarPaginaConfiguracoes,
 };
@@ -25,6 +26,7 @@ const TITULOS_PAGINA = {
   pagamentos: "Pagamentos",
   tempo: "Tempo",
   despesas: "Despesas",
+  avaliacoes: "Avaliações Google",
   prospeccao: "Prospecção",
   configuracoes: "Configurações",
 };
@@ -44,7 +46,6 @@ function irParaPagina(pagina) {
 
 function atualizarPainel() {
   if (typeof renderizarDemandasPainel === "function") renderizarDemandasPainel();
-  if (typeof renderizarAvaliacoesPainel === "function") renderizarAvaliacoesPainel();
   const hoje = new Date();
   const mesAtual = hoje.getMonth();
   const anoAtual = hoje.getFullYear();
