@@ -75,6 +75,8 @@ const DADOS_PADRAO = {
 
 DADOS_PADRAO.sementesDespesas = DADOS_PADRAO.despesas.map((d) => d.id);
 
+function hojeISOLocal() { const h = new Date(); return `${h.getFullYear()}-${String(h.getMonth()+1).padStart(2,"0")}-${String(h.getDate()).padStart(2,"0")}`; }
+
 function normalizarDados(dados) {
   const padrao = estruturaClonada(DADOS_PADRAO);
   const completo = { ...padrao, ...dados };
@@ -140,6 +142,15 @@ function normalizarDados(dados) {
     completo.configuracoes.margemAvulsos = 30;
   }
   completo.configPreenchida2026 = true;
+  if (!dados.universidadeVesporSeed2026) { // Universidade Vespor (Vedéks): módulos como demandas comuns, conforme pedido
+    completo.demandas.push(
+      { id: "vp-mod9", cliente: "Vespor", titulo: "Módulo 9 — Iniciando um Orçamento (Universidade Vespor)", data: hojeISOLocal(), status: "concluida" },
+      { id: "vp-mod10", cliente: "Vespor", titulo: "Módulo 10 — Condições Comerciais (Universidade Vespor)", data: hojeISOLocal(), status: "concluida" },
+      { id: "vp-mod11", cliente: "Vespor", titulo: "Módulo 11 — Formas de Pagamento (Universidade Vespor)", data: hojeISOLocal(), status: "concluida" },
+      { id: "vp-mod12", cliente: "Vespor", titulo: "Módulo 12 — Transporte e Frete (Universidade Vespor): substituir texto genérico do exercício por resumo explicativo", data: hojeISOLocal(), status: "fazer" }
+    );
+  }
+  completo.universidadeVesporSeed2026 = true;
   // migração: etapas renomeadas ("Em andamento" -> "Ativos", "Entregue" -> "Inativos")
   completo.clientes.forEach((c) => {
     if (c.etapaFunil === "Em andamento") c.etapaFunil = "Ativos";
