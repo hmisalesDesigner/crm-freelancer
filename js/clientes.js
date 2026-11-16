@@ -146,8 +146,8 @@ function renderizarPaginaClientes() {
           ? `<img src="${c.foto}" style="width:28px;height:28px;border-radius:50%;object-fit:cover;vertical-align:middle;margin-right:8px;">`
           : `<span style="display:inline-flex;width:28px;height:28px;border-radius:50%;background:var(--cor-primaria-clara);color:var(--cor-primaria);align-items:center;justify-content:center;font-size:11px;font-weight:700;vertical-align:middle;margin-right:8px;">${iniciais}</span>`;
         return `
-          <tr>
-            <td>${avatarHtml}<button type="button" class="link-cliente" data-ver="${c.id}" title="Ver painel deste cliente">${escaparHtml(c.nome)}</button></td>
+          <tr data-ver-linha="${c.id}" style="cursor:pointer;" title="Ver painel deste cliente">
+            <td>${avatarHtml}<span class="nome-cliente">${escaparHtml(c.nome)}</span></td>
             <td>${escaparHtml(c.contato || "-")}</td>
             <td>${escaparHtml((c.demanda || "").slice(0, 40))}</td>
             <td>${escaparHtml(c.etapaFunil)}</td>
@@ -161,11 +161,14 @@ function renderizarPaginaClientes() {
       })
       .join("") || `<tr><td colspan="7" style="text-align:center; color:var(--cor-texto-suave);">Nenhum cliente cadastrado ainda.</td></tr>`;
 
+    corpo.querySelectorAll("[data-ver-linha]").forEach((linha) =>
+      linha.addEventListener("click", (ev) => {
+        if (ev.target.closest("[data-editar], [data-excluir]")) return;
+        abrirPainelCliente(linha.dataset.verLinha);
+      })
+    );
     corpo.querySelectorAll("[data-editar]").forEach((btn) =>
       btn.addEventListener("click", () => abrirModal(btn.dataset.editar))
-    );
-    corpo.querySelectorAll("[data-ver]").forEach((btn) =>
-      btn.addEventListener("click", () => abrirPainelCliente(btn.dataset.ver))
     );
     corpo.querySelectorAll("[data-excluir]").forEach((btn) =>
       btn.addEventListener("click", () => {

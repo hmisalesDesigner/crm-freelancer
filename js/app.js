@@ -12,7 +12,6 @@ const RENDERIZADORES = {
   pagamentos: renderizarPaginaPagamentos,
   tempo: renderizarPaginaTempo,
   despesas: renderizarPaginaDespesas,
-  avaliacoes: renderizarPaginaAvaliacoes,
   prospeccao: renderizarPaginaProspeccao,
   configuracoes: renderizarPaginaConfiguracoes,
 };
@@ -26,7 +25,6 @@ const TITULOS_PAGINA = {
   pagamentos: "Pagamentos",
   tempo: "Tempo",
   despesas: "Despesas",
-  avaliacoes: "Avaliações Google",
   prospeccao: "Prospecção",
   configuracoes: "Configurações",
 };
