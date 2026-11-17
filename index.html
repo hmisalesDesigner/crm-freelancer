@@ -10,7 +10,7 @@
 <link rel="icon" type="image/png" href="icone-192.png">
 <script>
   // Versão do site: muda a cada publicação (e a cada clique em "Atualizar") para o navegador nunca reaproveitar arquivos antigos.
-  window.VERSAO_SITE = "20261117a";
+  window.VERSAO_SITE = "20261117b";
   (function () {
     var v = new URLSearchParams(location.search).get("_v") || window.VERSAO_SITE;
     window.__v = encodeURIComponent(v);
@@ -38,7 +38,6 @@
         <button class="menu-item" data-pagina="funil">📋 Funil de Vendas</button>
         <button class="menu-item" data-pagina="orcamentos">📄 Orçamentos</button>
         <button class="menu-item" data-pagina="pagamentos">💳 Pagamentos</button>
-        <button class="menu-item" data-pagina="tempo">⏱️ Tempo</button>
         <button class="menu-item" data-pagina="despesas">💸 Despesas</button>
         <button class="menu-item" data-pagina="prospeccao">🔎 Prospecção</button>
         <button class="menu-item" data-pagina="configuracoes">⚙️ Configurações</button>
@@ -52,7 +51,7 @@
 
       <header class="topo">
         <h1 id="titulo-pagina">Painel</h1>
-        <button class="cronometro-global" id="cronometro-global" style="display:none" title="Ir para a tela de Tempo"></button>
+        <button class="cronometro-global" id="cronometro-global" style="display:none" title="Ir para o painel do cliente"></button>
         <div style="display:flex; align-items:center; gap:10px;">
           <div class="status-drive" id="status-drive">💾 Dados salvos localmente</div>
           <button class="botao secundario pequeno" id="btn-atualizar-site" title="Recarrega o site ignorando o cache do navegador"><span class="icone-girar" style="display:inline-block">🔄</span> Atualizar</button>
@@ -118,7 +117,6 @@
       <section id="pagina-pagamentos" class="pagina"></section>
       <section id="pagina-despesas" class="pagina"></section>
       <section id="pagina-cliente-detalhe" class="pagina"></section>
-      <section id="pagina-tempo" class="pagina"></section>
       <section id="pagina-prospeccao" class="pagina"></section>
       <section id="pagina-configuracoes" class="pagina"></section>
 

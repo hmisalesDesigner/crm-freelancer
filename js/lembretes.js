@@ -97,7 +97,7 @@ function renderizarLembretes() {
           <b>⏱️ Relógio rodando</b>
           <span class="item-alerta-detalhe">${escaparHtml(tarefa ? tarefa.descricao : "Tarefa")}</span>
         </div>
-        <button class="botao secundario pequeno" data-ir="tempo">Abrir</button>
+        ${tarefa && tarefa.clienteId ? `<button class="botao secundario pequeno" data-abrir-cliente-tarefa="${tarefa.clienteId}">Abrir</button>` : ""}
       </div>`);
   }
 
@@ -111,4 +111,5 @@ function renderizarLembretes() {
     renderizarLembretes();
   }));
   alvo.querySelectorAll("[data-ir]").forEach((b) => b.addEventListener("click", () => irParaPagina(b.dataset.ir)));
+  alvo.querySelectorAll("[data-abrir-cliente-tarefa]").forEach((b) => b.addEventListener("click", () => abrirPainelCliente(b.dataset.abrirClienteTarefa)));
 }

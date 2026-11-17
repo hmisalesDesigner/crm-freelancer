@@ -85,7 +85,7 @@ function renderizarPaginaCalculadora() {
 
           <div style="margin-top:16px; max-width:700px;">
             <h4 style="margin-bottom:4px;">Demandas do mês</h4>
-            <p class="card-sub" style="margin:0 0 8px;">As tarefas do cliente fixo medidas na aba <b>Tempo</b> aparecem aqui sozinhas. Use o campo abaixo só para lançar horas manualmente.</p>
+            <p class="card-sub" style="margin:0 0 8px;">As tarefas do cliente fixo gravadas no painel dele (relógio) aparecem aqui sozinhas. Use o campo abaixo só para lançar horas manualmente.</p>
             <div class="form-grid" style="grid-template-columns: 2fr 1fr auto;">
               <div class="campo"><label>Descrição da demanda</label><input id="mes-nova-descricao" placeholder="Ex: Edição de 3 reels"></div>
               <div class="campo"><label>Horas gastas</label><input type="number" id="mes-nova-horas" step="0.25" value="1"></div>
@@ -164,9 +164,9 @@ function renderizarPaginaCalculadora() {
     const manuais = ESTADO.demandasMensais
       .filter((d) => chaveMes(d.data) === mes)
       .map((d) => ({ ...d, origem: "manual" }));
-    // tarefas do cliente fixo medidas pelo relógio (aba Tempo)
+    // tarefas do cliente fixo medidas pelo relógio (ligado no painel dele)
     const cronometradas = ESTADO.tarefas
-      .filter((t) => t.fixo)
+      .filter((t) => t.fixo || (t.clienteId && t.clienteId === ESTADO.configuracoes.clienteFixoId))
       .map((t) => ({ id: t.id, descricao: t.descricao, horas: segundosTarefa(t.id, mes) / 3600, origem: "cronometro", progresso: t.progresso }))
       .filter((d) => d.horas > 0);
     return [...cronometradas, ...manuais];

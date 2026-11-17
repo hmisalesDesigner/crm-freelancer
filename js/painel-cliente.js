@@ -5,6 +5,8 @@
  * Aberto clicando no nome do cliente na tela "Clientes".
  */
 
+let PAINEL_CLIENTE_ABERTO = null;
+
 function abrirPainelCliente(id) {
   const cliente = ESTADO.clientes.find((c) => c.id === id);
   if (!cliente) return;
@@ -12,7 +14,15 @@ function abrirPainelCliente(id) {
   document.getElementById("pagina-cliente-detalhe").classList.add("ativa");
   document.querySelectorAll(".menu-item").forEach((m) => m.classList.remove("ativo"));
   document.getElementById("titulo-pagina").textContent = cliente.nome;
+  PAINEL_CLIENTE_ABERTO = id;
   renderizarPainelCliente(id);
+}
+
+/** Chamado pelo relógio (tempo.js) ao ligar/desligar: atualiza o painel se for o que está aberto agora. */
+function atualizarPainelClienteSeAberto() {
+  if (PAINEL_CLIENTE_ABERTO && document.getElementById("pagina-cliente-detalhe").classList.contains("ativa")) {
+    renderizarPainelCliente(PAINEL_CLIENTE_ABERTO);
+  }
 }
 
 function renderizarPainelCliente(id) {
@@ -30,6 +40,20 @@ function renderizarPainelCliente(id) {
   const aReceber = (ESTADO.pagamentos || []).filter((p) => p.clienteId === cliente.id && !p.pago).reduce((s, p) => s + Number(p.valor || 0), 0);
   const horasMes = (horasDoCliente(cliente, mesAtualChave()) / 3600);
   const ehFixo = ESTADO.configuracoes.clienteFixoId === cliente.id;
+
+  /* --- relógio deste cliente --- */
+  const cronoAtivo = ESTADO.cronometroAtivo;
+  const tarefaAtiva = cronoAtivo ? tarefaPorId(cronoAtivo.tarefaId) : null;
+  const gravandoAqui = !!(tarefaAtiva && tarefaAtiva.clienteId === cliente.id);
+  const gravandoEmOutro = !!(cronoAtivo && !gravandoAqui);
+  const tarefasAbertasCliente = ESTADO.tarefas.filter((t) => t.clienteId === cliente.id && t.progresso !== "finalizada" && (!gravandoAqui || t.id !== tarefaAtiva.id));
+  const horasAno = horasAnoCliente(cliente, ano) / 3600;
+  const minimoHora = valorMinimoHora();
+  const rotuloInterruptor = gravandoAqui
+    ? `Gravando: ${escaparHtml(tarefaAtiva.descricao)} — toque para parar`
+    : gravandoEmOutro
+      ? "Gravando em outro cliente agora"
+      : "Digite a tarefa acima e toque para começar a gravar";
 
   const linhaDemanda = (d) => `
     <li class="demanda-item">
@@ -61,14 +85,34 @@ function renderizarPainelCliente(id) {
 
     <div class="painel-grafico-funil" style="margin-bottom:16px;">
       <h3>📌 Demandas</h3>
-      <div style="display:flex; gap:6px; margin-bottom:10px;">
-        <input id="pc-dem-novo" placeholder="Nova demanda deste cliente" style="flex:1; min-width:0;">
-        <button class="botao pequeno" id="pc-dem-add">+</button>
+      <div style="display:flex; gap:6px; margin-bottom:6px; flex-wrap:wrap; align-items:center;">
+        <input id="pc-dem-novo" placeholder="Nova demanda ou tarefa deste cliente" style="flex:1; min-width:200px;">
+        <button class="botao pequeno" id="pc-dem-add" title="Só anota a demanda, sem contar tempo">+ Demanda</button>
+        <div class="interruptor-wrap" style="margin:0;">
+          <button class="interruptor ${gravandoAqui ? "ativo" : ""}" id="pc-btn-cronometro" role="switch" aria-checked="${gravandoAqui}" ${gravandoEmOutro ? 'title="Pare o outro relógio antes"' : ""}>
+            <span class="interruptor-bolinha"></span>
+          </button>
+        </div>
       </div>
+      <p class="card-sub" style="margin:0 0 14px;">${rotuloInterruptor}</p>
       <h4 style="margin:10px 0 6px;">Em aberto (${abertas.length})</h4>
       <ul class="demanda-lista">${abertas.length ? abertas.map(linhaDemanda).join("") : `<li class="demanda-item" style="color:var(--cor-texto-suave)">Nada em aberto.</li>`}</ul>
       <h4 style="margin:10px 0 6px;">Concluídas recentemente</h4>
       <ul class="demanda-lista">${concluidas.slice(0, 8).map((d) => `<li class="demanda-item"><span class="selo aceito">Concluída</span><span class="demanda-titulo">${escaparHtml(d.titulo)}</span>${seloCategoria(d.categoria)}<span class="card-sub">${d.data ? formatarDataBR(d.data) : ""}</span></li>`).join("") || `<li class="demanda-item" style="color:var(--cor-texto-suave)">Nenhuma ainda.</li>`}</ul>
+
+      <h4 style="margin:16px 0 6px;">⏱ Tempo registrado</h4>
+      ${tarefasAbertasCliente.length ? `<ul class="demanda-lista">${tarefasAbertasCliente.map((t) => `
+        <li class="demanda-item">
+          <span class="selo ${t.progresso === "andamento" ? "enviado" : "pendente"}">${ROTULOS_PROGRESSO[t.progresso]}</span>
+          <span class="demanda-titulo">${escaparHtml(t.descricao)}</span>
+          <span class="card-sub">${formatarDuracaoCurta(segundosTarefa(t.id))}</span>
+          <span class="demanda-acoes"><button class="botao secundario pequeno" data-pc-retomar="${t.id}">▶ Retomar</button></span>
+        </li>`).join("")}</ul>` : ""}
+      <p class="card-sub" style="margin:${tarefasAbertasCliente.length ? "8px" : "0"} 0 0;">
+        ${horasAno >= 0.1
+          ? `Valor/hora real em ${ano}: <b>${formatarMoeda(totalFaturadoAno / horasAno)}</b>/h (${horasAno.toLocaleString("pt-BR", { maximumFractionDigits: 1 })}h registradas) — seu mínimo é ${formatarMoeda(minimoHora)}/h.`
+          : `Registre tempo nas tarefas para ver o valor/hora real (seu mínimo é ${formatarMoeda(minimoHora)}/h).`}
+      </p>
     </div>
 
     <div class="painel-grafico-funil" style="margin-bottom:16px;">
@@ -134,6 +178,22 @@ function renderizarPainelCliente(id) {
     renderizarPainelCliente(id);
   });
   document.getElementById("pc-dem-novo").addEventListener("keydown", (ev) => { if (ev.key === "Enter") document.getElementById("pc-dem-add").click(); });
+
+  document.getElementById("pc-btn-cronometro").addEventListener("click", () => {
+    const ativoAgora = ESTADO.cronometroAtivo;
+    if (ativoAgora) {
+      const t = tarefaPorId(ativoAgora.tarefaId);
+      if (t && t.clienteId === cliente.id) pararCronometro();
+      else iniciarCronometro(); // já tem um relógio rodando em outro cliente: mostra o aviso
+      return;
+    }
+    const texto = document.getElementById("pc-dem-novo").value.trim();
+    if (!texto) { alert("Digite o que você vai fazer antes de começar a gravar."); return; }
+    const novaTarefa = { id: gerarId(), descricao: texto, clienteId: cliente.id, orcamentoId: null, fixo: false, progresso: "comeco", criadaEm: new Date().toISOString(), finalizadaEm: null };
+    atualizarEstado((e) => { e.tarefas.push(novaTarefa); });
+    iniciarCronometro(novaTarefa.id);
+  });
+  container.querySelectorAll("[data-pc-retomar]").forEach((b) => b.addEventListener("click", () => iniciarCronometro(b.dataset.pcRetomar)));
 
   container.querySelectorAll("[data-pcdem]").forEach((b) => b.addEventListener("click", () => {
     const acao = b.dataset.pcdem, demId = b.dataset.id;

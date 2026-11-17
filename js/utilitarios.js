@@ -173,3 +173,10 @@ function horasDoCliente(cliente, mes) {
   }
   return segundos;
 }
+
+/** Soma das horas de um cliente no ano inteiro (12 meses), em segundos. */
+function horasAnoCliente(cliente, ano) {
+  let segundos = 0;
+  for (let m = 0; m < 12; m++) segundos += horasDoCliente(cliente, `${ano}-${String(m + 1).padStart(2, "0")}`);
+  return segundos;
+}
