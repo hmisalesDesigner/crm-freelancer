@@ -81,7 +81,7 @@ function renderizarGraficoFaturamentoCliente(alvoId, cliente) {
   const valores = faturamentoPorMesCliente(ano, cliente);
   const maximo = Math.max(...valores, 1) * 1.15;
 
-  const L = 560, A = 180, margemE = 8, margemB = 26, margemT = 14;
+  const L = 560, A = 90, margemE = 8, margemB = 20, margemT = 8;
   const areaA = A - margemB - margemT;
   const larguraBarra = (L - margemE * 2) / 12;
   const y = (v) => margemT + areaA - (v / maximo) * areaA;

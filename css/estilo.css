@@ -668,6 +668,7 @@ html:not([data-tema="escuro"]) .selo.recusado { background: #e5e7eb; color: #4b5
 
 /* Gráfico de faturamento */
 .grafico-svg { width: 100%; height: auto; display: block; }
+#pagina-cliente-detalhe .grafico-svg { max-height: 180px; }
 .barra-mes { fill: var(--cor-borda); transition: fill .15s; }
 .barra-mes.atual { fill: var(--cor-primaria); }
 .grafico-svg g:hover .barra-mes { fill: var(--cor-primaria); opacity: .85; }

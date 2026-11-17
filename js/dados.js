@@ -199,6 +199,19 @@ function normalizarDados(dados) {
     if (!completo.configuracoes.clienteFixoId) completo.configuracoes.clienteFixoId = cliente.id;
   }
   completo.pagamentosVespor2026 = true;
+  if (!dados.atividadesVespor16a17Nov2026) { // atividades de 16 e 17/11 informadas pelo Henrique (avaliações Google Varejocar)
+    completo.demandas.push(
+      { id: "vp-16nov-1", cliente: "Vespor", titulo: "Verificação de avaliações pendentes de resposta no Google Meu Negócio - Varejocar: 40 avaliações verificadas, a maioria positiva mas a minoria com alguma reclamação", data: "2026-11-16", status: "concluida", categoria: "Suporte" },
+      { id: "vp-16nov-2", cliente: "Vespor", titulo: "Respondendo avaliações Google Meu Negócio - Varejocar: contagem de 16/11, 35 respostas positivas concluídas", data: "2026-11-16", status: "concluida", categoria: "Suporte" },
+      { id: "vp-16nov-3", cliente: "Vespor", titulo: "Levantamento das avaliações negativas recentes no Google Meu Negócio - Varejocar (4 avaliações negativas recentes)", data: "2026-11-16", status: "concluida", categoria: "Suporte" },
+      { id: "vp-16nov-4", cliente: "Vespor", titulo: "Avaliação negativa — Robson Vicentini, 2 estrelas (há 7 semanas): atendimento na conveniência (Espaço Café) — atendente desatenta, no celular, sem trazer cardápio", data: "2026-11-16", status: "concluida", categoria: "Revisão" },
+      { id: "vp-16nov-5", cliente: "Vespor", titulo: "Avaliação negativa — William Pernia, 1 estrela (há 3 semanas): falta de agendamento no autocenter, difícil de ser atendido no fim do dia, interação ruim com funcionário", data: "2026-11-16", status: "concluida", categoria: "Revisão" },
+      { id: "vp-16nov-6", cliente: "Vespor", titulo: "Avaliação negativa — Leonardo Piovesam, 1 estrela (há 3 semanas): demora no atendimento pelo WhatsApp (mais de 1h sem resposta)", data: "2026-11-16", status: "concluida", categoria: "Revisão" },
+      { id: "vp-16nov-7", cliente: "Vespor", titulo: "Avaliação 1 estrela de Nei Jose (provável engano): texto totalmente positivo, elogia preços e profissionais — parece erro na marcação das estrelas", data: "2026-11-16", status: "concluida", categoria: "Revisão" },
+      { id: "vp-17nov-1", cliente: "Vespor", titulo: "Respondendo avaliações Google Meu Negócio - Varejocar: contagem de 17/11, 4 respostas positivas concluídas", data: "2026-11-17", status: "concluida", categoria: "Suporte" }
+    );
+  }
+  completo.atividadesVespor16a17Nov2026 = true;
   // migração: etapas renomeadas ("Em andamento" -> "Ativos", "Entregue" -> "Inativos")
   completo.clientes.forEach((c) => {
     if (c.etapaFunil === "Em andamento") c.etapaFunil = "Ativos";

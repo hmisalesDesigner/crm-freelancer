@@ -38,7 +38,7 @@ function renderizarGraficoAvaliacoes(alvoId, lista) {
   if (!alvo) return;
   const dados = avaliacoesPorMes(6, lista);
   const maximo = Math.max(...dados.map((d) => Math.max(d.positiva, d.negativa)), 1) * 1.2;
-  const L = 560, A = 180, margemE = 8, margemB = 26, margemT = 14;
+  const L = 560, A = 90, margemE = 8, margemB = 20, margemT = 8;
   const areaA = A - margemB - margemT;
   const larguraGrupo = (L - margemE * 2) / dados.length;
   const y = (v) => margemT + areaA - (v / maximo) * areaA;
