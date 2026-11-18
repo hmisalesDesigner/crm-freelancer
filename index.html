@@ -10,7 +10,7 @@
 <link rel="icon" type="image/png" href="icone-192.png">
 <script>
   // Versão do site: muda a cada publicação (e a cada clique em "Atualizar") para o navegador nunca reaproveitar arquivos antigos.
-  window.VERSAO_SITE = "20261118a";
+  window.VERSAO_SITE = "20261118c";
   (function () {
     var v = new URLSearchParams(location.search).get("_v") || window.VERSAO_SITE;
     window.__v = encodeURIComponent(v);
@@ -99,6 +99,22 @@
           </table>
         </div>
 
+        <div class="secao-dia">
+          <h3 class="titulo-pilula">Novos leads <b id="painel-leads-contagem">0</b></h3>
+          <div class="grade-leads grade-painel" id="painel-leads"></div>
+        </div>
+        <div class="secao-dia">
+          <h3 class="titulo-pilula">Tarefas de hoje <b id="painel-tarefas-contagem">0</b></h3>
+          <div class="linha-plano">
+            <input id="plano-texto" type="text" placeholder="Planejar atividade (ex.: Preparar arte do feriado)">
+            <select id="plano-categoria"></select>
+            <select id="plano-dia"><option value="hoje">Hoje</option><option value="amanha">Amanhã</option></select>
+            <button class="botao pequeno" id="plano-add">+ Planejar</button>
+          </div>
+          <p class="card-sub" id="painel-plano-resumo"></p>
+          <div class="grade-leads grade-painel" id="painel-tarefas-dia"></div>
+        </div>
+
         <div class="painel-grafico-funil" style="margin-bottom:16px;">
           <h3>📌 Demandas Vespor <span class="card-sub" style="display:inline;">(inclui Varejocar)</span></h3>
           <div id="painel-demandas"></div>
@@ -126,7 +142,7 @@
   <script>
     if ("serviceWorker" in navigator && (location.protocol === "https:" || location.hostname === "localhost")) navigator.serviceWorker.register("sw.js").catch(function () {});
     (function () {
-      var arquivos = ["js/demandas-seed.js", "js/dados.js", "js/utilitarios.js", "js/calculadora.js", "js/clientes.js", "js/funil.js", "js/orcamentos.js", "js/prospeccao.js", "js/pagamentos.js", "js/tempo.js", "js/despesas.js", "js/demandas.js", "js/avaliacoes.js", "js/followup.js", "js/grafico.js", "js/lembretes.js", "js/exportar.js", "js/documentos.js", "js/painel-cliente.js", "js/app.js", "js/login.js", "js/google-drive.js"];
+      var arquivos = ["js/demandas-seed.js", "js/dados.js", "js/utilitarios.js", "js/calculadora.js", "js/clientes.js", "js/funil.js", "js/orcamentos.js", "js/prospeccao.js", "js/pagamentos.js", "js/tempo.js", "js/despesas.js", "js/demandas.js", "js/avaliacoes.js", "js/followup.js", "js/grafico.js", "js/lembretes.js", "js/exportar.js", "js/documentos.js", "js/painel-cliente.js", "js/painel-dia.js", "js/app.js", "js/login.js", "js/google-drive.js"];
       arquivos.forEach(function (a) { document.write('<script src="' + a + '?v=' + window.__v + '"><\/script>'); });
     })();
   </script>

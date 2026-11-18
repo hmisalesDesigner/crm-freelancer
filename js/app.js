@@ -98,6 +98,7 @@ function atualizarPainel() {
   }
 
   renderizarFollowUpsPainel();
+  renderizarVisaoDoDia();
   renderizarSparklineFaturamento();
   renderizarLembretes();
 }

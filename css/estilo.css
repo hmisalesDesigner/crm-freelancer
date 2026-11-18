@@ -776,3 +776,19 @@ a.chip { text-decoration: none; }
 .card-pasta-acoes { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; margin-top: 2px; }
 .bolinhas-nivel { display: inline-flex; gap: 4px; padding: 4px 8px; border: 1px solid var(--cor-borda); border-radius: 12px; }
 .bolinha-nivel { width: 9px; height: 9px; border-radius: 50%; background: var(--cor-borda); display: block; }
+
+/* ===== Visão do dia no Painel ===== */
+.secao-dia { margin-bottom: 18px; }
+.titulo-pilula {
+  display: inline-flex; align-items: center; gap: 8px; margin: 0; padding: 6px 16px;
+  font-size: 17px; font-weight: 600; border: 1px solid var(--cor-primaria); border-radius: 22px;
+}
+.titulo-pilula b { color: var(--cor-primaria); }
+.grade-painel { margin-top: 30px; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); }
+.aba-avatar.neutra { background: var(--cor-fundo-painel); border: 1px solid var(--cor-borda); font-size: 18px; }
+.card-pasta-acoes .selo { margin-right: auto; }
+
+.linha-plano{display:flex;gap:8px;flex-wrap:wrap;margin:8px 0}
+.linha-plano input{flex:1;min-width:220px}
+.card-pasta select,.linha-plano select{background:var(--cor-card,var(--cor-fundo));color:var(--cor-texto);border:1px solid var(--cor-borda);border-radius:8px;padding:6px 8px}
+.linha-plano input{background:var(--cor-card,var(--cor-fundo));color:var(--cor-texto);border:1px solid var(--cor-borda);border-radius:8px;padding:8px 10px}
