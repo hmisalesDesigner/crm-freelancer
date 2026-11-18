@@ -792,3 +792,42 @@ a.chip { text-decoration: none; }
 .linha-plano input{flex:1;min-width:220px}
 .card-pasta select,.linha-plano select{background:var(--cor-card,var(--cor-fundo));color:var(--cor-texto);border:1px solid var(--cor-borda);border-radius:8px;padding:6px 8px}
 .linha-plano input{background:var(--cor-card,var(--cor-fundo));color:var(--cor-texto);border:1px solid var(--cor-borda);border-radius:8px;padding:8px 10px}
+
+/* ===== Painel conforme layout de referência ===== */
+.topo { flex-wrap: wrap; }
+.lembretes-topo { display: flex; align-items: center; gap: 12px; padding: 8px 14px; border: 1px solid var(--cor-borda); border-left: 4px solid var(--cor-primaria); border-radius: 14px; background: var(--cor-fundo-painel); max-width: 100%; }
+.lembretes-titulo { font-weight: 600; font-size: 13px; white-space: nowrap; }
+.lembretes-topo #painel-lembretes { display: flex; gap: 10px; flex-wrap: wrap; }
+.lembretes-topo .item-alerta { margin: 0; padding: 0 0 0 10px; background: none; border: none; border-left: 1px solid var(--cor-borda); border-radius: 0; gap: 12px; font-size: 12px; }
+.lembretes-topo p { margin: 0 !important; }
+.cards-resumo-mock { grid-template-columns: 1.15fr 1.15fr 1fr .8fr 1.9fr; align-items: stretch; margin-bottom: 18px; }
+.cards-resumo-mock .card { border-radius: 14px; }
+.card-centro { align-items: center; text-align: center; }
+.card-valor-grande { font-size: 42px !important; line-height: 1.1; }
+.card-orcamentos { padding: 10px 14px; }
+.card-orcamentos-topo { display: flex; justify-content: space-between; align-items: center; gap: 8px; margin-bottom: 6px; }
+.badge-contagem { min-width: 52px; text-align: center; border: 1px solid var(--cor-borda); border-radius: 18px; padding: 2px 14px; font-size: 18px; }
+.tabela-mini { font-size: 11px; } .tabela-mini th, .tabela-mini td { padding: 4px 6px; }
+.painel-grafico-funil { border-radius: 24px; }
+.pilulas-dem { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 10px; align-items: stretch; }
+.espaco-pilulas { flex: 1 1 24px; }
+.pilula-dem { display: flex; align-items: center; gap: 22px; justify-content: space-between; padding: 8px 18px; border: 2px solid var(--cor-borda); border-radius: 14px; background: var(--cor-fundo-painel); font-size: 13px; }
+.pilula-dem b { font-size: 26px; line-height: 1; }
+.pilula-dem small { font-size: 10px; color: var(--cor-texto-suave); align-self: flex-end; }
+.p-fazer { border-color: #f3f4f6; } .p-responder { border-color: #eab308; } .p-andamento { border-color: var(--cor-primaria); } .p-ok { border-color: #22c55e; }
+.cabecalho-secao { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px; }
+.filtros-dia { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+.chip-icone { padding: 4px 10px; }
+.busca-dia { background: var(--cor-fundo-painel); color: var(--cor-texto); border: 1px solid var(--cor-borda); border-radius: 16px; padding: 4px 12px; width: 150px; }
+.card-pasta-meta { align-items: flex-end; }
+.card-pasta-meta .direita { display: flex; flex-direction: column; align-items: flex-end; gap: 4px; }
+.rotulo { display: block; font-size: 10px; color: var(--cor-texto-suave); margin-bottom: 4px; }
+.rotulo-quente, .rotulo-alta { color: var(--cor-primaria); font-weight: 600; }
+.rotulo-media { color: #eab308; } .rotulo-baixa { color: var(--cor-texto-suave); }
+.chips-mini { display: flex; flex-wrap: wrap; gap: 4px; }
+.chip-mini { font-size: 10px; padding: 2px 8px; border-radius: 10px; background: var(--cor-fundo); border: 1px solid var(--cor-borda); color: var(--cor-texto-suave); }
+.chip-atraso { color: var(--cor-perigo); border-color: var(--cor-perigo); }
+@media (max-width: 1100px) { .cards-resumo-mock { grid-template-columns: repeat(2, 1fr); } .card-orcamentos { grid-column: 1 / -1; } }
+
+.pilula-dem { gap: 12px; padding: 8px 12px; font-size: 12px; } .pilula-dem b { font-size: 22px; } .pilulas-dem { gap: 8px; flex-wrap: nowrap; overflow-x: auto; }
+.lista-dem summary { cursor: pointer; margin-top: 14px; color: var(--cor-texto-suave); font-size: 13px; }

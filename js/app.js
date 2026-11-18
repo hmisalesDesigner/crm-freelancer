@@ -35,6 +35,7 @@ function irParaPagina(pagina) {
   document.querySelector(`.menu-item[data-pagina="${pagina}"]`).classList.add("ativo");
 
   document.getElementById("titulo-pagina").textContent = TITULOS_PAGINA[pagina];
+  const lemb = document.getElementById("lembretes-topo"); if (lemb) lemb.style.display = pagina === "painel" ? "" : "none";
 
   const render = RENDERIZADORES[pagina];
   if (render) render();
@@ -54,6 +55,8 @@ function atualizarPainel() {
 
   document.getElementById("painel-faturamento-mes").textContent = formatarMoeda(faturamentoMes);
   const meta = Number(ESTADO.configuracoes.metaMensal || 0);
+  const barraMeta = document.getElementById("painel-barra-meta");
+  if (barraMeta) { const pm = meta > 0 ? Math.min((faturamentoMes / meta) * 100, 100) : 0; barraMeta.style.width = pm + "%"; barraMeta.className = "barra-progresso-interna"; }
   document.getElementById("painel-meta-texto").textContent = meta > 0
     ? `Meta: ${formatarMoeda(meta)} (${Math.min((faturamentoMes / meta) * 100, 999).toFixed(0)}%)`
     : "";

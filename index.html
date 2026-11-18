@@ -10,7 +10,7 @@
 <link rel="icon" type="image/png" href="icone-192.png">
 <script>
   // Versão do site: muda a cada publicação (e a cada clique em "Atualizar") para o navegador nunca reaproveitar arquivos antigos.
-  window.VERSAO_SITE = "20261118c";
+  window.VERSAO_SITE = "20261118e";
   (function () {
     var v = new URLSearchParams(location.search).get("_v") || window.VERSAO_SITE;
     window.__v = encodeURIComponent(v);
@@ -56,73 +56,68 @@
           <div class="status-drive" id="status-drive">💾 Dados salvos localmente</div>
           <button class="botao secundario pequeno" id="btn-atualizar-site" title="Recarrega o site ignorando o cache do navegador"><span class="icone-girar" style="display:inline-block">🔄</span> Atualizar</button>
         </div>
+        <div class="lembretes-topo" id="lembretes-topo"><span class="lembretes-titulo">🔔 Lembretes</span><div id="painel-lembretes"></div></div>
       </header>
 
       <section id="pagina-painel" class="pagina ativa">
-        <div class="cards-resumo">
-          <div class="card" style="display:flex; justify-content:space-between; align-items:flex-start; gap:8px;">
-            <div>
-              <span class="card-label">Faturamento no mês</span>
-              <span class="card-valor" id="painel-faturamento-mes">R$ 0,00</span>
-              <span class="card-sub" id="painel-meta-texto"></span>
-            </div>
-            <div id="painel-sparkline-faturamento" style="width:90px; flex-shrink:0;"></div>
-          </div>
+        <div class="cards-resumo cards-resumo-mock">
           <div class="card">
             <span class="card-label">Faturamento no ano (MEI)</span>
             <span class="card-valor" id="painel-faturamento-ano">R$ 0,00</span>
-            <div class="barra-progresso">
-              <div class="barra-progresso-interna" id="painel-barra-mei"></div>
-            </div>
+            <div class="barra-progresso"><div class="barra-progresso-interna" id="painel-barra-mei"></div></div>
             <span class="card-sub" id="painel-mei-texto">0% do limite de R$ 81.000,00</span>
+          </div>
+          <div class="card">
+            <span class="card-label">Faturamento atual no mês</span>
+            <span class="card-valor" id="painel-faturamento-mes">R$ 0,00</span>
+            <div class="barra-progresso"><div class="barra-progresso-interna" id="painel-barra-meta"></div></div>
+            <span class="card-sub" id="painel-meta-texto"></span>
           </div>
           <div class="card">
             <span class="card-label">A receber</span>
             <span class="card-valor" id="painel-a-receber">R$ 0,00</span>
             <span class="card-sub" id="painel-atrasados-texto"></span>
           </div>
-          <div class="card">
+          <div class="card card-centro">
             <span class="card-label">Clientes ativos</span>
-            <span class="card-valor" id="painel-clientes-ativos">0</span>
+            <span class="card-valor card-valor-grande" id="painel-clientes-ativos">0</span>
+            <span class="card-sub">em atendimento</span>
           </div>
-          <div class="card">
-            <span class="card-label">Orçamentos em aberto</span>
-            <span class="card-valor" id="painel-orcamentos-abertos">0</span>
+          <div class="card card-orcamentos">
+            <div class="card-orcamentos-topo"><span class="card-label" style="margin:0;">Orçamentos recentes/abertos</span><b class="badge-contagem" id="painel-orcamentos-abertos">0</b></div>
+            <table class="tabela tabela-mini">
+              <thead><tr><th>Cliente</th><th>Status</th><th>Projeto</th><th>Valor</th></tr></thead>
+              <tbody id="painel-orcamentos-recentes"></tbody>
+            </table>
           </div>
         </div>
 
-        <div class="bloco-destaque">
-          <h3>📄 Orçamentos Recentes</h3>
-          <table class="tabela">
-            <thead><tr><th>Cliente</th><th>Status</th><th>Projeto</th><th>Valor</th></tr></thead>
-            <tbody id="painel-orcamentos-recentes"></tbody>
-          </table>
+        <div class="painel-grafico-funil" style="margin-bottom:22px;">
+          <h3>Demandas <span class="card-sub" style="display:inline;">(Vespor, inclui Varejocar)</span></h3>
+          <div id="painel-demandas"></div>
         </div>
 
         <div class="secao-dia">
-          <h3 class="titulo-pilula">Novos leads <b id="painel-leads-contagem">0</b></h3>
+          <div class="cabecalho-secao">
+            <h3 class="titulo-pilula">Novos leads <b id="painel-leads-contagem">0</b></h3>
+            <div class="filtros-dia" id="painel-leads-filtros"></div>
+          </div>
           <div class="grade-leads grade-painel" id="painel-leads"></div>
         </div>
         <div class="secao-dia">
-          <h3 class="titulo-pilula">Tarefas de hoje <b id="painel-tarefas-contagem">0</b></h3>
+          <div class="cabecalho-secao">
+            <h3 class="titulo-pilula">Tarefas de hoje <b id="painel-tarefas-contagem">0</b></h3>
+            <div class="filtros-dia" id="painel-tarefas-filtros"></div>
+          </div>
           <div class="linha-plano">
             <input id="plano-texto" type="text" placeholder="Planejar atividade (ex.: Preparar arte do feriado)">
             <select id="plano-categoria"></select>
+            <select id="plano-prioridade"><option value="media">Prioridade média</option><option value="alta">Prioridade alta</option><option value="baixa">Prioridade baixa</option></select>
             <select id="plano-dia"><option value="hoje">Hoje</option><option value="amanha">Amanhã</option></select>
             <button class="botao pequeno" id="plano-add">+ Planejar</button>
           </div>
           <p class="card-sub" id="painel-plano-resumo"></p>
           <div class="grade-leads grade-painel" id="painel-tarefas-dia"></div>
-        </div>
-
-        <div class="painel-grafico-funil" style="margin-bottom:16px;">
-          <h3>📌 Demandas Vespor <span class="card-sub" style="display:inline;">(inclui Varejocar)</span></h3>
-          <div id="painel-demandas"></div>
-        </div>
-
-        <div class="painel-grafico-funil">
-          <h3>🔔 Lembretes</h3>
-          <div id="painel-lembretes"></div>
         </div>
       </section>
 

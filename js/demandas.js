@@ -3,7 +3,7 @@
  * Demandas do cliente Vespor (inclui Varejocar) no painel inicial:
  * A fazer -> Em andamento -> Concluída. O histórico da planilha entra como "Concluída".
  */
-const STATUS_DEMANDA = { fazer: "A fazer", andamento: "Em andamento", concluida: "Concluída" };
+const STATUS_DEMANDA = { fazer: "A fazer", responder: "Para responder", andamento: "Em andamento", concluida: "Concluída" };
 const CATEGORIA_DEMANDA = {
   "Arte": { classe: "cat-arte", cor: "#a78bfa" },
   "Suporte": { classe: "cat-suporte", cor: "#60a5fa" },
@@ -24,8 +24,10 @@ function renderizarDemandasPainel() {
   const abertas = lista.filter((d) => d.status !== "concluida");
   const fazer = lista.filter((d) => d.status === "fazer").length;
   const andamento = lista.filter((d) => d.status === "andamento").length;
+  const responder = lista.filter((d) => d.status === "responder").length;
   const concluidas = lista.filter((d) => d.status === "concluida");
   const limite = somarDiasISO(hojeISO(), -7);
+  const hojeN = concluidas.filter((d) => d.data === hojeISO()).length;
   const semana = concluidas.filter((d) => d.data && d.data >= limite).length;
   const mes = mesAtualChave();
   const noMes = concluidas.filter((d) => d.data && chaveMes(d.data) === mes).length;
@@ -42,36 +44,43 @@ function renderizarDemandasPainel() {
 
   const linha = (d) => `
     <li class="demanda-item">
-      <span class="selo ${d.status === "andamento" ? "enviado" : "pendente"}">${STATUS_DEMANDA[d.status]}</span>
+      <span class="selo ${d.status === "andamento" ? "enviado" : d.status === "responder" ? "morno" : "pendente"}">${STATUS_DEMANDA[d.status]}</span>
       <span class="demanda-titulo">${escaparHtml(d.titulo)}</span>${seloCategoria(d.categoria)}
       <span class="demanda-acoes">
-        ${d.status === "fazer" ? `<button class="botao secundario pequeno" data-dem="andamento" data-id="${d.id}">Iniciar</button>` : ""}
+        ${d.status === "fazer" || d.status === "responder" ? `<button class="botao secundario pequeno" data-dem="andamento" data-id="${d.id}">Iniciar</button>` : ""}
         <button class="botao sucesso pequeno" data-dem="concluida" data-id="${d.id}">Concluir</button>
         <button class="botao perigo pequeno" data-dem="excluir" data-id="${d.id}" title="Excluir">✕</button>
       </span>
     </li>`;
 
   alvo.innerHTML = `
-    <div class="cards-resumo" style="grid-template-columns: repeat(4, 1fr);">
-      <div class="card"><span class="card-label">A fazer</span><span class="card-valor">${fazer}</span></div>
-      <div class="card"><span class="card-label">Em andamento</span><span class="card-valor" style="color:var(--cor-primaria)">${andamento}</span></div>
-      <div class="card"><span class="card-label">Concluídas (7 dias)</span><span class="card-valor" style="color:var(--cor-sucesso)">${semana}</span><span class="card-sub">${noMes} neste mês · ${concluidas.length} no total</span></div>
-      <div class="card"><span class="card-label">Novas demandas</span>
-        <div style="display:flex; gap:6px; margin-top:6px;"><input id="dem-novo" placeholder="Ex: Arte promoção" style="flex:1; min-width:0;"><button class="botao pequeno" id="dem-add">+</button></div>
-        <label class="card-sub" style="margin-top:6px;"><input type="checkbox" id="dem-ja-andamento"> já começar em andamento</label>
-      </div>
+    <div class="pilulas-dem">
+      <div class="pilula-dem p-fazer"><span>A fazer</span><b>${fazer}</b></div>
+      <div class="pilula-dem p-responder"><span>Para responder</span><b>${responder}</b></div>
+      <div class="pilula-dem p-andamento"><span>Em andamento</span><b>${andamento}</b></div>
+      <div class="pilula-dem p-ok"><span>Concluídas (Hoje)</span><b>${hojeN}</b></div>
+      <span class="espaco-pilulas"></span>
+      <div class="pilula-dem p-ok"><span>Concluídas (Semana)</span><b>${semana}</b></div>
+      <div class="pilula-dem p-ok"><span>Concluídas (neste mês)</span><b>${noMes}</b></div>
+      <div class="pilula-dem p-ok"><span>Concluídas (Ano)</span><b>${concluidas.length}</b> <small>no total</small></div>
+    </div>
+    <div class="linha-plano" style="margin-top:14px;">
+      <input id="dem-novo" placeholder="Nova demanda (ex.: Arte promoção)">
+      <select id="dem-status-novo"><option value="fazer">A fazer</option><option value="responder">Para responder</option><option value="andamento">Em andamento</option></select>
+      <button class="botao pequeno" id="dem-add">+ Adicionar</button>
     </div>
 
     ${barraCategorias}
+    <details class="lista-dem"><summary>Ver lista de demandas (${abertas.length} em aberto)</summary>
     <h4 style="margin:12px 0 6px;">Em aberto (${abertas.length})</h4>
     <ul class="demanda-lista">${abertas.length ? abertas.map(linha).join("") : `<li class="demanda-item" style="color:var(--cor-texto-suave)">Nada em aberto. Adicione uma nova demanda acima.</li>`}</ul>
     <h4 style="margin:12px 0 6px;">Concluídas recentemente</h4>
-    <ul class="demanda-lista">${recentes.map((d) => `<li class="demanda-item"><span class="selo aceito">Concluída</span><span class="demanda-titulo">${escaparHtml(d.titulo)}</span>${seloCategoria(d.categoria)}<span class="card-sub">${d.data ? formatarDataBR(d.data) : ""}</span></li>`).join("") || `<li class="demanda-item" style="color:var(--cor-texto-suave)">Nenhuma ainda.</li>`}</ul>`;
+    <ul class="demanda-lista">${recentes.map((d) => `<li class="demanda-item"><span class="selo aceito">Concluída</span><span class="demanda-titulo">${escaparHtml(d.titulo)}</span>${seloCategoria(d.categoria)}<span class="card-sub">${d.data ? formatarDataBR(d.data) : ""}</span></li>`).join("") || `<li class="demanda-item" style="color:var(--cor-texto-suave)">Nenhuma ainda.</li>`}</ul></details>`;
 
   const adicionar = (texto, status) => {
     const t = (texto ?? document.getElementById("dem-novo").value).trim();
     if (!t) return;
-    const andando = status || (document.getElementById("dem-ja-andamento").checked ? "andamento" : "fazer");
+    const andando = status || document.getElementById("dem-status-novo").value || "fazer";
     atualizarEstado((e) => { e.demandas.push({ id: gerarId(), cliente: "Vespor", titulo: t, data: hojeISO(), status: andando }); });
     renderizarDemandasPainel();
   };
