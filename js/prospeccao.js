@@ -10,8 +10,8 @@
  *     pronta e follow-up integrado ao painel. Os dados vão para o Drive junto com o resto do CRM.
  */
 
-const STATUS_LEAD = ["Novo", "Qualificado", "Contatado", "Respondeu", "Proposta enviada", "Fechado", "Perdido"];
-const STATUS_LEAD_ENCERRADOS = ["Fechado", "Perdido"];
+const STATUS_LEAD = ["Novo", "Qualificado", "Contatado", "Respondeu", "Tem interesse", "Visita marcada", "Pediu retorno", "Fiquei de retornar", "Proposta enviada", "Fechado", "Sem interesse", "Perdido"];
+const STATUS_LEAD_ENCERRADOS = ["Fechado", "Sem interesse", "Perdido"];
 const NICHOS_LEAD = [
   { nome: "Restaurantes e delivery", busca: "restaurante OR delivery OR hamburgueria OR pizzaria" },
   { nome: "Estética e saúde", busca: "estética OR clínica OR odontologia OR dentista" },
@@ -121,7 +121,7 @@ function mensagemParaLead(l) {
 }
 
 function etapaDeClienteParaLead(status) {
-  return { Contatado: "Contato", Respondeu: "Contato", "Proposta enviada": "Orçamento enviado", Fechado: "Fechado" }[status] || "Prospecção";
+  return { Contatado: "Contato", Respondeu: "Contato", "Tem interesse": "Contato", "Visita marcada": "Briefing", "Pediu retorno": "Contato", "Fiquei de retornar": "Contato", "Proposta enviada": "Orçamento enviado", Fechado: "Fechado" }[status] || "Prospecção";
 }
 
 /* ---------- página ---------- */

@@ -11,6 +11,21 @@ const CATEGORIA_DEMANDA = {
   "Revisão": { classe: "cat-revisao", cor: "#f472b6" },
 };
 
+/** Marca a demanda como concluída hoje, guardando o dia em que ela estava planejada (agenda semanal). */
+function concluirDemanda(d) {
+  d.planejadaPara = d.planejadaPara || d.data || hojeISO();
+  d.status = "concluida";
+  d.data = hojeISO();
+}
+
+/** Segunda-feira da semana de uma data (AAAA-MM-DD), sem depender de fuso. */
+function inicioSemanaISO(dataISO) {
+  const [a, m, dia] = dataISO.split("-").map(Number);
+  const dt = new Date(a, m - 1, dia);
+  const dow = (dt.getDay() + 6) % 7; // segunda = 0
+  return somarDiasISO(dataISO, -dow);
+}
+
 function seloCategoria(categoria) {
   const c = CATEGORIA_DEMANDA[categoria];
   if (!c) return "";
@@ -81,7 +96,7 @@ function renderizarDemandasPainel() {
     const t = (texto ?? document.getElementById("dem-novo").value).trim();
     if (!t) return;
     const andando = status || document.getElementById("dem-status-novo").value || "fazer";
-    atualizarEstado((e) => { e.demandas.push({ id: gerarId(), cliente: "Vespor", titulo: t, data: hojeISO(), status: andando }); });
+    atualizarEstado((e) => { e.demandas.push({ id: gerarId(), cliente: "Vespor", titulo: t, data: hojeISO(), planejadaPara: hojeISO(), status: andando }); });
     renderizarDemandasPainel();
   };
   document.getElementById("dem-add").addEventListener("click", () => adicionar());
@@ -92,8 +107,7 @@ function renderizarDemandasPainel() {
       if (acao === "excluir") { e.demandas = e.demandas.filter((x) => x.id !== id); return; }
       const d = e.demandas.find((x) => x.id === id);
       if (!d) return;
-      d.status = acao;
-      if (acao === "concluida") d.data = hojeISO();
+      if (acao === "concluida") concluirDemanda(d); else d.status = acao;
     });
     renderizarDemandasPainel();
   }));

@@ -170,6 +170,8 @@ function renderizarVisaoDoDia() {
     }, c.id === (ativoId || fixoId));
   }).join("") || `<p class="card-sub" style="grid-column:1/-1;">${clientes.length ? "Nenhum cliente neste filtro." : "Nenhum cliente cadastrado ainda."}</p>`;
 
+  renderizarAgendaSemana();
+
   /* --- planejar atividade (como a linha pré-pronta da planilha) --- */
   const btnPlan = document.getElementById("plano-add");
   if (btnPlan && !btnPlan.dataset.ok) {
@@ -180,7 +182,7 @@ function renderizarVisaoDoDia() {
       const inp = document.getElementById("plano-texto"); const t = inp.value.trim(); if (!t) return;
       const dia = document.getElementById("plano-dia").value === "amanha" ? somarDiasISO(hojeISO(), 1) : hojeISO();
       const prioridade = document.getElementById("plano-prioridade").value;
-      atualizarEstado((e) => { e.demandas.push({ id: gerarId(), cliente: "Vespor", titulo: t, data: dia, status: "fazer", categoria: sel.value || undefined, prioridade }); });
+      atualizarEstado((e) => { e.demandas.push({ id: gerarId(), cliente: "Vespor", titulo: t, data: dia, planejadaPara: dia, status: "fazer", categoria: sel.value || undefined, prioridade }); });
       inp.value = ""; atualizarPainel();
     };
     btnPlan.addEventListener("click", enviar);
@@ -209,7 +211,7 @@ function renderizarVisaoDoDia() {
   document.querySelectorAll("[data-filtro-tarefas]").forEach((b) => b.addEventListener("click", () => { FILTRO_TAREFAS = b.dataset.filtroTarefas; renderizarVisaoDoDia(); }));
   document.querySelectorAll("#painel-leads [data-ir], #painel-tarefas-dia [data-ir]").forEach((b) => b.addEventListener("click", () => irParaPagina(b.dataset.ir)));
   alvoTarefas.querySelectorAll("[data-status-dem]").forEach((sel) => sel.addEventListener("change", () => {
-    atualizarEstado((e) => { const d = e.demandas.find((x) => x.id === sel.dataset.statusDem); if (d) { d.status = sel.value; if (sel.value === "concluida") d.data = hojeISO(); } });
+    atualizarEstado((e) => { const d = e.demandas.find((x) => x.id === sel.dataset.statusDem); if (d) { if (sel.value === "concluida") concluirDemanda(d); else d.status = sel.value; } });
     atualizarPainel();
   }));
   alvoTarefas.querySelectorAll("[data-status-follow]").forEach((sel) => sel.addEventListener("change", () => {
@@ -219,7 +221,7 @@ function renderizarVisaoDoDia() {
     const [tipo, ref] = b.dataset.adiarDia.split(":"); const amanha = somarDiasISO(hojeISO(), 1);
     atualizarEstado((e) => {
       if (tipo === "c") { const c = e.clientes.find((x) => x.id === ref); if (c) c.proximoContato = amanha; return; }
-      if (tipo === "d") { const d = e.demandas.find((x) => x.id === ref); if (d) d.data = amanha; return; }
+      if (tipo === "d") { const d = e.demandas.find((x) => x.id === ref); if (d) { d.planejadaPara = d.planejadaPara || d.data; d.data = amanha; } return; }
       const it = followups[Number(ref)];
       if (it.tipo === "lead") { const l = e.leads.find((x) => x.id === it.leadId); if (l) l.proximoContato = amanha; }
       else if (it.tipo === "contato") { const c = e.clientes.find((x) => x.id === it.clienteId); if (c) c.proximoContato = amanha; }
@@ -228,7 +230,7 @@ function renderizarVisaoDoDia() {
     atualizarPainel();
   }));
   alvoTarefas.querySelectorAll("[data-concluir-dia]").forEach((b) => b.addEventListener("click", () => {
-    atualizarEstado((e) => { const d = e.demandas.find((x) => x.id === b.dataset.concluirDia); if (d) { d.status = "concluida"; d.data = hojeISO(); } });
+    atualizarEstado((e) => { const d = e.demandas.find((x) => x.id === b.dataset.concluirDia); if (d) concluirDemanda(d); });
     atualizarPainel();
   }));
   alvoTarefas.querySelectorAll("[data-feito-dia]").forEach((btn) => btn.addEventListener("click", () => {
@@ -240,4 +242,39 @@ function renderizarVisaoDoDia() {
     });
     atualizarPainel();
   }));
+}
+
+
+/* ---------- agenda da semana (como a Agenda Semanal da planilha) ---------- */
+function renderizarAgendaSemana() {
+  const alvo = document.getElementById("painel-agenda-semana");
+  if (!alvo) return;
+  const hoje = hojeISO();
+  const seg = inicioSemanaISO(hoje);
+  const dias = [0, 1, 2, 3, 4, 5, 6].map((i) => somarDiasISO(seg, i));
+  const nomes = ["Segunda", "Terça", "Quarta", "Quinta", "Sexta", "Sábado", "Domingo"];
+  const porDia = {}; dias.forEach((d) => (porDia[d] = []));
+  let noDia = 0, outroDia = 0, abertas = 0;
+  (ESTADO.demandas || []).forEach((d) => {
+    const plan = d.status === "concluida" ? (d.planejadaPara || d.data) : d.data;
+    if (!plan || !porDia[plan]) return;
+    let cls = "ag-aberta", marca = "";
+    if (d.status === "concluida") {
+      if (d.data <= plan) { cls = "ag-ok"; noDia++; marca = "Feito no dia"; }
+      else { cls = "ag-tarde"; outroDia++; marca = "Feito em outro dia (" + formatarDataBR(d.data).slice(0, 5) + ")"; }
+    } else { abertas++; if (plan < hoje) { cls = "ag-atrasada"; marca = "Atrasada"; } }
+    porDia[plan].push({ d, cls, marca });
+  });
+  const resumo = document.getElementById("agenda-resumo");
+  if (resumo) resumo.innerHTML = `<span class="leg ag-ok">${noDia} feitas no dia</span><span class="leg ag-tarde">${outroDia} em outro dia</span><span class="leg ag-aberta">${abertas} em aberto</span>`;
+  const mostrar = dias.filter((dia, i) => i < 5 || porDia[dia].length);
+  alvo.style.gridTemplateColumns = `repeat(${mostrar.length}, minmax(0, 1fr))`;
+  alvo.innerHTML = mostrar.map((dia) => {
+    const i = dias.indexOf(dia); const itens = porDia[dia];
+    return `<div class="ag-coluna${dia === hoje ? " ag-hoje" : ""}">
+      <div class="ag-cab"><b>${nomes[i]}</b><span>${formatarDataBR(dia).slice(0, 5)}</span><small>${itens.length}</small></div>
+      ${itens.slice(0, 10).map(({ d, cls, marca }) => `<div class="ag-item ${cls}" title="${escaparHtml(d.titulo)}${marca ? " — " + marca : ""}">${escaparHtml(d.titulo)}</div>`).join("") || `<div class="ag-vazio">—</div>`}
+      ${itens.length > 10 ? `<div class="ag-vazio">+ ${itens.length - 10}</div>` : ""}
+    </div>`;
+  }).join("");
 }

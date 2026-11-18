@@ -70,6 +70,7 @@ function renderizarPaginaClientes() {
             <div class="campo"><label>Razão Social</label><input id="cli-razao" readonly></div>
             <div class="campo"><label>Capital Social</label><input id="cli-capital" readonly></div>
             <div class="campo"><label>Próximo contato (follow-up)</label><input type="date" id="cli-proximo"></div>
+            <div class="campo"><label>🎂 Aniversário (cliente ou empresa)</label><input type="date" id="cli-aniversario"></div>
             <div class="campo">
               <label>Etapa no funil</label>
               <select id="cli-etapa">${ETAPAS_FUNIL.map((e) => `<option value="${e}">${e}</option>`).join("")}</select>
@@ -197,6 +198,7 @@ function renderizarPaginaClientes() {
     document.getElementById("cli-etapa").value = cliente?.etapaFunil || "Prospecção";
     document.getElementById("cli-demanda").value = cliente?.demanda || "";
     document.getElementById("cli-proximo").value = cliente?.proximoContato || "";
+    document.getElementById("cli-aniversario").value = cliente?.aniversario || "";
     document.getElementById("cli-cnpj-status").style.display = "none";
     fotoAtualBase64 = cliente?.foto || "";
     notasAtuais = (cliente?.notas || []).map((n) => ({ ...n }));
@@ -274,6 +276,7 @@ function renderizarPaginaClientes() {
           etapaFunil: document.getElementById("cli-etapa").value,
           demanda: document.getElementById("cli-demanda").value,
           proximoContato: document.getElementById("cli-proximo").value,
+          aniversario: document.getElementById("cli-aniversario").value,
           foto: fotoAtualBase64,
           notas: notasAtuais,
         });
@@ -288,6 +291,7 @@ function renderizarPaginaClientes() {
           etapaFunil: document.getElementById("cli-etapa").value,
           demanda: document.getElementById("cli-demanda").value,
           proximoContato: document.getElementById("cli-proximo").value,
+          aniversario: document.getElementById("cli-aniversario").value,
           foto: fotoAtualBase64,
           historicoFinanceiro: [],
           notas: notasAtuais,

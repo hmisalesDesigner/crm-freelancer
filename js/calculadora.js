@@ -56,9 +56,37 @@ function renderizarPaginaCalculadora() {
               <input type="number" id="calc-horas-projeto" value="10">
             </div>
             <div class="campo">
-              <label>📈 Margem de segurança (%)</label>
+              <label>📈 Margem de lucro (%)</label>
               <input type="number" id="calc-margem-projeto" value="20">
             </div>
+            <div class="campo">
+              <label>🧾 Custos do job (R$: banco de imagens, fontes, impressão...)</label>
+              <input type="number" id="calc-custos-job" value="0">
+            </div>
+            <div class="campo">
+              <label>⏳ Prazo de execução</label>
+              <select id="calc-urgencia"><option value="0">Longo (sem acréscimo)</option><option value="5" selected>Médio (+5%)</option><option value="15">Curto (+15%)</option><option value="50">Pra ontem (+50%)</option></select>
+            </div>
+            <div class="campo">
+              <label>🎁 Desconto</label>
+              <select id="calc-desconto"><option value="0" selected>Nenhum</option><option value="5">Primeiro retorno (−5%)</option><option value="10">Cliente fiel (−10%)</option></select>
+            </div>
+            <div class="campo">
+              <label>🕐 Horas de trabalho por dia</label>
+              <input type="number" id="calc-horas-dia" value="6">
+            </div>
+          </div>
+
+          <div style="margin-top:14px; max-width:700px;">
+            <h4 style="margin-bottom:4px;">Atividades do projeto (opcional)</h4>
+            <p class="card-sub" style="margin:0 0 8px;">Liste as atividades com dias × horas por dia; o total vira as horas do projeto.</p>
+            <div class="form-grid" style="grid-template-columns: 2fr 1fr 1fr auto;">
+              <div class="campo"><label>Atividade</label><input id="atv-nome" placeholder="Ex: Banner 16x9 - 4 cores"></div>
+              <div class="campo"><label>Dias</label><input type="number" id="atv-dias" value="1" min="0" step="0.5"></div>
+              <div class="campo"><label>Horas/dia</label><input type="number" id="atv-horas" value="4" min="0" step="0.5"></div>
+              <div class="campo"><label>&nbsp;</label><button class="botao secundario" id="atv-add" type="button">+ Adicionar</button></div>
+            </div>
+            <table class="tabela" style="margin-top:10px;"><thead><tr><th>Atividade</th><th>Dias</th><th>Horas/dia</th><th>Total</th><th></th></tr></thead><tbody id="atv-corpo"></tbody></table>
           </div>
         </div>
 
@@ -118,6 +146,7 @@ function renderizarPaginaCalculadora() {
         <div id="resultado-visivel-projeto" style="display:none">
           <span class="card-label">Valor sugerido do projeto</span>
           <div class="valor" id="resultado-projeto" style="font-size:26px; font-weight:800; color:var(--cor-primaria);">R$ 0,00</div>
+          <div id="resultado-projeto-detalhe" class="card-sub" style="margin-top:8px; line-height:1.6;"></div>
         </div>
         <div id="resultado-visivel-peca" style="display:none">
           <span class="card-label">Valor total</span>
@@ -137,6 +166,13 @@ function renderizarPaginaCalculadora() {
     </div>
   `;
 
+  let atividadesCalc = [];
+  function desenharAtividades() {
+    const corpo = document.getElementById("atv-corpo");
+    corpo.innerHTML = atividadesCalc.map((a, i) => `<tr><td>${escaparHtml(a.nome)}</td><td>${a.dias}</td><td>${a.horas}</td><td>${a.dias * a.horas}h</td><td><button class="botao perigo pequeno" data-atv-del="${i}" type="button">✕</button></td></tr>`).join("") || `<tr><td colspan="5" style="text-align:center;color:var(--cor-texto-suave);">Nenhuma atividade.</td></tr>`;
+    corpo.querySelectorAll("[data-atv-del]").forEach((b) => b.addEventListener("click", () => { atividadesCalc.splice(Number(b.dataset.atvDel), 1); desenharAtividades(); recalcular(); }));
+  }
+
   function recalcular() {
     const salario = Number(document.getElementById("calc-salario").value) || 0;
     const custos = Number(document.getElementById("calc-custos").value) || 0;
@@ -146,10 +182,20 @@ function renderizarPaginaCalculadora() {
     const margemAvulso = Number(document.getElementById("calc-margem-avulso").value) || 0;
     document.getElementById("resultado-hora-avulso").textContent = formatarMoeda(valorHora * (1 + margemAvulso / 100));
 
+    const totalAtividades = atividadesCalc.reduce((t, a) => t + a.dias * a.horas, 0);
+    if (atividadesCalc.length) document.getElementById("calc-horas-projeto").value = totalAtividades;
     const horasProjeto = Number(document.getElementById("calc-horas-projeto").value) || 0;
     const margem = Number(document.getElementById("calc-margem-projeto").value) || 0;
-    const valorProjeto = valorHora * horasProjeto * (1 + margem / 100);
+    const custosJob = Number(document.getElementById("calc-custos-job").value) || 0;
+    const urgencia = Number(document.getElementById("calc-urgencia").value) || 0;
+    const desconto = Number(document.getElementById("calc-desconto").value) || 0;
+    const horasDia = Number(document.getElementById("calc-horas-dia").value) || 6;
+    const base = valorHora * horasProjeto + custosJob;
+    const valorProjeto = base * (1 + (margem + urgencia - desconto) / 100);
     document.getElementById("resultado-projeto").textContent = formatarMoeda(valorProjeto);
+    const diasUteis = Math.ceil(horasProjeto / horasDia);
+    document.getElementById("resultado-projeto-detalhe").innerHTML =
+      `Custo (horas + job): ${formatarMoeda(base)}<br>Lucro estimado: ${formatarMoeda(valorProjeto - base)}<br>Prazo: ${diasUteis} dia(s) de trabalho (≈ ${(diasUteis / 4).toLocaleString("pt-BR", { maximumFractionDigits: 1 })} semana(s) a 4 dias/semana)`;
 
     const valorPeca = Number(document.getElementById("calc-valor-peca").value) || 0;
     const qtdPeca = Number(document.getElementById("calc-qtd-peca").value) || 0;
@@ -253,6 +299,15 @@ function renderizarPaginaCalculadora() {
   });
 
   container.querySelectorAll("input").forEach((input) => input.addEventListener("input", recalcular));
+  container.querySelectorAll("#bloco-modo-projeto select").forEach((sel) => sel.addEventListener("change", recalcular));
+  document.getElementById("atv-add").addEventListener("click", () => {
+    const nome = document.getElementById("atv-nome").value.trim();
+    if (!nome) return;
+    atividadesCalc.push({ nome, dias: Number(document.getElementById("atv-dias").value) || 0, horas: Number(document.getElementById("atv-horas").value) || 0 });
+    document.getElementById("atv-nome").value = "";
+    desenharAtividades(); recalcular();
+  });
+  desenharAtividades();
 
   document.getElementById("btn-add-demanda-mes").addEventListener("click", () => {
     const descricao = document.getElementById("mes-nova-descricao").value.trim();

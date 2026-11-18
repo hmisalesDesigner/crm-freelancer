@@ -89,6 +89,23 @@ function renderizarLembretes() {
       </div>`);
   }
 
+  const hojeBase = hojeISO();
+  (ESTADO.clientes || []).forEach((c) => {
+    if (!c.aniversario) return;
+    const [, mm, dd] = c.aniversario.split("-");
+    let prox = `${hojeBase.slice(0, 4)}-${mm}-${dd}`;
+    if (prox < hojeBase) prox = `${Number(hojeBase.slice(0, 4)) + 1}-${mm}-${dd}`;
+    const dias = diasEntre(hojeBase, prox);
+    if (dias <= 7) itens.push(`
+      <div class="item-alerta">
+        <div>
+          <b>🎂 Aniversário: ${escaparHtml(c.nome)}</b>
+          <span class="item-alerta-detalhe">${dias === 0 ? "É hoje! Mande uma mensagem." : `Em ${dias} dia(s), dia ${dd}/${mm}`}</span>
+        </div>
+        <button class="botao secundario pequeno" data-abrir-cliente-tarefa="${c.id}">Abrir</button>
+      </div>`);
+  });
+
   if (ESTADO.cronometroAtivo) {
     const tarefa = tarefaPorId(ESTADO.cronometroAtivo.tarefaId);
     itens.push(`

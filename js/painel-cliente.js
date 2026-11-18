@@ -132,6 +132,8 @@ function renderizarPainelCliente(id) {
       ${totaisAval.total > 0 ? `<div id="pc-grafico-avaliacoes"></div>` : `<p class="card-sub">Nenhuma avaliação registrada para este cliente ainda.</p>`}
     </div>
 
+    ${htmlExtrasCliente(cliente)}
+
     ${htmlContratoCliente()}
 
     <div class="painel-grafico-funil">
@@ -147,6 +149,7 @@ function renderizarPainelCliente(id) {
   if (totaisAval.total > 0) renderizarGraficoAvaliacoes("pc-grafico-avaliacoes", avaliacoes);
   renderizarGraficoFaturamentoCliente("pc-grafico-faturamento", cliente);
   ligarContratoCliente(cliente.id);
+  ligarExtrasCliente(cliente.id);
 
   function desenharNotas() {
     const alvo = document.getElementById("pc-notas");
@@ -177,7 +180,7 @@ function renderizarPainelCliente(id) {
   document.getElementById("pc-dem-add").addEventListener("click", () => {
     const t = document.getElementById("pc-dem-novo").value.trim();
     if (!t) return;
-    atualizarEstado((e) => { e.demandas.push({ id: gerarId(), cliente: cliente.nome, clienteId: cliente.id, titulo: t, data: hojeISO(), status: "fazer" }); });
+    atualizarEstado((e) => { e.demandas.push({ id: gerarId(), cliente: cliente.nome, clienteId: cliente.id, titulo: t, data: hojeISO(), planejadaPara: hojeISO(), status: "fazer" }); });
     renderizarPainelCliente(id);
   });
   document.getElementById("pc-dem-novo").addEventListener("keydown", (ev) => { if (ev.key === "Enter") document.getElementById("pc-dem-add").click(); });
@@ -204,8 +207,7 @@ function renderizarPainelCliente(id) {
       if (acao === "excluir") { e.demandas = e.demandas.filter((x) => x.id !== demId); return; }
       const d = e.demandas.find((x) => x.id === demId);
       if (!d) return;
-      d.status = acao;
-      if (acao === "concluida") d.data = hojeISO();
+      if (acao === "concluida") concluirDemanda(d); else d.status = acao;
     });
     renderizarPainelCliente(id);
   }));
