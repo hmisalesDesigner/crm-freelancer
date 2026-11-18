@@ -132,6 +132,8 @@ function renderizarPainelCliente(id) {
       ${totaisAval.total > 0 ? `<div id="pc-grafico-avaliacoes"></div>` : `<p class="card-sub">Nenhuma avaliação registrada para este cliente ainda.</p>`}
     </div>
 
+    ${htmlContratoCliente()}
+
     <div class="painel-grafico-funil">
       <h3>📝 Anotações</h3>
       <div style="display:flex; gap:6px; margin-bottom:10px;">
@@ -144,6 +146,7 @@ function renderizarPainelCliente(id) {
 
   if (totaisAval.total > 0) renderizarGraficoAvaliacoes("pc-grafico-avaliacoes", avaliacoes);
   renderizarGraficoFaturamentoCliente("pc-grafico-faturamento", cliente);
+  ligarContratoCliente(cliente.id);
 
   function desenharNotas() {
     const alvo = document.getElementById("pc-notas");
