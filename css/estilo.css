@@ -753,3 +753,26 @@ a.chip { text-decoration: none; }
 .demanda-titulo { flex: 1; min-width: 0; overflow-wrap: anywhere; }
 .demanda-acoes { display: flex; gap: 6px; flex-shrink: 0; }
 @media (max-width: 760px) { .demanda-item { flex-wrap: wrap; } .demanda-acoes { width: 100%; } #painel-demandas .cards-resumo { grid-template-columns: repeat(2, 1fr) !important; } }
+
+/* ===== Cards "pasta": avatar e ícone de ação saem pela borda de cima, como abas ===== */
+.grade-leads { display: grid; grid-template-columns: repeat(auto-fill, minmax(290px, 1fr)); gap: 40px 16px; margin-top: 34px; }
+.card-pasta {
+  position: relative; background: var(--cor-fundo-painel); border: 1px solid var(--cor-borda);
+  border-radius: 18px; padding: 34px 16px 14px; display: flex; flex-direction: column; gap: 10px;
+}
+.aba-avatar, .aba-icone {
+  position: absolute; top: -20px; width: 42px; height: 42px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 14px;
+  box-shadow: 0 0 0 6px var(--cor-fundo); /* recorte: dá o efeito de aba encaixada na pasta */
+}
+.aba-avatar { left: 14px; background: var(--cor-primaria); color: var(--cor-texto-sobre-primaria); }
+.aba-icone { right: 14px; background: var(--cor-fundo-painel); color: var(--cor-texto); border: 1px solid var(--cor-borda); cursor: pointer; font-size: 17px; }
+.aba-icone:hover { border-color: var(--cor-primaria); color: var(--cor-primaria); }
+.card-pasta-nome { margin: 0; font-size: 17px; font-weight: 600; }
+.card-pasta-sub { margin: -6px 0 0; font-size: 12px; color: var(--cor-texto-suave); }
+.card-pasta-metricas { display: flex; gap: 16px; font-size: 14px; font-weight: 600; }
+.card-pasta-metricas small { display: block; font-size: 10px; font-weight: 400; color: var(--cor-texto-suave); }
+.card-pasta-linha { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.card-pasta-acoes { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; margin-top: 2px; }
+.bolinhas-nivel { display: inline-flex; gap: 4px; padding: 4px 8px; border: 1px solid var(--cor-borda); border-radius: 12px; }
+.bolinha-nivel { width: 9px; height: 9px; border-radius: 50%; background: var(--cor-borda); display: block; }

@@ -185,11 +185,7 @@ function renderizarPaginaProspeccao() {
     </div>
     <div class="filtros" id="lead-filtros"></div>
     <div class="campo" style="max-width:360px; margin:10px 0;"><input id="lead-busca" placeholder="Buscar por nome, @ ou nicho"></div>
-    <div style="overflow-x:auto;">
-      <table class="tabela"><thead><tr>
-        <th>Lead</th><th>Nicho</th><th>Seguidores</th><th>Posts/sem</th><th>Eng.</th><th>Score</th><th>Status</th><th>Follow-up</th><th></th>
-      </tr></thead><tbody id="lead-corpo"></tbody></table>
-    </div>
+    <div class="grade-leads" id="lead-corpo"></div>
     <div class="orc-privado" id="lead-mensagem" style="display:none; margin-top:16px; max-width:700px; position:static;"></div>
   `;
 
@@ -288,22 +284,37 @@ function renderizarPaginaProspeccao() {
     const hoje = hojeISO();
     $("lead-corpo").innerHTML = lista.map(({ l, score }) => {
       const eng = engajamentoLead(l);
-      return `<tr>
-        <td><b>${escaparHtml(l.nome || l.perfil)}</b><br><span class="card-sub">${escaparHtml(l.perfil || "")} · ${escaparHtml(l.tipo || "")}</span></td>
-        <td>${escaparHtml(l.nicho || "-")}</td>
-        <td>${l.seguidores != null ? Number(l.seguidores).toLocaleString("pt-BR") : "-"}</td>
-        <td>${l.postsPorSemana != null ? l.postsPorSemana : "-"}</td>
-        <td>${eng ? eng.toFixed(1) + "%" : "-"}</td>
-        <td><span class="selo ${prioridadeLead(score)}">${score} · ${prioridadeLead(score)}</span></td>
-        <td><select data-status-lead="${l.id}">${STATUS_LEAD.map((s) => `<option ${s === l.status ? "selected" : ""}>${s}</option>`).join("")}</select></td>
-        <td>${l.proximoContato ? `<span ${l.proximoContato <= hoje && !STATUS_LEAD_ENCERRADOS.includes(l.status) ? 'style="color:var(--cor-perigo);font-weight:600;"' : ""}>${formatarDataBR(l.proximoContato)}</span>` : "-"}</td>
-        <td style="white-space:nowrap;">
+      const nome = l.nome || l.perfil || "?";
+      const iniciais = nome.replace(/^@/, "").split(/\s+/).slice(0, 2).map((p) => p[0] || "").join("").toUpperCase();
+      const cheios = Math.max(1, Math.min(5, Math.round(score / 20)));
+      const cores = ["#ef4444", "#f97316", "#eab308", "#84cc16", "#22c55e"];
+      const bolinhas = cores.map((c, i) => `<i class="bolinha-nivel" style="${i < cheios ? "background:" + c : ""}"></i>`).join("");
+      const atrasado = l.proximoContato && l.proximoContato <= hoje && !STATUS_LEAD_ENCERRADOS.includes(l.status);
+      return `<div class="card-pasta lead-card">
+        <span class="aba-avatar">${escaparHtml(iniciais)}</span>
+        <button class="aba-icone" data-editar-lead="${l.id}" title="Editar lead" aria-label="Editar">↗</button>
+        <h4 class="card-pasta-nome">${escaparHtml(nome)}</h4>
+        <p class="card-pasta-sub">${escaparHtml(l.perfil || "")}${l.tipo ? " · " + escaparHtml(l.tipo) : ""}${l.nicho ? " · " + escaparHtml(l.nicho) : ""}</p>
+        <div class="card-pasta-metricas">
+          <span><small>Seguidores</small>${l.seguidores != null ? Number(l.seguidores).toLocaleString("pt-BR") : "-"}</span>
+          <span><small>Posts/sem</small>${l.postsPorSemana != null ? l.postsPorSemana : "-"}</span>
+          <span><small>Eng.</small>${eng ? eng.toFixed(1) + "%" : "-"}</span>
+        </div>
+        <div class="card-pasta-linha">
+          <span class="selo ${prioridadeLead(score)}">${score} · ${prioridadeLead(score)}</span>
+          <span class="bolinhas-nivel" title="Interesse: ${score}/100">${bolinhas}</span>
+        </div>
+        <div class="card-pasta-linha">
+          <select data-status-lead="${l.id}">${STATUS_LEAD.map((s) => `<option ${s === l.status ? "selected" : ""}>${s}</option>`).join("")}</select>
+          <span class="card-sub" style="margin:0;${atrasado ? "color:var(--cor-perigo);font-weight:600;" : ""}">${l.proximoContato ? "Follow-up " + formatarDataBR(l.proximoContato) : ""}</span>
+        </div>
+        <div class="card-pasta-acoes">
           <button class="botao sucesso pequeno" data-msg-lead="${l.id}">💬 Mensagem</button>
-          <button class="botao secundario pequeno" data-editar-lead="${l.id}">Editar</button>
-          ${l.clienteId ? `<span class="card-sub">✔ cliente</span>` : `<button class="botao secundario pequeno" data-cliente-lead="${l.id}">→ Cliente</button>`}
+          ${l.clienteId ? `<span class="card-sub" style="margin:0;">✔ cliente</span>` : `<button class="botao secundario pequeno" data-cliente-lead="${l.id}">→ Cliente</button>`}
           <button class="botao perigo pequeno" data-excluir-lead="${l.id}" aria-label="Excluir">✕</button>
-        </td></tr>`;
-    }).join("") || `<tr><td colspan="9" style="text-align:center; color:var(--cor-texto-suave);">Nenhum lead nesta visão.</td></tr>`;
+        </div>
+      </div>`;
+    }).join("") || `<p class="card-sub" style="grid-column:1/-1; text-align:center;">Nenhum lead nesta visão.</p>`;
 
     const corpo = $("lead-corpo");
     corpo.querySelectorAll("[data-status-lead]").forEach((s) => s.addEventListener("change", () => {
