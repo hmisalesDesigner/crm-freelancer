@@ -4,9 +4,9 @@
  * cada um com filtros em pílulas (como no layout Workspace) e planejamento de atividades.
  */
 
-let FILTRO_LEADS = "todos", FILTRO_TAREFAS = "todas";
-let BUSCA_LEADS = "", BUSCA_TAREFAS = "";
-let BUSCA_ABERTA = { leads: false, tarefas: false };
+let FILTRO_LEADS = "todos", FILTRO_TAREFAS = "todas", FILTRO_CLIENTES = "todos";
+let BUSCA_LEADS = "", BUSCA_TAREFAS = "", BUSCA_CLIENTES = "";
+let BUSCA_ABERTA = { leads: false, tarefas: false, clientes: false };
 
 const FILTROS_LEADS = [["todos", "Todos"], ["quente", "🔥 Lead quente"], ["baixo", "Interesse baixo"], ["medio", "Interesse médio"], ["alto", "Interesse alto"]];
 const FILTROS_TAREFAS = [["todas", "Todas"], ["atrasada", "Atrasadas"], ["alta", "Prioridade alta"], ["media", "Prioridade média"], ["baixa", "Prioridade baixa"]];
@@ -103,43 +103,72 @@ function renderizarVisaoDoDia() {
   const visiveis = tarefas.filter((t) => (FILTRO_TAREFAS === "todas" || (FILTRO_TAREFAS === "atrasada" ? t.atrasada : t.prioridade === FILTRO_TAREFAS))
     && (!buscaT || t.texto.toLowerCase().includes(buscaT)));
 
+  const lista = visiveis.slice(0, 8);
   const rotPrio = (p) => `<small class="rotulo rotulo-${p}">${ROTULO_PRIORIDADE[p]}</small>`;
-  alvoTarefas.innerHTML = visiveis.slice(0, 8).map((t) => {
-    if (t.kind === "follow") {
-      const it = t.it;
-      const wa = linkWhatsapp(it.contato, it.mensagem);
-      const icone = it.tipo === "contato" ? "📞" : it.tipo === "lead" ? "🔎" : "📄";
-      return `<div class="card-pasta">
-        <span class="aba-avatar neutra">${icone}</span>
-        <button class="aba-icone" data-ir="${it.tipo === "lead" ? "prospeccao" : it.tipo === "orcamento" ? "orcamentos" : "funil"}" title="Abrir" aria-label="Abrir">↗</button>
-        <h4 class="card-pasta-nome">${escaparHtml(it.titulo)}</h4>
-        <p class="card-pasta-sub">${escaparHtml(it.detalhe)}</p>
-        <div class="card-pasta-linha card-pasta-meta">
-          <div><small class="rotulo">Tipo</small><div class="chips-mini"><span class="chip-mini">Follow-up</span>${t.atrasada ? `<span class="chip-mini chip-atraso">Atrasado</span>` : ""}</div></div>
-          <div class="direita">${rotPrio(t.prioridade)}</div>
-        </div>
-        <div class="card-pasta-acoes">
-          ${wa ? `<a class="botao sucesso pequeno" href="${wa}" target="_blank" rel="noopener">💬 WhatsApp</a>` : ""}
-          <button class="botao secundario pequeno" data-feito-dia="${t.i}">Feito</button>
-        </div>
-      </div>`;
-    }
-    const d = t.d;
-    return `<div class="card-pasta">
-      <span class="aba-avatar neutra">🛠️</span>
-      <button class="aba-icone" data-ir="painel" title="Demandas" aria-label="Abrir">↗</button>
-      <h4 class="card-pasta-nome">${escaparHtml(d.titulo)}</h4>
-      <p class="card-pasta-sub">${escaparHtml(d.cliente || "")} · ${STATUS_DEMANDA[d.status]}</p>
-      <div class="card-pasta-linha card-pasta-meta">
-        <div><small class="rotulo">Categoria</small><div class="chips-mini">${d.categoria ? seloCategoria(d.categoria) : `<span class="chip-mini">—</span>`}${t.atrasada ? `<span class="chip-mini chip-atraso">Atrasada</span>` : ""}</div></div>
-        <div class="direita">${rotPrio(t.prioridade)}</div>
+  const cartaTarefa = (o, destaque) => `<div class="card-tarefa${destaque ? " destaque" : ""}">
+      <div class="tarefa-tab"><span class="tarefa-avatar">${o.avatar}</span></div>
+      <div class="tarefa-acoes-topo">
+        <button class="circulo-btn" data-adiar-dia="${o.chave}" title="Adiar para amanhã" aria-label="Adiar para amanhã">🔔</button>
+        <button class="circulo-btn" ${o.verCliente ? `data-ver-cliente="${o.verCliente}"` : `data-ir="${o.ir}"`} title="Abrir" aria-label="Abrir">↗</button>
       </div>
-      <div class="card-pasta-acoes">
-        <button class="botao sucesso pequeno" data-concluir-dia="${d.id}">Concluir</button>
+      <div class="tarefa-corpo">
+        <div class="tarefa-titulo"><span class="tarefa-icone">${o.icone}</span><div><h4>${escaparHtml(o.titulo)}</h4><p>${escaparHtml(o.sub)}</p></div></div>
+        <div class="tarefa-chips">${o.chips}${o.prioridade ? rotPrio(o.prioridade) : ""}</div>
+        <small class="rotulo">${o.rotuloSelect || "Status"}</small>
+        <div class="tarefa-rodape">
+          ${o.seletor}
+          <span class="tarefa-icones">${o.wa ? `<a class="circulo-mini" href="${o.wa}" target="_blank" rel="noopener" title="WhatsApp">💬</a>` : ""}${o.attrFeito ? `<button class="circulo-mini" ${o.attrFeito} title="Concluir" aria-label="Concluir">✔</button>` : ""}</span>
+        </div>
       </div>
     </div>`;
+  alvoTarefas.innerHTML = lista.map((t, n) => {
+    const atraso = t.atrasada ? `<span class="chip-mini chip-atraso">Atrasada</span>` : "";
+    if (t.kind === "follow") {
+      const it = t.it;
+      return cartaTarefa({
+        avatar: it.tipo === "contato" ? "📞" : it.tipo === "lead" ? "🔎" : "📄",
+        chave: "f:" + t.i, ir: it.tipo === "lead" ? "prospeccao" : it.tipo === "orcamento" ? "orcamentos" : "funil",
+        icone: it.tipo === "orcamento" ? "📄" : "✉️", titulo: it.titulo, sub: it.detalhe,
+        chips: `<span class="chip-mini">Follow-up</span>${atraso}`, prioridade: t.prioridade,
+        seletor: `<select class="tarefa-select" data-status-follow="${t.i}"><option>Pendente</option><option value="feito">Feito</option></select>`,
+        wa: linkWhatsapp(it.contato, it.mensagem), attrFeito: `data-feito-dia="${t.i}"`,
+      }, n === 0);
+    }
+    const d = t.d;
+    return cartaTarefa({
+      avatar: escaparHtml(((d.cliente || "?")[0] || "?").toUpperCase()),
+      chave: "d:" + d.id, ir: "painel", icone: "🛠️", titulo: d.titulo,
+      sub: `${d.cliente || ""}${d.data ? " · " + formatarDataBR(d.data) : ""}`,
+      chips: `${d.categoria ? seloCategoria(d.categoria) : ""}${atraso}`, prioridade: t.prioridade,
+      seletor: `<select class="tarefa-select" data-status-dem="${d.id}">${Object.keys(STATUS_DEMANDA).map((k) => `<option value="${k}"${k === d.status ? " selected" : ""}>${STATUS_DEMANDA[k]}</option>`).join("")}</select>`,
+      wa: "", attrFeito: `data-concluir-dia="${d.id}"`,
+    }, n === 0);
   }).join("") || `<p class="card-sub" style="grid-column:1/-1;">${tarefas.length ? "Nenhuma tarefa neste filtro." : "Nada pendente para hoje. 🎉"}</p>`;
   if (visiveis.length > 8) alvoTarefas.insertAdjacentHTML("beforeend", `<p class="card-sub" style="grid-column:1/-1;margin:0;">+ ${visiveis.length - 8} tarefa(s) — veja a lista completa em Demandas</p>`);
+
+  /* --- clientes (visão de todos) --- */
+  const clientes = ESTADO.clientes || [];
+  const etapasPresentes = ETAPAS_FUNIL.filter((e) => clientes.some((c) => c.etapaFunil === e));
+  document.getElementById("painel-clientes-contagem").textContent = clientes.length;
+  document.getElementById("painel-clientes-filtros").innerHTML = barraFiltros("clientes", [["todos", "Todos"]].concat(etapasPresentes.map((e) => [e, e])), FILTRO_CLIENTES, BUSCA_ABERTA.clientes, BUSCA_CLIENTES);
+  const buscaC = BUSCA_CLIENTES.trim().toLowerCase();
+  const clientesVisiveis = clientes.filter((c) => (FILTRO_CLIENTES === "todos" || c.etapaFunil === FILTRO_CLIENTES) && (!buscaC || `${c.nome || ""} ${c.contato || ""} ${c.demanda || ""}`.toLowerCase().includes(buscaC)));
+  const fixoId = (ESTADO.configuracoes || {}).clienteFixoId;
+  const ativoId = ESTADO.cronometroAtivo ? ((tarefaPorId(ESTADO.cronometroAtivo.tarefaId) || {}).clienteId) : null;
+  document.getElementById("painel-clientes").innerHTML = clientesVisiveis.map((c) => {
+    const total = (c.historicoFinanceiro || []).reduce((acc, h) => acc + Number(h.valor || 0), 0);
+    const abertas = demandasDoCliente(c).filter((d) => d.status !== "concluida").length;
+    const iniciais = (c.nome || "?").trim().split(/\s+/).map((x) => x[0]).slice(0, 2).join("").toUpperCase();
+    return cartaTarefa({
+      avatar: c.foto ? `<img src="${c.foto}" alt="">` : escaparHtml(iniciais),
+      chave: "c:" + c.id, verCliente: c.id, icone: "👤", titulo: c.nome || "Sem nome",
+      sub: c.contato || (c.demanda || "").slice(0, 40) || "Sem contato",
+      chips: `<span class="chip-mini">${abertas} demanda(s) em aberto</span><span class="chip-mini">${formatarMoeda(total)}</span>${c.proximoContato ? `<span class="chip-mini${c.proximoContato <= hojeStr ? " chip-atraso" : ""}">Contato ${formatarDataBR(c.proximoContato)}</span>` : ""}`,
+      rotuloSelect: "Etapa", prioridade: "",
+      seletor: `<select class="tarefa-select" data-etapa-cliente="${c.id}">${ETAPAS_FUNIL.map((e) => `<option${e === c.etapaFunil ? " selected" : ""}>${e}</option>`).join("")}</select>`,
+      wa: linkWhatsapp(c.contato, ""), attrFeito: "",
+    }, c.id === (ativoId || fixoId));
+  }).join("") || `<p class="card-sub" style="grid-column:1/-1;">${clientes.length ? "Nenhum cliente neste filtro." : "Nenhum cliente cadastrado ainda."}</p>`;
 
   /* --- planejar atividade (como a linha pré-pronta da planilha) --- */
   const btnPlan = document.getElementById("plano-add");
@@ -159,21 +188,45 @@ function renderizarVisaoDoDia() {
   }
 
   /* --- ações --- */
-  const secoes = { leads: () => [FILTRO_LEADS, BUSCA_LEADS], tarefas: () => [FILTRO_TAREFAS, BUSCA_TAREFAS] };
-  document.querySelectorAll("#painel-leads-filtros [data-busca-toggle], #painel-tarefas-filtros [data-busca-toggle]").forEach((b) => b.addEventListener("click", () => {
+  document.querySelectorAll("#painel-leads-filtros [data-busca-toggle], #painel-tarefas-filtros [data-busca-toggle], #painel-clientes-filtros [data-busca-toggle]").forEach((b) => b.addEventListener("click", () => {
     const k = b.dataset.buscaToggle; BUSCA_ABERTA[k] = !BUSCA_ABERTA[k];
-    if (!BUSCA_ABERTA[k]) { if (k === "leads") BUSCA_LEADS = ""; else BUSCA_TAREFAS = ""; }
+    if (!BUSCA_ABERTA[k]) { if (k === "leads") BUSCA_LEADS = ""; else if (k === "clientes") BUSCA_CLIENTES = ""; else BUSCA_TAREFAS = ""; }
     renderizarVisaoDoDia();
     const inp = document.querySelector(`[data-busca-input="${k}"]`); if (inp) inp.focus();
   }));
   document.querySelectorAll("[data-busca-input]").forEach((inp) => inp.addEventListener("input", () => {
-    const k = inp.dataset.buscaInput; if (k === "leads") BUSCA_LEADS = inp.value; else BUSCA_TAREFAS = inp.value;
+    const k = inp.dataset.buscaInput; if (k === "leads") BUSCA_LEADS = inp.value; else if (k === "clientes") BUSCA_CLIENTES = inp.value; else BUSCA_TAREFAS = inp.value;
     renderizarVisaoDoDia();
     const novo = document.querySelector(`[data-busca-input="${k}"]`); if (novo) { novo.focus(); novo.setSelectionRange(novo.value.length, novo.value.length); }
   }));
   document.querySelectorAll("[data-filtro-leads]").forEach((b) => b.addEventListener("click", () => { FILTRO_LEADS = b.dataset.filtroLeads; renderizarVisaoDoDia(); }));
+  document.querySelectorAll("[data-filtro-clientes]").forEach((b) => b.addEventListener("click", () => { FILTRO_CLIENTES = b.dataset.filtroClientes; renderizarVisaoDoDia(); }));
+  document.querySelectorAll("#painel-clientes [data-ver-cliente]").forEach((b) => b.addEventListener("click", () => abrirPainelCliente(b.dataset.verCliente)));
+  document.querySelectorAll("[data-etapa-cliente]").forEach((sel) => sel.addEventListener("change", () => {
+    atualizarEstado((e) => { const c = e.clientes.find((x) => x.id === sel.dataset.etapaCliente); if (c) c.etapaFunil = sel.value; });
+    atualizarPainel();
+  }));
   document.querySelectorAll("[data-filtro-tarefas]").forEach((b) => b.addEventListener("click", () => { FILTRO_TAREFAS = b.dataset.filtroTarefas; renderizarVisaoDoDia(); }));
   document.querySelectorAll("#painel-leads [data-ir], #painel-tarefas-dia [data-ir]").forEach((b) => b.addEventListener("click", () => irParaPagina(b.dataset.ir)));
+  alvoTarefas.querySelectorAll("[data-status-dem]").forEach((sel) => sel.addEventListener("change", () => {
+    atualizarEstado((e) => { const d = e.demandas.find((x) => x.id === sel.dataset.statusDem); if (d) { d.status = sel.value; if (sel.value === "concluida") d.data = hojeISO(); } });
+    atualizarPainel();
+  }));
+  alvoTarefas.querySelectorAll("[data-status-follow]").forEach((sel) => sel.addEventListener("change", () => {
+    if (sel.value === "feito") alvoTarefas.querySelector(`[data-feito-dia="${sel.dataset.statusFollow}"]`).click();
+  }));
+  document.querySelectorAll("#painel-tarefas-dia [data-adiar-dia], #painel-clientes [data-adiar-dia]").forEach((b) => b.addEventListener("click", () => {
+    const [tipo, ref] = b.dataset.adiarDia.split(":"); const amanha = somarDiasISO(hojeISO(), 1);
+    atualizarEstado((e) => {
+      if (tipo === "c") { const c = e.clientes.find((x) => x.id === ref); if (c) c.proximoContato = amanha; return; }
+      if (tipo === "d") { const d = e.demandas.find((x) => x.id === ref); if (d) d.data = amanha; return; }
+      const it = followups[Number(ref)];
+      if (it.tipo === "lead") { const l = e.leads.find((x) => x.id === it.leadId); if (l) l.proximoContato = amanha; }
+      else if (it.tipo === "contato") { const c = e.clientes.find((x) => x.id === it.clienteId); if (c) c.proximoContato = amanha; }
+      else { const o = e.orcamentos.find((x) => x.id === it.orcamentoId); if (o) o.ultimoFollowUp = hojeISO(); }
+    });
+    atualizarPainel();
+  }));
   alvoTarefas.querySelectorAll("[data-concluir-dia]").forEach((b) => b.addEventListener("click", () => {
     atualizarEstado((e) => { const d = e.demandas.find((x) => x.id === b.dataset.concluirDia); if (d) { d.status = "concluida"; d.data = hojeISO(); } });
     atualizarPainel();

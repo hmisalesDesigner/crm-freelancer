@@ -10,7 +10,7 @@
 <link rel="icon" type="image/png" href="icone-192.png">
 <script>
   // Versão do site: muda a cada publicação (e a cada clique em "Atualizar") para o navegador nunca reaproveitar arquivos antigos.
-  window.VERSAO_SITE = "20261118e";
+  window.VERSAO_SITE = "20261118g";
   (function () {
     var v = new URLSearchParams(location.search).get("_v") || window.VERSAO_SITE;
     window.__v = encodeURIComponent(v);
@@ -99,6 +99,14 @@
 
         <div class="secao-dia">
           <div class="cabecalho-secao">
+            <h3 class="titulo-pilula">Clientes <b id="painel-clientes-contagem">0</b></h3>
+            <div class="filtros-dia" id="painel-clientes-filtros"></div>
+          </div>
+          <div class="grade-tarefas" id="painel-clientes"></div>
+        </div>
+
+        <div class="secao-dia">
+          <div class="cabecalho-secao">
             <h3 class="titulo-pilula">Novos leads <b id="painel-leads-contagem">0</b></h3>
             <div class="filtros-dia" id="painel-leads-filtros"></div>
           </div>
@@ -117,7 +125,7 @@
             <button class="botao pequeno" id="plano-add">+ Planejar</button>
           </div>
           <p class="card-sub" id="painel-plano-resumo"></p>
-          <div class="grade-leads grade-painel" id="painel-tarefas-dia"></div>
+          <div class="grade-tarefas" id="painel-tarefas-dia"></div>
         </div>
       </section>
 

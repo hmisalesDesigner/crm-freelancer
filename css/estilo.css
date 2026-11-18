@@ -831,3 +831,33 @@ a.chip { text-decoration: none; }
 
 .pilula-dem { gap: 12px; padding: 8px 12px; font-size: 12px; } .pilula-dem b { font-size: 22px; } .pilulas-dem { gap: 8px; flex-wrap: nowrap; overflow-x: auto; }
 .lista-dem summary { cursor: pointer; margin-top: 14px; color: var(--cor-texto-suave); font-size: 13px; }
+
+/* ===== Cards de tarefa em aba (layout Workspace) ===== */
+.filtros-dia .chip.ativo { background: #fff; color: #111; border-color: #fff; }
+.grade-tarefas { display: grid; grid-template-columns: repeat(auto-fill, minmax(270px, 1fr)); gap: 20px 16px; margin-top: 16px; }
+.card-tarefa { --c: var(--cor-fundo-painel); position: relative; padding-top: 54px; color: var(--cor-texto); }
+.card-tarefa.destaque { --c: var(--cor-primaria); color: var(--cor-texto-sobre-primaria); }
+.tarefa-tab { position: absolute; top: 0; left: 0; width: calc(100% - 116px); height: 62px; background: var(--c); border-radius: 22px 22px 0 0; }
+.tarefa-tab::after { content: ""; position: absolute; right: -22px; top: 32px; width: 22px; height: 22px; background: radial-gradient(circle at 100% 0, transparent 21px, var(--c) 22px); }
+.tarefa-avatar { position: absolute; left: 14px; top: 8px; width: 40px; height: 40px; border-radius: 50%; background: var(--cor-primaria); color: var(--cor-texto-sobre-primaria); display: flex; align-items: center; justify-content: center; font-weight: 700; box-shadow: 0 0 0 2px rgba(255,255,255,.15); }
+.destaque .tarefa-avatar { background: #1a1a1a; color: #fff; }
+.tarefa-acoes-topo { position: absolute; top: 2px; right: 0; display: flex; gap: 8px; }
+.circulo-btn { width: 44px; height: 44px; border-radius: 50%; background: var(--cor-fundo-painel); border: 1px solid var(--cor-borda); color: var(--cor-texto); cursor: pointer; font-size: 16px; }
+.circulo-btn:hover { border-color: var(--cor-primaria); color: var(--cor-primaria); }
+.tarefa-corpo { position: relative; background: var(--c); border-radius: 0 22px 22px 22px; padding: 14px 16px 14px; display: flex; flex-direction: column; gap: 8px; min-height: 150px; }
+.tarefa-titulo { display: flex; gap: 10px; align-items: flex-start; }
+.tarefa-icone { width: 34px; height: 34px; flex-shrink: 0; border-radius: 10px; display: flex; align-items: center; justify-content: center; background: rgba(128,128,128,.18); font-size: 18px; }
+.tarefa-titulo h4 { margin: 0; font-size: 17px; font-weight: 600; line-height: 1.2; }
+.tarefa-titulo p { margin: 2px 0 0; font-size: 11px; opacity: .7; }
+.tarefa-chips { display: flex; flex-wrap: wrap; gap: 4px; align-items: center; }
+.destaque .rotulo, .destaque .rotulo-media, .destaque .rotulo-alta { color: inherit; opacity: .8; }
+.tarefa-rodape { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-top: auto; }
+.card-tarefa .tarefa-select { background: var(--cor-fundo); border: 1px solid var(--cor-borda); color: var(--cor-texto); border-radius: 18px; padding: 6px 10px; max-width: 160px; }
+.destaque .tarefa-select { background: rgba(0,0,0,.18); border-color: transparent; color: inherit; }
+.tarefa-icones { display: flex; gap: 6px; }
+.circulo-mini { width: 30px; height: 30px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; background: transparent; border: none; color: inherit; cursor: pointer; text-decoration: none; font-size: 15px; }
+.destaque .circulo-mini { background: #1a1a1a; color: #fff; }
+.circulo-mini:hover { background: rgba(128,128,128,.25); }
+.destaque .chip-mini { background: rgba(0,0,0,.15); border-color: transparent; color: inherit; }
+
+.tarefa-avatar { overflow: hidden; } .tarefa-avatar img { width: 100%; height: 100%; object-fit: cover; }
