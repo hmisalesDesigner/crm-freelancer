@@ -12,6 +12,7 @@ const RENDERIZADORES = {
   pagamentos: renderizarPaginaPagamentos,
   despesas: renderizarPaginaDespesas,
   prospeccao: renderizarPaginaProspeccao,
+  lembretes: renderizarPaginaLembretes,
   configuracoes: renderizarPaginaConfiguracoes,
 };
 
@@ -24,6 +25,7 @@ const TITULOS_PAGINA = {
   pagamentos: "Pagamentos",
   despesas: "Despesas",
   prospeccao: "Prospecção",
+  lembretes: "Lembretes",
   configuracoes: "Configurações",
 };
 
@@ -35,7 +37,6 @@ function irParaPagina(pagina) {
   document.querySelector(`.menu-item[data-pagina="${pagina}"]`).classList.add("ativo");
 
   document.getElementById("titulo-pagina").textContent = TITULOS_PAGINA[pagina];
-  const lemb = document.getElementById("lembretes-topo"); if (lemb) lemb.style.display = pagina === "painel" ? "" : "none";
 
   const render = RENDERIZADORES[pagina];
   if (render) render();
@@ -329,6 +330,7 @@ function inicializarApp() {
 
   garantirMensalidadeFixa();
   iniciarIndicadorCronometro();
+  document.getElementById("lembretes-topo").addEventListener("click", () => irParaPagina("lembretes"));
   atualizarPainel();
 }
 

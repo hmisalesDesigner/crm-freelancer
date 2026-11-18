@@ -881,3 +881,11 @@ a.chip { text-decoration: none; }
 .bloco-extra { margin-bottom: 16px; } .bloco-extra > summary { cursor: pointer; list-style: none; } .bloco-extra > summary::-webkit-details-marker { display: none; }
 .bloco-extra > summary::after { content: " ▾"; color: var(--cor-texto-suave); } .bloco-extra[open] > summary::after { content: " ▴"; }
 .acomp-var { font-weight: 600; color: var(--cor-primaria); white-space: nowrap; }
+
+/* Topo: Lembretes + status + Atualizar, com o botão Atualizar sempre no canto superior direito */
+.topo-direita { display: flex; align-items: center; gap: 10px; margin-left: auto; }
+.lembretes-topo { cursor: pointer; color: inherit; font: inherit; padding: 5px 12px; gap: 8px; border-radius: 999px; background: var(--cor-fundo-painel); }
+.lembretes-topo:hover { border-color: var(--cor-primaria); }
+.lembretes-topo .badge-contagem { min-width: 0; padding: 0 8px; font-size: 13px; border-color: var(--cor-primaria); color: var(--cor-primaria); }
+.link-desfazer { background: none; border: none; color: var(--cor-primaria); cursor: pointer; font-size: 10px; text-decoration: underline; padding: 0 0 0 4px; }
+.das-pagos { display: flex; flex-wrap: wrap; gap: 6px; }

@@ -10,7 +10,7 @@
 <link rel="icon" type="image/png" href="icone-192.png">
 <script>
   // Versão do site: muda a cada publicação (e a cada clique em "Atualizar") para o navegador nunca reaproveitar arquivos antigos.
-  window.VERSAO_SITE = "20261118l";
+  window.VERSAO_SITE = "20261118n";
   (function () {
     var v = new URLSearchParams(location.search).get("_v") || window.VERSAO_SITE;
     window.__v = encodeURIComponent(v);
@@ -40,6 +40,7 @@
         <button class="menu-item" data-pagina="pagamentos">💳 Pagamentos</button>
         <button class="menu-item" data-pagina="despesas">💸 Despesas</button>
         <button class="menu-item" data-pagina="prospeccao">🔎 Prospecção</button>
+        <button class="menu-item" data-pagina="lembretes">🔔 Lembretes</button>
         <button class="menu-item" data-pagina="configuracoes">⚙️ Configurações</button>
       </nav>
       <button id="btn-tema" class="btn-tema">🌙 Tema</button>
@@ -52,12 +53,12 @@
       <header class="topo">
         <h1 id="titulo-pagina">Painel</h1>
         <button class="cronometro-global" id="cronometro-global" style="display:none" title="Ir para o painel do cliente"></button>
-        <div style="display:flex; align-items:center; gap:10px;">
+        <div class="topo-direita">
+          <button class="lembretes-topo" id="lembretes-topo" title="Abrir a página de Lembretes"><span class="lembretes-titulo">🔔 Lembretes</span><b class="badge-contagem" id="lembretes-contagem">0</b></button>
           <div class="status-drive" id="status-drive">💾 Dados salvos localmente</div>
           <button class="botao secundario pequeno" id="btn-atualizar-site" title="Recarrega o site ignorando o cache do navegador"><span class="icone-girar" style="display:inline-block">🔄</span> Atualizar</button>
         </div>
-        <div class="lembretes-topo" id="lembretes-topo"><span class="lembretes-titulo">🔔 Lembretes</span><div id="painel-lembretes"></div></div>
-      </header>
+        </header>
 
       <section id="pagina-painel" class="pagina ativa">
         <div class="cards-resumo cards-resumo-mock">
@@ -145,6 +146,7 @@
       <section id="pagina-despesas" class="pagina"></section>
       <section id="pagina-cliente-detalhe" class="pagina"></section>
       <section id="pagina-prospeccao" class="pagina"></section>
+      <section id="pagina-lembretes" class="pagina"></section>
       <section id="pagina-configuracoes" class="pagina"></section>
 
     </main>

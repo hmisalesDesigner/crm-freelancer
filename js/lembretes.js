@@ -32,94 +32,93 @@ function proximoPrazoDASN() {
   return prazo;
 }
 
-function renderizarLembretes() {
-  const alvo = document.getElementById("painel-lembretes");
-  if (!alvo) return;
+function itemAlerta(nivel, titulo, detalhe, botao) {
+  return `
+    <div class="item-alerta ${nivel || ""}">
+      <div>
+        <b>${titulo}</b>
+        <span class="item-alerta-detalhe">${detalhe}</span>
+      </div>
+      ${botao || ""}
+    </div>`;
+}
+
+/** Lembretes de dinheiro: DAS, declaração anual, pagamentos em atraso e limite do MEI. */
+function itensLembretesFinanceiro() {
   const itens = [];
   const hoje = hojeISO();
 
   const das = proximoVencimentoDAS();
   if (das) {
     const dias = diasEntre(hoje, das.vencimento);
-    const nivel = dias < 0 ? "perigo" : dias <= 5 ? "alerta" : "";
-    itens.push(`
-      <div class="item-alerta ${nivel}">
-        <div>
-          <b>🧾 DAS do MEI</b>
-          <span class="item-alerta-detalhe">Vence em ${formatarDataBR(das.vencimento)} ${dias < 0 ? `(atrasado há ${-dias} dia(s))` : dias === 0 ? "(hoje)" : `(em ${dias} dia(s))`}</span>
-        </div>
-        <button class="botao sucesso pequeno" data-das="${das.chave}">Já paguei</button>
-      </div>`);
+    itens.push(itemAlerta(dias < 0 ? "perigo" : dias <= 5 ? "alerta" : "", "🧾 DAS do MEI",
+      `Vence em ${formatarDataBR(das.vencimento)} ${dias < 0 ? `(atrasado há ${-dias} dia(s))` : dias === 0 ? "(hoje)" : `(em ${dias} dia(s))`}`,
+      `<button class="botao sucesso pequeno" data-das="${das.chave}">Já paguei</button>`));
   }
 
   const prazo = proximoPrazoDASN();
   const diasDasn = diasEntre(hoje, prazo);
   if (diasDasn <= 60) {
-    itens.push(`
-      <div class="item-alerta ${diasDasn <= 15 ? "alerta" : ""}">
-        <div>
-          <b>📑 Declaração anual do MEI (DASN-SIMEI)</b>
-          <span class="item-alerta-detalhe">Prazo até ${formatarDataBR(prazo)} (em ${diasDasn} dia(s))</span>
-        </div>
-      </div>`);
+    itens.push(itemAlerta(diasDasn <= 15 ? "alerta" : "", "📑 Declaração anual do MEI (DASN-SIMEI)", `Prazo até ${formatarDataBR(prazo)} (em ${diasDasn} dia(s))`));
   }
 
   const t = totaisPagamentos();
   if (t.atrasados > 0) {
-    itens.push(`
-      <div class="item-alerta perigo">
-        <div>
-          <b>💳 Pagamentos em atraso</b>
-          <span class="item-alerta-detalhe">${t.atrasados} pagamento(s) somando ${formatarMoeda(t.valorAtrasado)}</span>
-        </div>
-        <button class="botao secundario pequeno" data-ir="pagamentos">Ver</button>
-      </div>`);
+    itens.push(itemAlerta("perigo", "💳 Pagamentos em atraso", `${t.atrasados} pagamento(s) somando ${formatarMoeda(t.valorAtrasado)}`,
+      `<button class="botao secundario pequeno" data-ir="pagamentos">Ver</button>`));
   }
 
   const limite = Number(ESTADO.configuracoes.limiteMeiAnual || 81000);
   const fat = calcularFaturamentoAno();
   const pct = (fat / limite) * 100;
   if (pct >= 70) {
-    itens.push(`
-      <div class="item-alerta ${pct >= 90 ? "perigo" : "alerta"}">
-        <div>
-          <b>⚠️ Limite do MEI</b>
-          <span class="item-alerta-detalhe">Você já usou ${pct.toFixed(1)}% do limite anual (${formatarMoeda(fat)} de ${formatarMoeda(limite)})</span>
-        </div>
-      </div>`);
+    itens.push(itemAlerta(pct >= 90 ? "perigo" : "alerta", "⚠️ Limite do MEI", `Você já usou ${pct.toFixed(1)}% do limite anual (${formatarMoeda(fat)} de ${formatarMoeda(limite)})`));
+  }
+  return itens;
+}
+
+/** Lembretes do trabalho: follow-ups, demandas para responder/atrasadas, relógio e aniversários. */
+function itensLembretesServicos() {
+  const itens = [];
+  const hoje = hojeISO();
+
+  obterFollowUps().forEach((it) => {
+    const destino = it.tipo === "lead" ? "prospeccao" : it.tipo === "orcamento" ? "orcamentos" : "funil";
+    itens.push(itemAlerta((it.atraso || 0) > 0 ? "alerta" : "", `${it.tipo === "lead" ? "🔎" : it.tipo === "orcamento" ? "📄" : "📞"} ${escaparHtml(it.titulo)}`, escaparHtml(it.detalhe),
+      `<button class="botao secundario pequeno" data-ir="${destino}">Abrir</button>`));
+  });
+
+  const demandas = ESTADO.demandas || [];
+  const responder = demandas.filter((d) => d.status === "responder");
+  if (responder.length) {
+    itens.push(itemAlerta("alerta", "✉️ Demandas para responder", `${responder.length} aguardando resposta: ${escaparHtml(responder.slice(0, 2).map((d) => d.titulo).join("; "))}${responder.length > 2 ? "…" : ""}`,
+      `<button class="botao secundario pequeno" data-ir="painel">Ver</button>`));
+  }
+  const atrasadas = demandas.filter((d) => ["fazer", "andamento"].includes(d.status) && d.data && d.data < hoje);
+  if (atrasadas.length) {
+    itens.push(itemAlerta("perigo", "⏰ Demandas atrasadas", `${atrasadas.length} planejada(s) para dias anteriores e ainda em aberto`,
+      `<button class="botao secundario pequeno" data-ir="painel">Ver</button>`));
   }
 
-  const hojeBase = hojeISO();
   (ESTADO.clientes || []).forEach((c) => {
     if (!c.aniversario) return;
     const [, mm, dd] = c.aniversario.split("-");
-    let prox = `${hojeBase.slice(0, 4)}-${mm}-${dd}`;
-    if (prox < hojeBase) prox = `${Number(hojeBase.slice(0, 4)) + 1}-${mm}-${dd}`;
-    const dias = diasEntre(hojeBase, prox);
-    if (dias <= 7) itens.push(`
-      <div class="item-alerta">
-        <div>
-          <b>🎂 Aniversário: ${escaparHtml(c.nome)}</b>
-          <span class="item-alerta-detalhe">${dias === 0 ? "É hoje! Mande uma mensagem." : `Em ${dias} dia(s), dia ${dd}/${mm}`}</span>
-        </div>
-        <button class="botao secundario pequeno" data-abrir-cliente-tarefa="${c.id}">Abrir</button>
-      </div>`);
+    let prox = `${hoje.slice(0, 4)}-${mm}-${dd}`;
+    if (prox < hoje) prox = `${Number(hoje.slice(0, 4)) + 1}-${mm}-${dd}`;
+    const dias = diasEntre(hoje, prox);
+    if (dias <= 7) itens.push(itemAlerta("", `🎂 Aniversário: ${escaparHtml(c.nome)}`, dias === 0 ? "É hoje! Mande uma mensagem." : `Em ${dias} dia(s), dia ${dd}/${mm}`,
+      `<button class="botao secundario pequeno" data-abrir-cliente-tarefa="${c.id}">Abrir</button>`));
   });
 
   if (ESTADO.cronometroAtivo) {
     const tarefa = tarefaPorId(ESTADO.cronometroAtivo.tarefaId);
-    itens.push(`
-      <div class="item-alerta">
-        <div>
-          <b>⏱️ Relógio rodando</b>
-          <span class="item-alerta-detalhe">${escaparHtml(tarefa ? tarefa.descricao : "Tarefa")}</span>
-        </div>
-        ${tarefa && tarefa.clienteId ? `<button class="botao secundario pequeno" data-abrir-cliente-tarefa="${tarefa.clienteId}">Abrir</button>` : ""}
-      </div>`);
+    itens.push(itemAlerta("", "⏱️ Relógio rodando", escaparHtml(tarefa ? tarefa.descricao : "Tarefa"),
+      tarefa && tarefa.clienteId ? `<button class="botao secundario pequeno" data-abrir-cliente-tarefa="${tarefa.clienteId}">Abrir</button>` : ""));
   }
+  return itens;
+}
 
-  alvo.innerHTML = itens.join("") || `<p style="color:var(--cor-texto-suave); font-size:13px; margin:12px 0 0;">Tudo em dia. ✅</p>`;
-
+function ligarLembretes(alvo) {
   alvo.querySelectorAll("[data-das]").forEach((b) => b.addEventListener("click", () => {
     atualizarEstado((e) => {
       e.configuracoes.dasPagos = e.configuracoes.dasPagos || [];
@@ -127,6 +126,41 @@ function renderizarLembretes() {
     });
     renderizarLembretes();
   }));
+  alvo.querySelectorAll("[data-das-desfazer]").forEach((b) => b.addEventListener("click", () => {
+    atualizarEstado((e) => { e.configuracoes.dasPagos = (e.configuracoes.dasPagos || []).filter((x) => x !== b.dataset.dasDesfazer); });
+    renderizarLembretes();
+  }));
   alvo.querySelectorAll("[data-ir]").forEach((b) => b.addEventListener("click", () => irParaPagina(b.dataset.ir)));
   alvo.querySelectorAll("[data-abrir-cliente-tarefa]").forEach((b) => b.addEventListener("click", () => abrirPainelCliente(b.dataset.abrirClienteTarefa)));
+}
+
+/** Página "Lembretes": duas seções, Serviços e Financeiro. */
+function renderizarPaginaLembretes() {
+  const pagina = document.getElementById("pagina-lembretes");
+  if (!pagina) return;
+  const servicos = itensLembretesServicos();
+  const financeiro = itensLembretesFinanceiro();
+  const pagos = [...(ESTADO.configuracoes.dasPagos || [])].sort().reverse().slice(0, 6);
+  const vazio = `<p style="color:var(--cor-texto-suave); font-size:13px; margin:12px 0 0;">Tudo em dia. ✅</p>`;
+  pagina.innerHTML = `
+    <div class="painel-grafico-funil" style="margin-bottom:16px;">
+      <h3>💼 Serviços <span class="card-sub" style="display:inline;">(${servicos.length})</span></h3>
+      <div id="lembretes-servicos">${servicos.join("") || vazio}</div>
+    </div>
+    <div class="painel-grafico-funil">
+      <h3>💰 Financeiro <span class="card-sub" style="display:inline;">(${financeiro.length})</span></h3>
+      <div id="lembretes-financeiro">${financeiro.join("") || vazio}</div>
+      ${pagos.length ? `<h4 style="margin:16px 0 6px;">DAS marcados como pagos</h4>
+        <div class="das-pagos">${pagos.map((c) => `<span class="chip-mini">DAS ${c.slice(5)}/${c.slice(0, 4)} ✔ <button class="link-desfazer" data-das-desfazer="${c}" title="Desfazer: marcar como não pago">desfazer</button></span>`).join("")}</div>` : ""}
+    </div>`;
+  ligarLembretes(pagina);
+}
+
+/** Atualiza o contador do botão no topo do Painel e, se a página estiver aberta, a lista. */
+function renderizarLembretes() {
+  const total = itensLembretesServicos().length + itensLembretesFinanceiro().length;
+  const n = document.getElementById("lembretes-contagem");
+  if (n) n.textContent = total;
+  const pagina = document.getElementById("pagina-lembretes");
+  if (pagina && pagina.classList.contains("ativa")) renderizarPaginaLembretes();
 }
