@@ -223,6 +223,22 @@ function normalizarDados(dados) {
     );
   }
   completo.atividadesVespor23a24Nov2026 = true;
+  if (!dados.atividadesVespor17a18Nov2026) { // completa 17 e 18/11 conforme a Planilha de Desempenho
+    const v = (id, data, titulo, categoria) => ({ id, cliente: "Vespor", titulo, data, status: "concluida", categoria });
+    completo.demandas.push(
+      v("vp-17nov-2", "2026-11-17", "Criando texto resposta para as 3 avaliações negativas que temos atualmente, vou apresentar para Gisele em breve.", "Suporte"),
+      v("vp-17nov-3", "2026-11-17", "Organização e separação do vídeo motivacional e mensagem motivacional para essa semana atual nº34", "Vídeo/Áudio"),
+      v("vp-17nov-4", "2026-11-17", "Preparar rascunho da arte - Feriado da consciência negra 20/11", "Arte"),
+      v("vp-18nov-1", "2026-11-18", "Confirmar com a Vanessa RH se terá vídeo motivacional sendo exibido devido o feriado de consciência negra no Brasil (20/11)", "Vídeo/Áudio"),
+      v("vp-18nov-2", "2026-11-18", "Decupagem do vídeo motivacional para esta quinta-feira (amanhã), adiantamento devido o feriado de sexta se for aprovado esse adiantamento.", "Vídeo/Áudio"),
+      v("vp-18nov-3", "2026-11-18", "Após alinhamento com a Vanessa RH, ficou definido que o vídeo motivacional editado essa semana será exibido na semana que vem nas filiais.", "Suporte"),
+      v("vp-18nov-4", "2026-11-18", "Finalização da edição do vídeo motivacional, inclusão de cenas e trilha sonora no final.", "Vídeo/Áudio"),
+      v("vp-18nov-5", "2026-11-18", "Exportação do vídeo motivacional - VideoMot27Nov26_TudoDandoCerto (Tema: Acreditar que os planos e objetivos já vão dar certo antes mesmo de serem iniciados)", "Vídeo/Áudio"),
+      v("vp-18nov-6", "2026-11-18", "Subindo o arquivo de vídeo no Dropbox online, gerando o link para compartilhamento nas filiais amanhã (vídeo será exibido semana que vem para as equipes)", "Suporte"),
+      v("vp-18nov-7", "2026-11-18", "Criação da mensagem motivacional para leitura após o vídeo.", "Arte"),
+      v("vp-18nov-8", "2026-11-18", "Envio do link online do vídeo motivacional e mensagem motivacional para aprovação - Vanessa RH", "Suporte"));
+  }
+  completo.atividadesVespor17a18Nov2026 = true;
   completo.atividadesVespor16a17Nov2026 = true;
   // migração: etapas renomeadas ("Em andamento" -> "Ativos", "Entregue" -> "Inativos")
   completo.clientes.forEach((c) => {
