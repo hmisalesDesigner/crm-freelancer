@@ -10,7 +10,7 @@
 <link rel="icon" type="image/png" href="icone-192.png">
 <script>
   // Versão do site: muda a cada publicação (e a cada clique em "Atualizar") para o navegador nunca reaproveitar arquivos antigos.
-  window.VERSAO_SITE = "20261125b";
+  window.VERSAO_SITE = "20261125d";
   (function () {
     var v = new URLSearchParams(location.search).get("_v") || window.VERSAO_SITE;
     window.__v = encodeURIComponent(v);
@@ -132,8 +132,10 @@
             <input id="plano-texto" type="text" placeholder="Planejar atividade (ex.: Preparar arte do feriado)">
             <select id="plano-categoria"></select>
             <select id="plano-prioridade"><option value="media">Prioridade média</option><option value="alta">Prioridade alta</option><option value="baixa">Prioridade baixa</option></select>
-            <select id="plano-dia"><option value="hoje">Hoje</option><option value="amanha">Amanhã</option></select>
-            <button class="botao pequeno" id="plano-add">+ Planejar</button>
+            <select id="plano-dia"><option value="hoje">Hoje</option><option value="amanha">Amanhã</option><option value="ontem">Ontem (já feita)</option><option value="outra">Outra data…</option></select>
+            <input type="date" id="plano-data" style="display:none">
+            <label class="card-sub" style="margin:0;display:flex;align-items:center;gap:4px;"><input type="checkbox" id="plano-feita"> já feita</label>
+            <button class="botao pequeno" id="plano-add">+ Adicionar</button>
           </div>
           <p class="card-sub" id="painel-plano-resumo"></p>
           <div class="grade-tarefas" id="painel-tarefas-dia"></div>

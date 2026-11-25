@@ -180,12 +180,18 @@ function renderizarVisaoDoDia() {
     sel.innerHTML = `<option value="">Categoria</option>` + Object.keys(CATEGORIA_DEMANDA).map((c) => `<option>${c}</option>`).join("");
     const enviar = () => {
       const inp = document.getElementById("plano-texto"); const t = inp.value.trim(); if (!t) return;
-      const dia = document.getElementById("plano-dia").value === "amanha" ? somarDiasISO(hojeISO(), 1) : hojeISO();
+      const escolha = document.getElementById("plano-dia").value;
+      const dia = escolha === "amanha" ? somarDiasISO(hojeISO(), 1) : escolha === "ontem" ? somarDiasISO(hojeISO(), -1) : escolha === "outra" ? (document.getElementById("plano-data").value || hojeISO()) : hojeISO();
       const prioridade = document.getElementById("plano-prioridade").value;
-      atualizarEstado((e) => { e.demandas.push({ id: gerarId(), cliente: "Vespor", titulo: t, data: dia, planejadaPara: dia, status: "fazer", categoria: sel.value || undefined, prioridade }); });
-      inp.value = ""; atualizarPainel();
+      const feita = document.getElementById("plano-feita").checked || dia < hojeISO(); // dia passado = atividade já feita
+      atualizarEstado((e) => { e.demandas.push({ id: gerarId(), cliente: "Vespor", titulo: t, data: dia, planejadaPara: dia, status: feita ? "concluida" : "fazer", categoria: sel.value || undefined, prioridade }); });
+      inp.value = ""; inp.focus(); atualizarPainel();
     };
     btnPlan.addEventListener("click", enviar);
+    document.getElementById("plano-dia").addEventListener("change", (ev) => {
+      document.getElementById("plano-data").style.display = ev.target.value === "outra" ? "" : "none";
+      if (ev.target.value === "ontem") document.getElementById("plano-feita").checked = true;
+    });
     document.getElementById("plano-texto").addEventListener("keydown", (ev) => { if (ev.key === "Enter") enviar(); });
   }
 
@@ -265,14 +271,19 @@ function renderizarAgendaSemana() {
     } else { abertas++; if (plan < hoje) { cls = "ag-atrasada"; marca = "Atrasada"; } }
     porDia[plan].push({ d, cls, marca });
   });
+  const meta = Number((ESTADO.configuracoes || {}).metaAtividadesDia || 8);
+  const feitasEm = (dia) => (ESTADO.demandas || []).filter((d) => d.status === "concluida" && d.data === dia).length;
+  const uteisPassados = dias.slice(0, 5).filter((dia) => dia <= hoje);
+  const totalFeitas = uteisPassados.reduce((t, dia) => t + feitasEm(dia), 0);
+  const media = uteisPassados.length ? (totalFeitas / uteisPassados.length).toFixed(1).replace(".", ",") : "0";
   const resumo = document.getElementById("agenda-resumo");
-  if (resumo) resumo.innerHTML = `<span class="leg ag-ok">${noDia} feitas no dia</span><span class="leg ag-tarde">${outroDia} em outro dia</span><span class="leg ag-aberta">${abertas} em aberto</span>`;
+  if (resumo) resumo.innerHTML = `<span class="leg">Meta ${meta}/dia · média ${media}</span><span class="leg ag-ok">${noDia} feitas no dia</span><span class="leg ag-tarde">${outroDia} em outro dia</span><span class="leg ag-aberta">${abertas} em aberto</span>`;
   const mostrar = dias.filter((dia, i) => i < 5 || porDia[dia].length);
   alvo.style.gridTemplateColumns = `repeat(${mostrar.length}, minmax(0, 1fr))`;
   alvo.innerHTML = mostrar.map((dia) => {
     const i = dias.indexOf(dia); const itens = porDia[dia];
     return `<div class="ag-coluna${dia === hoje ? " ag-hoje" : ""}">
-      <div class="ag-cab"><b>${nomes[i]}</b><span>${formatarDataBR(dia).slice(0, 5)}</span><small>${itens.length}</small></div>
+      <div class="ag-cab"><b>${nomes[i]}</b><span>${formatarDataBR(dia).slice(0, 5)}</span><small class="${dia <= hoje ? (feitasEm(dia) >= meta ? "meta-ok" : "meta-baixa") : ""}" title="Concluídas neste dia / meta">${dia <= hoje ? feitasEm(dia) + "/" + meta : itens.length}</small></div>
       ${itens.slice(0, 10).map(({ d, cls, marca }) => `<div class="ag-item ${cls}" title="${escaparHtml(d.titulo)}${marca ? " — " + marca : ""}">${escaparHtml(d.titulo)}</div>`).join("") || `<div class="ag-vazio">—</div>`}
       ${itens.length > 10 ? `<div class="ag-vazio">+ ${itens.length - 10}</div>` : ""}
     </div>`;

@@ -211,6 +211,18 @@ function normalizarDados(dados) {
       { id: "vp-17nov-1", cliente: "Vespor", titulo: "Respondendo avaliações Google Meu Negócio - Varejocar: contagem de 17/11, 4 respostas positivas concluídas", data: "2026-11-17", status: "concluida", categoria: "Suporte" }
     );
   }
+  if (!dados.atividadesVespor23a24Nov2026) { // atividades de 23 e 24/11 informadas pelo Henrique (semana 35)
+    const rh = "Atualização de arte para vaga de trabalho - RH Vespor - Novo formato estilo IA - Setor/Função: ";
+    completo.demandas.push(
+      { id: "vp-23nov-1", cliente: "Vespor", titulo: "Download do Filme: O Discurso do Rei - Projeto do RH com os Gerentes comerciais", data: "2026-11-23", status: "concluida", categoria: "Vídeo/Áudio" },
+      { id: "vp-23nov-2", cliente: "Vespor", titulo: "Subindo o arquivo do vídeo no drive online (Nuvem) - Filme: O Discurso do Rei - Projeto Gerentes comerciais", data: "2026-11-23", status: "concluida", categoria: "Vídeo/Áudio" },
+      { id: "vp-23nov-3", cliente: "Vespor", titulo: "Gerando link online para compartilhamento - Filme: O Discurso do Rei - Projeto Gerentes comerciais", data: "2026-11-23", status: "concluida", categoria: "Suporte" },
+      { id: "vp-23nov-4", cliente: "Vespor", titulo: "Levantamento de quantas avaliações positivas estão sem resposta no momento: 6 avaliações positivas (Marcelo Amaral, Diego verifiano, Jefferson kramin, Vitoria Regina, José Fechio, Wesley Possari)", data: "2026-11-23", status: "concluida", categoria: "Suporte" },
+      { id: "vp-24nov-1", cliente: "Vespor", titulo: rh + "Administrativo (Filial)", data: "2026-11-24", status: "concluida", categoria: "Arte" },
+      { id: "vp-24nov-2", cliente: "Vespor", titulo: rh + "(a definir) (Filial)", data: "2026-11-24", status: "concluida", categoria: "Arte" },
+    );
+  }
+  completo.atividadesVespor23a24Nov2026 = true;
   completo.atividadesVespor16a17Nov2026 = true;
   // migração: etapas renomeadas ("Em andamento" -> "Ativos", "Entregue" -> "Inativos")
   completo.clientes.forEach((c) => {

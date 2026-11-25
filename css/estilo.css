@@ -889,3 +889,5 @@ a.chip { text-decoration: none; }
 .lembretes-topo .badge-contagem { min-width: 0; padding: 0 8px; font-size: 13px; border-color: var(--cor-primaria); color: var(--cor-primaria); }
 .link-desfazer { background: none; border: none; color: var(--cor-primaria); cursor: pointer; font-size: 10px; text-decoration: underline; padding: 0 0 0 4px; }
 .das-pagos { display: flex; flex-wrap: wrap; gap: 6px; }
+
+.ag-cab small.meta-ok { color: #22c55e; font-weight: 700; } .ag-cab small.meta-baixa { color: #ef4444; font-weight: 700; }

@@ -98,7 +98,7 @@ function renderizarPainelCliente(id) {
       <h4 style="margin:10px 0 6px;">Em aberto (${abertas.length})</h4>
       <ul class="demanda-lista">${abertas.length ? abertas.map(linhaDemanda).join("") : `<li class="demanda-item" style="color:var(--cor-texto-suave)">Nada em aberto.</li>`}</ul>
       <h4 style="margin:10px 0 6px;">Concluídas recentemente</h4>
-      <ul class="demanda-lista">${concluidas.slice(0, 8).map((d) => `<li class="demanda-item"><span class="selo aceito">Concluída</span><span class="demanda-titulo">${escaparHtml(d.titulo)}</span>${seloCategoria(d.categoria)}<span class="card-sub">${d.data ? formatarDataBR(d.data) : ""}</span></li>`).join("") || `<li class="demanda-item" style="color:var(--cor-texto-suave)">Nenhuma ainda.</li>`}</ul>
+      <ul class="demanda-lista">${concluidas.slice(0, 20).map((d) => `<li class="demanda-item"><span class="selo aceito">Concluída</span><span class="demanda-titulo">${escaparHtml(d.titulo)}</span>${seloCategoria(d.categoria)}<span class="card-sub">${d.data ? formatarDataBR(d.data) : ""}</span></li>`).join("") || `<li class="demanda-item" style="color:var(--cor-texto-suave)">Nenhuma ainda.</li>`}</ul>
 
       <h4 style="margin:16px 0 6px;">⏱ Tempo registrado</h4>
       ${tarefasAbertasCliente.length ? `<ul class="demanda-lista">${tarefasAbertasCliente.map((t) => `
