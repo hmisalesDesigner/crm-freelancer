@@ -10,11 +10,21 @@
 <link rel="icon" type="image/png" href="icone-192.png">
 <script>
   // Versão do site: muda a cada publicação (e a cada clique em "Atualizar") para o navegador nunca reaproveitar arquivos antigos.
-  window.VERSAO_SITE = "20261118n";
+  window.VERSAO_SITE = "20261125b";
   (function () {
     var v = new URLSearchParams(location.search).get("_v") || window.VERSAO_SITE;
     window.__v = encodeURIComponent(v);
     document.write('<link rel="stylesheet" href="css/estilo.css?v=' + window.__v + '">');
+
+    // Lista de scripts (em ordem de execução). O histórico de demandas (demandas-seed.js, ~200 KB) só é baixado
+    // na primeira vez: depois que o histórico já foi importado ele não é mais necessário.
+    var arquivos = ["js/demandas-seed.js", "js/dados.js", "js/utilitarios.js", "js/calculadora.js", "js/clientes.js", "js/funil.js", "js/orcamentos.js", "js/prospeccao.js", "js/pagamentos.js", "js/tempo.js", "js/despesas.js", "js/demandas.js", "js/avaliacoes.js", "js/followup.js", "js/grafico.js", "js/lembretes.js", "js/exportar.js", "js/documentos.js", "js/contratos-modelos.js", "js/contratos.js", "js/cliente-extras.js", "js/painel-cliente.js", "js/painel-dia.js", "js/app.js", "js/login.js", "js/google-drive.js"];
+    var jaImportou = false;
+    try { jaImportou = (localStorage.getItem("crm_freelancer_dados_v1") || "").indexOf('"demandasVespor":true') !== -1; } catch (e) {}
+    if (jaImportou) arquivos.shift();
+    window.__scripts = arquivos;
+    // Baixa todos os scripts em paralelo desde o início (a execução continua em ordem, logo abaixo).
+    arquivos.forEach(function (a) { document.write('<link rel="preload" as="script" href="' + a + '?v=' + window.__v + '">'); });
   })();
 </script>
 <script src="https://accounts.google.com/gsi/client" async defer></script>
@@ -155,8 +165,7 @@
   <script>
     if ("serviceWorker" in navigator && (location.protocol === "https:" || location.hostname === "localhost")) navigator.serviceWorker.register("sw.js").catch(function () {});
     (function () {
-      var arquivos = ["js/demandas-seed.js", "js/dados.js", "js/utilitarios.js", "js/calculadora.js", "js/clientes.js", "js/funil.js", "js/orcamentos.js", "js/prospeccao.js", "js/pagamentos.js", "js/tempo.js", "js/despesas.js", "js/demandas.js", "js/avaliacoes.js", "js/followup.js", "js/grafico.js", "js/lembretes.js", "js/exportar.js", "js/documentos.js", "js/contratos-modelos.js", "js/contratos.js", "js/cliente-extras.js", "js/painel-cliente.js", "js/painel-dia.js", "js/app.js", "js/login.js", "js/google-drive.js"];
-      arquivos.forEach(function (a) { document.write('<script src="' + a + '?v=' + window.__v + '"><\/script>'); });
+      window.__scripts.forEach(function (a) { document.write('<script src="' + a + '?v=' + window.__v + '"><\/script>'); });
     })();
   </script>
 </body>

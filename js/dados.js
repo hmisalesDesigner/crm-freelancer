@@ -123,7 +123,7 @@ function normalizarDados(dados) {
   if (!dados.demandasVespor && Array.isArray(window.DEMANDAS_VESPOR_SEED)) { // histórico da planilha entra uma vez como "Concluída"
     window.DEMANDAS_VESPOR_SEED.forEach((x, i) => completo.demandas.push({ id: "vp-" + i, cliente: "Vespor", titulo: x[2], data: x[0] || "", semana: x[1], status: "concluida" }));
   }
-  completo.demandasVespor = true;
+  completo.demandasVespor = !!dados.demandasVespor || Array.isArray(window.DEMANDAS_VESPOR_SEED); // sem o arquivo do histórico, tenta de novo na próxima carga
   completo.sementesDespesas = padrao.despesas.map((d) => d.id);
   // ajuste de preço pedido pelo Henrique (16/11/2026): salário desejado, custos reais e horas de dedicação (8h/dia, seg a sex)
   if (!dados.calculadoraAjustada2026) {
