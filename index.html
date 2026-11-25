@@ -10,7 +10,7 @@
 <link rel="icon" type="image/png" href="icone-192.png">
 <script>
   // Versão do site: muda a cada publicação (e a cada clique em "Atualizar") para o navegador nunca reaproveitar arquivos antigos.
-  window.VERSAO_SITE = "20261125d";
+  window.VERSAO_SITE = "20261125e";
   (function () {
     var v = new URLSearchParams(location.search).get("_v") || window.VERSAO_SITE;
     window.__v = encodeURIComponent(v);
@@ -18,7 +18,7 @@
 
     // Lista de scripts (em ordem de execução). O histórico de demandas (demandas-seed.js, ~200 KB) só é baixado
     // na primeira vez: depois que o histórico já foi importado ele não é mais necessário.
-    var arquivos = ["js/demandas-seed.js", "js/dados.js", "js/utilitarios.js", "js/calculadora.js", "js/clientes.js", "js/funil.js", "js/orcamentos.js", "js/prospeccao.js", "js/pagamentos.js", "js/tempo.js", "js/despesas.js", "js/demandas.js", "js/avaliacoes.js", "js/followup.js", "js/grafico.js", "js/lembretes.js", "js/exportar.js", "js/documentos.js", "js/contratos-modelos.js", "js/contratos.js", "js/cliente-extras.js", "js/painel-cliente.js", "js/painel-dia.js", "js/app.js", "js/login.js", "js/google-drive.js"];
+    var arquivos = ["js/demandas-seed.js", "js/dados.js", "js/utilitarios.js", "js/calculadora.js", "js/clientes.js", "js/funil.js", "js/orcamentos.js", "js/prospeccao.js", "js/pagamentos.js", "js/tempo.js", "js/despesas.js", "js/demandas.js", "js/avaliacoes.js", "js/followup.js", "js/grafico.js", "js/lembretes.js", "js/exportar.js", "js/documentos.js", "js/contratos-modelos.js", "js/contratos.js", "js/cliente-extras.js", "js/relatorio.js", "js/painel-cliente.js", "js/painel-dia.js", "js/app.js", "js/login.js", "js/google-drive.js"];
     var jaImportou = false;
     try { jaImportou = (localStorage.getItem("crm_freelancer_dados_v1") || "").indexOf('"demandasVespor":true') !== -1; } catch (e) {}
     if (jaImportou) arquivos.shift();
@@ -130,7 +130,9 @@
           </div>
           <div class="linha-plano">
             <input id="plano-texto" type="text" placeholder="Planejar atividade (ex.: Preparar arte do feriado)">
+            <select id="plano-cliente" title="Cliente"></select>
             <select id="plano-categoria"></select>
+            <input id="plano-campanha" type="text" placeholder="Campanha (opcional)" style="max-width:170px">
             <select id="plano-prioridade"><option value="media">Prioridade média</option><option value="alta">Prioridade alta</option><option value="baixa">Prioridade baixa</option></select>
             <select id="plano-dia"><option value="hoje">Hoje</option><option value="amanha">Amanhã</option><option value="ontem">Ontem (já feita)</option><option value="outra">Outra data…</option></select>
             <input type="date" id="plano-data" style="display:none">

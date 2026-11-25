@@ -98,7 +98,7 @@ function renderizarPainelCliente(id) {
       <h4 style="margin:10px 0 6px;">Em aberto (${abertas.length})</h4>
       <ul class="demanda-lista">${abertas.length ? abertas.map(linhaDemanda).join("") : `<li class="demanda-item" style="color:var(--cor-texto-suave)">Nada em aberto.</li>`}</ul>
       <h4 style="margin:10px 0 6px;">Concluídas recentemente</h4>
-      <ul class="demanda-lista">${concluidas.slice(0, 20).map((d) => `<li class="demanda-item"><span class="selo aceito">Concluída</span><span class="demanda-titulo">${escaparHtml(d.titulo)}</span>${seloCategoria(d.categoria)}<span class="card-sub">${d.data ? formatarDataBR(d.data) : ""}</span></li>`).join("") || `<li class="demanda-item" style="color:var(--cor-texto-suave)">Nenhuma ainda.</li>`}</ul>
+      <ul class="demanda-lista">${concluidas.slice(0, 20).map((d) => `<li class="demanda-item"><span class="selo aceito">Concluída</span><span class="demanda-titulo">${escaparHtml(d.titulo)}</span>${seloCategoria(d.categoria)}<span class="card-sub">${d.data ? formatarDataBR(d.data) : ""}</span>${d.campanha ? ` <span class="selo enviado">${escaparHtml(d.campanha)}</span>` : ""}<span class="demanda-acoes"><button class="botao secundario pequeno" data-pc-campanha="${d.id}" title="Marcar campanha (aparece no relatório)">🏷</button></span></li>`).join("") || `<li class="demanda-item" style="color:var(--cor-texto-suave)">Nenhuma ainda.</li>`}</ul>
 
       <h4 style="margin:16px 0 6px;">⏱ Tempo registrado</h4>
       ${tarefasAbertasCliente.length ? `<ul class="demanda-lista">${tarefasAbertasCliente.map((t) => `
@@ -132,6 +132,8 @@ function renderizarPainelCliente(id) {
       ${totaisAval.total > 0 ? `<div id="pc-grafico-avaliacoes"></div>` : `<p class="card-sub">Nenhuma avaliação registrada para este cliente ainda.</p>`}
     </div>
 
+    ${htmlRelatorioNoPainel()}
+
     ${htmlExtrasCliente(cliente)}
 
     ${htmlContratoCliente()}
@@ -150,6 +152,7 @@ function renderizarPainelCliente(id) {
   renderizarGraficoFaturamentoCliente("pc-grafico-faturamento", cliente);
   ligarContratoCliente(cliente.id);
   ligarExtrasCliente(cliente.id);
+  ligarRelatorioCliente(cliente);
 
   function desenharNotas() {
     const alvo = document.getElementById("pc-notas");
@@ -209,6 +212,14 @@ function renderizarPainelCliente(id) {
       if (!d) return;
       if (acao === "concluida") concluirDemanda(d); else d.status = acao;
     });
+    renderizarPainelCliente(id);
+  }));
+
+  container.querySelectorAll("[data-pc-campanha]").forEach((b) => b.addEventListener("click", () => {
+    const d = ESTADO.demandas.find((x) => x.id === b.dataset.pcCampanha); if (!d) return;
+    const nome = prompt("Nome da campanha (deixe vazio para remover):", d.campanha || "");
+    if (nome === null) return;
+    atualizarEstado((e) => { const x = e.demandas.find((y) => y.id === d.id); if (nome.trim()) x.campanha = nome.trim(); else delete x.campanha; });
     renderizarPainelCliente(id);
   }));
 

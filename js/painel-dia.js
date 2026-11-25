@@ -177,6 +177,9 @@ function renderizarVisaoDoDia() {
   if (btnPlan && !btnPlan.dataset.ok) {
     btnPlan.dataset.ok = "1";
     const sel = document.getElementById("plano-categoria");
+    const selCli = document.getElementById("plano-cliente");
+    const preencherClientes = () => { const v = selCli.value; selCli.innerHTML = ESTADO.clientes.map((c) => `<option value="${c.id}">${escaparHtml(c.nome)}</option>`).join("") || `<option value="">Sem cliente</option>`; if (v) selCli.value = v; else { const vp = ESTADO.clientes.find((c) => /vespor/i.test(c.nome)) || ESTADO.clientes.find((c) => c.id === ESTADO.configuracoes.clienteFixoId); if (vp) selCli.value = vp.id; } };
+    preencherClientes(); selCli.addEventListener("focus", preencherClientes);
     sel.innerHTML = `<option value="">Categoria</option>` + Object.keys(CATEGORIA_DEMANDA).map((c) => `<option>${c}</option>`).join("");
     const enviar = () => {
       const inp = document.getElementById("plano-texto"); const t = inp.value.trim(); if (!t) return;
@@ -184,7 +187,7 @@ function renderizarVisaoDoDia() {
       const dia = escolha === "amanha" ? somarDiasISO(hojeISO(), 1) : escolha === "ontem" ? somarDiasISO(hojeISO(), -1) : escolha === "outra" ? (document.getElementById("plano-data").value || hojeISO()) : hojeISO();
       const prioridade = document.getElementById("plano-prioridade").value;
       const feita = document.getElementById("plano-feita").checked || dia < hojeISO(); // dia passado = atividade já feita
-      atualizarEstado((e) => { e.demandas.push({ id: gerarId(), cliente: "Vespor", titulo: t, data: dia, planejadaPara: dia, status: feita ? "concluida" : "fazer", categoria: sel.value || undefined, prioridade }); });
+      atualizarEstado((e) => { const cli = e.clientes.find((c) => c.id === document.getElementById("plano-cliente").value); const camp = document.getElementById("plano-campanha").value.trim(); e.demandas.push({ id: gerarId(), cliente: cli ? cli.nome : "Vespor", clienteId: cli ? cli.id : undefined, titulo: t, data: dia, planejadaPara: dia, status: feita ? "concluida" : "fazer", categoria: sel.value || undefined, prioridade, campanha: camp || undefined }); });
       inp.value = ""; inp.focus(); atualizarPainel();
     };
     btnPlan.addEventListener("click", enviar);
