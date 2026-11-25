@@ -6,6 +6,7 @@
  */
 
 let PAINEL_CLIENTE_ABERTO = null;
+let PC_ABA = "atividades";
 
 function abrirPainelCliente(id) {
   const cliente = ESTADO.clientes.find((c) => c.id === id);
@@ -14,6 +15,7 @@ function abrirPainelCliente(id) {
   document.getElementById("pagina-cliente-detalhe").classList.add("ativa");
   document.querySelectorAll(".menu-item").forEach((m) => m.classList.remove("ativo"));
   document.getElementById("titulo-pagina").textContent = cliente.nome;
+  if (PAINEL_CLIENTE_ABERTO !== id) PC_ABA = "atividades";
   PAINEL_CLIENTE_ABERTO = id;
   renderizarPainelCliente(id);
 }
@@ -78,11 +80,17 @@ function renderizarPainelCliente(id) {
       </div>
     </div>
 
+    <div class="abas-cli" role="tablist">
+      ${[["atividades", "Atividades"], ["projetos", "Projetos"], ["financeiro", "Financeiro"], ["documentos", "Documentos"], ["notas", "Notas"]].map(([k, r]) => `<button class="aba-btn${PC_ABA === k ? " ativa" : ""}" data-aba-btn="${k}" role="tab">${r}</button>`).join("")}
+    </div>
+    <div class="aba-cli ${PC_ABA === "financeiro" ? "ativa" : ""}" data-aba="financeiro">
     <div class="painel-grafico-funil" style="margin-bottom:16px;">
       <h3>💰 Faturamento</h3>
       <div id="pc-grafico-faturamento"></div>
     </div>
 
+    </div>
+    <div class="aba-cli ${PC_ABA === "atividades" ? "ativa" : ""}" data-aba="atividades">
     <div class="painel-grafico-funil" style="margin-bottom:16px;">
       <h3>📌 Demandas</h3>
       <div style="display:flex; gap:6px; margin-bottom:6px; flex-wrap:wrap; align-items:center;">
@@ -134,10 +142,15 @@ function renderizarPainelCliente(id) {
 
     ${htmlRelatorioNoPainel()}
 
+    </div>
+    <div class="aba-cli ${PC_ABA === "projetos" ? "ativa" : ""}" data-aba="projetos"><div id="pc-projetos">${htmlProjetosCliente(cliente)}</div></div>
+    <div class="aba-cli ${PC_ABA === "documentos" ? "ativa" : ""}" data-aba="documentos">
     ${htmlExtrasCliente(cliente)}
 
     ${htmlContratoCliente()}
 
+    </div>
+    <div class="aba-cli ${PC_ABA === "notas" ? "ativa" : ""}" data-aba="notas">
     <div class="painel-grafico-funil">
       <h3>📝 Anotações</h3>
       <div style="display:flex; gap:6px; margin-bottom:10px;">
@@ -146,6 +159,7 @@ function renderizarPainelCliente(id) {
       </div>
       <div id="pc-notas" class="lista-notas"></div>
     </div>
+    </div>
   `;
 
   if (totaisAval.total > 0) renderizarGraficoAvaliacoes("pc-grafico-avaliacoes", avaliacoes);
@@ -153,6 +167,12 @@ function renderizarPainelCliente(id) {
   ligarContratoCliente(cliente.id);
   ligarExtrasCliente(cliente.id);
   ligarRelatorioCliente(cliente);
+  ligarProjetosCliente(cliente);
+  container.querySelectorAll("[data-aba-btn]").forEach((b) => b.addEventListener("click", () => {
+    PC_ABA = b.dataset.abaBtn;
+    container.querySelectorAll("[data-aba-btn]").forEach((x) => x.classList.toggle("ativa", x === b));
+    container.querySelectorAll("[data-aba]").forEach((x) => x.classList.toggle("ativa", x.dataset.aba === PC_ABA));
+  }));
 
   function desenharNotas() {
     const alvo = document.getElementById("pc-notas");

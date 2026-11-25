@@ -251,7 +251,7 @@ function normalizarDados(dados) {
       const cli = completo.clientes.find((c) => /vespor/i.test(c.nome || ""));
       const abertos = mods.filter((d) => d.status !== "concluida");
       completo.projetosVideo.push({ id: "pj-treinamento-vespor", nome: "Treinamento Vespor", cliente: "Vespor", clienteId: cli ? cli.id : undefined,
-        ativoId: (abertos[0] || mods[0]).id, modulos: mods.map((d) => ({ id: d.id, nome: d.titulo.replace(/\s*\(Universidade Vespor\)/, ""), feitas: d.status === "concluida" ? [0, 1, 2, 3, 4, 5, 6] : [] })) });
+        foco: true, rotulo: "Módulo", ativoId: (abertos[0] || mods[0]).id, modulos: mods.map((d) => ({ id: d.id, nome: d.titulo.replace(/\s*\(Universidade Vespor\)/, ""), feitas: d.status === "concluida" ? [0, 1, 2, 3, 4, 5, 6] : [] })) });
     }
   }
   completo.projetoTreinamentoVespor = true;
