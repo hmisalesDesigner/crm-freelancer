@@ -103,8 +103,15 @@ function renderizarVisaoDoDia() {
   const visiveis = tarefas.filter((t) => (FILTRO_TAREFAS === "todas" || (FILTRO_TAREFAS === "atrasada" ? t.atrasada : t.prioridade === FILTRO_TAREFAS))
     && (!buscaT || t.texto.toLowerCase().includes(buscaT)));
 
-  const lista = visiveis.slice(0, 8);
+  const lista = visiveis.slice(0, 10);
   const rotPrio = (p) => `<small class="rotulo rotulo-${p}">${ROTULO_PRIORIDADE[p]}</small>`;
+  const linhaTarefa = (o) => `<div class="linha-tarefa">
+      ${o.attrFeito ? `<button class="check-tarefa" ${o.attrFeito} title="Concluir" aria-label="Concluir">✔</button>` : `<span class="check-tarefa vazio"></span>`}
+      <div class="lt-texto"><b>${escaparHtml(o.titulo)}</b><small>${escaparHtml(o.sub || "")}</small></div>
+      <div class="lt-chips">${o.chips}${o.prioridade === "alta" ? `<small class="rotulo rotulo-alta">Alta</small>` : ""}</div>
+      ${o.seletor}
+      <span class="lt-acoes">${o.wa ? `<a class="circulo-mini" href="${o.wa}" target="_blank" rel="noopener" title="WhatsApp">💬</a>` : ""}<button class="circulo-mini" data-adiar-dia="${o.chave}" title="Adiar para amanhã" aria-label="Adiar para amanhã">🔔</button><button class="circulo-mini" ${o.verCliente ? `data-ver-cliente="${o.verCliente}"` : `data-ir="${o.ir}"`} title="Abrir" aria-label="Abrir">↗</button></span>
+    </div>`;
   const cartaTarefa = (o, destaque) => `<div class="card-tarefa${destaque ? " destaque" : ""}">
       <div class="tarefa-tab"><span class="tarefa-avatar">${o.avatar}</span></div>
       <div class="tarefa-acoes-topo">
@@ -121,30 +128,42 @@ function renderizarVisaoDoDia() {
         </div>
       </div>
     </div>`;
-  alvoTarefas.innerHTML = lista.map((t, n) => {
+  alvoTarefas.innerHTML = lista.map((t) => {
     const atraso = t.atrasada ? `<span class="chip-mini chip-atraso">Atrasada</span>` : "";
     if (t.kind === "follow") {
       const it = t.it;
-      return cartaTarefa({
+      return linhaTarefa({
         avatar: it.tipo === "contato" ? "📞" : it.tipo === "lead" ? "🔎" : "📄",
         chave: "f:" + t.i, ir: it.tipo === "lead" ? "prospeccao" : it.tipo === "orcamento" ? "orcamentos" : "funil",
         icone: it.tipo === "orcamento" ? "📄" : "✉️", titulo: it.titulo, sub: it.detalhe,
         chips: `<span class="chip-mini">Follow-up</span>${atraso}`, prioridade: t.prioridade,
         seletor: `<select class="tarefa-select" data-status-follow="${t.i}"><option>Pendente</option><option value="feito">Feito</option></select>`,
         wa: linkWhatsapp(it.contato, it.mensagem), attrFeito: `data-feito-dia="${t.i}"`,
-      }, n === 0);
+      });
     }
     const d = t.d;
-    return cartaTarefa({
+    return linhaTarefa({
       avatar: escaparHtml(((d.cliente || "?")[0] || "?").toUpperCase()),
       chave: "d:" + d.id, ir: "painel", icone: "🛠️", titulo: d.titulo,
       sub: `${d.cliente || ""}${d.data ? " · " + formatarDataBR(d.data) : ""}`,
       chips: `${d.categoria ? seloCategoria(d.categoria) : ""}${atraso}`, prioridade: t.prioridade,
       seletor: `<select class="tarefa-select" data-status-dem="${d.id}">${Object.keys(STATUS_DEMANDA).map((k) => `<option value="${k}"${k === d.status ? " selected" : ""}>${STATUS_DEMANDA[k]}</option>`).join("")}</select>`,
       wa: "", attrFeito: `data-concluir-dia="${d.id}"`,
-    }, n === 0);
-  }).join("") || `<p class="card-sub" style="grid-column:1/-1;">${tarefas.length ? "Nenhuma tarefa neste filtro." : "Nada pendente para hoje. 🎉"}</p>`;
-  if (visiveis.length > 8) alvoTarefas.insertAdjacentHTML("beforeend", `<p class="card-sub" style="grid-column:1/-1;margin:0;">+ ${visiveis.length - 8} tarefa(s) — veja a lista completa em Demandas</p>`);
+    });
+  }).join("") || `<p class="card-sub" >${tarefas.length ? "Nenhuma tarefa neste filtro." : "Nada pendente para hoje. 🎉"}</p>`;
+  if (visiveis.length > 10) alvoTarefas.insertAdjacentHTML("beforeend", `<p class="card-sub" style="grid-column:1/-1;margin:0;">+ ${visiveis.length - 10} tarefa(s) — veja a lista completa em Demandas</p>`);
+
+  const faixa = document.getElementById("faixa-hoje");
+  if (faixa) {
+    const pct = Math.min(100, Math.round((feitasHoje / Math.max(metaDia, 1)) * 100));
+    const txt = (id) => (document.getElementById(id) || {}).textContent || "";
+    faixa.innerHTML = `
+      <div class="fh-item fh-meta"><span>Hoje</span><b>${feitasHoje}<small>/${metaDia}</small></b><div class="barra-progresso"><div class="barra-progresso-interna" style="width:${pct}%"></div></div></div>
+      <div class="fh-item"><span>A receber</span><b>${txt("painel-a-receber")}</b></div>
+      <div class="fh-item"><span>Mês</span><b>${txt("painel-faturamento-mes")}</b><small>${txt("painel-meta-texto")}</small></div>
+      ${ativos.length ? `<button class="fh-item fh-lead" data-ir="prospeccao"><span>Novos leads</span><b>${ativos.length}</b></button>` : ""}`;
+    faixa.querySelectorAll("[data-ir]").forEach((b) => b.addEventListener("click", () => irParaPagina(b.dataset.ir)));
+  }
 
   /* --- clientes (visão de todos) --- */
   const clientes = ESTADO.clientes || [];

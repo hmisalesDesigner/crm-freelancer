@@ -314,8 +314,14 @@ function aplicarTema(tema) {
 function inicializarApp() {
   aplicarTema(ESTADO.configuracoes.tema || "escuro");
 
-  document.querySelectorAll(".menu-item").forEach((item) => {
+  document.querySelectorAll(".menu-item[data-pagina]").forEach((item) => {
     item.addEventListener("click", () => irParaPagina(item.dataset.pagina));
+  });
+  const btnMais = document.getElementById("menu-mais");
+  if (btnMais) btnMais.addEventListener("click", () => {
+    const aberto = btnMais.closest(".menu").classList.toggle("aberto");
+    btnMais.setAttribute("aria-expanded", aberto);
+    btnMais.textContent = aberto ? "⋯ Menos" : "⋯ Mais";
   });
 
   document.getElementById("btn-sair").addEventListener("click", sairDoSite);

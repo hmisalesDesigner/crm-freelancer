@@ -10,7 +10,7 @@
 <link rel="icon" type="image/png" href="icone-192.png">
 <script>
   // Versão do site: muda a cada publicação (e a cada clique em "Atualizar") para o navegador nunca reaproveitar arquivos antigos.
-  window.VERSAO_SITE = "20261125g";
+  window.VERSAO_SITE = "20261125h";
   (function () {
     var v = new URLSearchParams(location.search).get("_v") || window.VERSAO_SITE;
     window.__v = encodeURIComponent(v);
@@ -44,14 +44,15 @@
       <nav class="menu">
         <button class="menu-item ativo" data-pagina="painel">📊 Painel</button>
         <button class="menu-item" data-pagina="clientes">👤 Clientes</button>
-        <button class="menu-item" data-pagina="calculadora">🧮 Calculadora</button>
-        <button class="menu-item" data-pagina="funil">📋 Funil de Vendas</button>
-        <button class="menu-item" data-pagina="orcamentos">📄 Orçamentos</button>
+        <button class="menu-item menu-sec" data-pagina="calculadora">🧮 Calculadora</button>
+        <button class="menu-item menu-sec" data-pagina="funil">📋 Funil de Vendas</button>
+        <button class="menu-item menu-sec" data-pagina="orcamentos">📄 Orçamentos</button>
         <button class="menu-item" data-pagina="pagamentos">💳 Pagamentos</button>
-        <button class="menu-item" data-pagina="despesas">💸 Despesas</button>
-        <button class="menu-item" data-pagina="prospeccao">🔎 Prospecção</button>
-        <button class="menu-item" data-pagina="lembretes">🔔 Lembretes</button>
-        <button class="menu-item" data-pagina="configuracoes">⚙️ Configurações</button>
+        <button class="menu-item menu-mais" id="menu-mais" aria-expanded="false">⋯ Mais</button>
+        <button class="menu-item menu-sec" data-pagina="despesas">💸 Despesas</button>
+        <button class="menu-item menu-sec" data-pagina="prospeccao">🔎 Prospecção</button>
+        <button class="menu-item menu-sec" data-pagina="lembretes">🔔 Lembretes</button>
+        <button class="menu-item menu-sec" data-pagina="configuracoes">⚙️ Configurações</button>
       </nav>
       <button id="btn-tema" class="btn-tema">🌙 Tema</button>
       <button id="btn-sair" class="btn-tema btn-sair">🚪 Sair</button>
@@ -71,7 +72,43 @@
         </header>
 
       <section id="pagina-painel" class="pagina ativa">
-        <div class="cards-resumo cards-resumo-mock">
+        <div class="faixa-hoje" id="faixa-hoje"></div>
+
+        <div class="secao-dia">
+          <div class="cabecalho-secao">
+            <h3 class="titulo-pilula">Tarefas de hoje <b id="painel-tarefas-contagem">0</b></h3>
+            <div class="filtros-dia" id="painel-tarefas-filtros"></div>
+          </div>
+          <div class="linha-plano">
+            <input id="plano-texto" type="text" placeholder="O que você vai fazer? (Enter para adicionar)">
+            <button class="botao pequeno" id="plano-add">+ Adicionar</button>
+          </div>
+          <details class="mais-opcoes"><summary>Mais opções (cliente, categoria, campanha, dia…)</summary>
+            <div class="linha-plano">
+              <select id="plano-cliente" title="Cliente"></select>
+              <select id="plano-categoria"></select>
+              <input id="plano-campanha" type="text" placeholder="Campanha (opcional)" style="max-width:170px;min-width:140px">
+              <select id="plano-prioridade"><option value="media">Prioridade média</option><option value="alta">Prioridade alta</option><option value="baixa">Prioridade baixa</option></select>
+              <select id="plano-dia"><option value="hoje">Hoje</option><option value="amanha">Amanhã</option><option value="ontem">Ontem (já feita)</option><option value="outra">Outra data…</option></select>
+              <input type="date" id="plano-data" style="display:none;min-width:130px">
+              <label class="card-sub" style="margin:0;display:flex;align-items:center;gap:4px;"><input type="checkbox" id="plano-feita" style="min-width:0"> já feita</label>
+            </div>
+          </details>
+          <p class="card-sub" id="painel-plano-resumo"></p>
+          <div class="lista-tarefas" id="painel-tarefas-dia"></div>
+        </div>
+
+<div class="secao-dia">
+          <div class="cabecalho-secao">
+            <h3 class="titulo-pilula">Agenda da semana</h3>
+            <div class="legenda-agenda" id="agenda-resumo"></div>
+          </div>
+          <div class="agenda-semana" id="painel-agenda-semana"></div>
+        </div>
+      
+        <details class="visao-geral" id="visao-geral">
+          <summary>Visão geral: faturamento, demandas, clientes e leads</summary>
+          <div class="cards-resumo cards-resumo-mock">
           <div class="card">
             <span class="card-label">Faturamento no ano (MEI)</span>
             <span class="card-valor" id="painel-faturamento-ano">R$ 0,00</span>
@@ -123,33 +160,8 @@
           </div>
           <div class="grade-leads grade-painel" id="painel-leads"></div>
         </div>
-        <div class="secao-dia">
-          <div class="cabecalho-secao">
-            <h3 class="titulo-pilula">Tarefas de hoje <b id="painel-tarefas-contagem">0</b></h3>
-            <div class="filtros-dia" id="painel-tarefas-filtros"></div>
-          </div>
-          <div class="linha-plano">
-            <input id="plano-texto" type="text" placeholder="Planejar atividade (ex.: Preparar arte do feriado)">
-            <select id="plano-cliente" title="Cliente"></select>
-            <select id="plano-categoria"></select>
-            <input id="plano-campanha" type="text" placeholder="Campanha (opcional)" style="max-width:170px">
-            <select id="plano-prioridade"><option value="media">Prioridade média</option><option value="alta">Prioridade alta</option><option value="baixa">Prioridade baixa</option></select>
-            <select id="plano-dia"><option value="hoje">Hoje</option><option value="amanha">Amanhã</option><option value="ontem">Ontem (já feita)</option><option value="outra">Outra data…</option></select>
-            <input type="date" id="plano-data" style="display:none">
-            <label class="card-sub" style="margin:0;display:flex;align-items:center;gap:4px;"><input type="checkbox" id="plano-feita"> já feita</label>
-            <button class="botao pequeno" id="plano-add">+ Adicionar</button>
-          </div>
-          <p class="card-sub" id="painel-plano-resumo"></p>
-          <div class="grade-tarefas" id="painel-tarefas-dia"></div>
-        </div>
-
-        <div class="secao-dia">
-          <div class="cabecalho-secao">
-            <h3 class="titulo-pilula">Agenda da semana</h3>
-            <div class="legenda-agenda" id="agenda-resumo"></div>
-          </div>
-          <div class="agenda-semana" id="painel-agenda-semana"></div>
-        </div>
+        
+        </details>
       </section>
 
       <section id="pagina-calculadora" class="pagina"></section>
