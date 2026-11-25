@@ -239,6 +239,10 @@ function normalizarDados(dados) {
       v("vp-18nov-8", "2026-11-18", "Envio do link online do vídeo motivacional e mensagem motivacional para aprovação - Vanessa RH", "Suporte"));
   }
   completo.atividadesVespor17a18Nov2026 = true;
+  if (!dados.atividadeVespor18Nov9 && !completo.demandas.some((d) => d.id === "vp-18nov-9")) {
+    completo.demandas.push({ id: "vp-18nov-9", cliente: "Vespor", titulo: "Lançamento do vídeo motivacional via Dropbox nas TVs das filiais", data: "2026-11-18", status: "concluida", categoria: "Suporte" });
+  }
+  completo.atividadeVespor18Nov9 = true;
   completo.atividadesVespor16a17Nov2026 = true;
   // migração: etapas renomeadas ("Em andamento" -> "Ativos", "Entregue" -> "Inativos")
   completo.clientes.forEach((c) => {
