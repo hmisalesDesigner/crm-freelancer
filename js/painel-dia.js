@@ -4,6 +4,13 @@
  * cada um com filtros em pílulas (como no layout Workspace) e planejamento de atividades.
  */
 
+let HOJE_CLIENTE_ID = null; // quando a rotina "Hoje" está dentro da página de um cliente
+function demandasDaRotina() {
+  const lista = ESTADO.demandas || [];
+  if (!HOJE_CLIENTE_ID) return lista;
+  const c = (ESTADO.clientes || []).find((x) => x.id === HOJE_CLIENTE_ID);
+  return c ? lista.filter((d) => d.clienteId === c.id || (!d.clienteId && nomesCorrespondemCliente(d.cliente, c.nome))) : lista;
+}
 let FILTRO_LEADS = "todos", FILTRO_TAREFAS = "todas", FILTRO_CLIENTES = "todos";
 let BUSCA_LEADS = "", BUSCA_TAREFAS = "", BUSCA_CLIENTES = "";
 let BUSCA_ABERTA = { leads: false, tarefas: false, clientes: false };
@@ -80,10 +87,10 @@ function renderizarVisaoDoDia() {
   if (leadsFiltrados.length > 4) alvoLeads.insertAdjacentHTML("beforeend", `<p class="card-sub" style="grid-column:1/-1;margin:0;">+ ${leadsFiltrados.length - 4} lead(s) na aba Prospecção</p>`);
 
   /* --- tarefas de hoje --- */
-  const followups = obterFollowUps();
-  const demandasAbertas = (ESTADO.demandas || [])
+  const followups = HOJE_CLIENTE_ID ? [] : obterFollowUps();
+  const demandasAbertas = demandasDaRotina()
     .filter((d) => ["andamento", "fazer", "responder"].includes(d.status) && (!d.data || d.data <= hojeStr))
-    .sort((a, b) => (a.status === "andamento" ? 0 : 1) - (b.status === "andamento" ? 0 : 1));
+    .sort((a, b) => (b.urgente ? 1 : 0) - (a.urgente ? 1 : 0) || (a.status === "andamento" ? 0 : 1) - (b.status === "andamento" ? 0 : 1));
   const feitasHoje = (ESTADO.demandas || []).filter((d) => d.status === "concluida" && d.data === hojeStr).length;
   const amanha = (ESTADO.demandas || []).filter((d) => ["fazer", "responder"].includes(d.status) && d.data === somarDiasISO(hojeStr, 1)).length;
   const metaDia = Number((ESTADO.configuracoes || {}).metaAtividadesDia || 8);
@@ -105,12 +112,12 @@ function renderizarVisaoDoDia() {
 
   const lista = visiveis.slice(0, 10);
   const rotPrio = (p) => `<small class="rotulo rotulo-${p}">${ROTULO_PRIORIDADE[p]}</small>`;
-  const linhaTarefa = (o) => `<div class="linha-tarefa">
+  const linhaTarefa = (o) => `<div class="linha-tarefa${o.urgente ? " urgente" : ""}">
       ${o.attrFeito ? `<button class="check-tarefa" ${o.attrFeito} title="Concluir" aria-label="Concluir">✔</button>` : `<span class="check-tarefa vazio"></span>`}
       <div class="lt-texto"><b>${escaparHtml(o.titulo)}</b><small>${escaparHtml(o.sub || "")}</small></div>
-      <div class="lt-chips">${o.chips}${o.prioridade === "alta" ? `<small class="rotulo rotulo-alta">Alta</small>` : ""}</div>
+      <div class="lt-chips">${o.urgente ? `<span class="chip-mini chip-urgente">🚨 Urgente</span>` : ""}${o.chips}${o.prioridade === "alta" ? `<small class="rotulo rotulo-alta">Alta</small>` : ""}</div>
       ${o.seletor}
-      <span class="lt-acoes">${o.wa ? `<a class="circulo-mini" href="${o.wa}" target="_blank" rel="noopener" title="WhatsApp">💬</a>` : ""}<button class="circulo-mini" data-adiar-dia="${o.chave}" title="Adiar para amanhã" aria-label="Adiar para amanhã">🔔</button><button class="circulo-mini" ${o.verCliente ? `data-ver-cliente="${o.verCliente}"` : `data-ir="${o.ir}"`} title="Abrir" aria-label="Abrir">↗</button></span>
+      <span class="lt-acoes">${o.wa ? `<a class="circulo-mini" href="${o.wa}" target="_blank" rel="noopener" title="WhatsApp">💬</a>` : ""}${o.chave.startsWith("d:") ? `<button class="circulo-mini${o.urgente ? " on" : ""}" data-urgente-dia="${o.chave.slice(2)}" title="${o.urgente ? "Tirar urgência" : "Marcar como urgente"}" aria-label="Urgente">🚨</button>` : ""}<button class="circulo-mini" data-adiar-dia="${o.chave}" title="Adiar para amanhã" aria-label="Adiar para amanhã">🔔</button><button class="circulo-mini" ${o.verCliente ? `data-ver-cliente="${o.verCliente}"` : `data-ir="${o.ir}"`} title="Abrir" aria-label="Abrir">↗</button></span>
     </div>`;
   const cartaTarefa = (o, destaque) => `<div class="card-tarefa${destaque ? " destaque" : ""}">
       <div class="tarefa-tab"><span class="tarefa-avatar">${o.avatar}</span></div>
@@ -144,7 +151,7 @@ function renderizarVisaoDoDia() {
     const d = t.d;
     return linhaTarefa({
       avatar: escaparHtml(((d.cliente || "?")[0] || "?").toUpperCase()),
-      chave: "d:" + d.id, ir: "painel", icone: "🛠️", titulo: d.titulo,
+      chave: "d:" + d.id, ir: "painel", icone: "🛠️", titulo: d.titulo, urgente: !!d.urgente,
       sub: `${d.cliente || ""}${d.data ? " · " + formatarDataBR(d.data) : ""}`,
       chips: `${d.categoria ? seloCategoria(d.categoria) : ""}${atraso}`, prioridade: t.prioridade,
       seletor: `<select class="tarefa-select" data-status-dem="${d.id}">${Object.keys(STATUS_DEMANDA).map((k) => `<option value="${k}"${k === d.status ? " selected" : ""}>${STATUS_DEMANDA[k]}</option>`).join("")}</select>`,
@@ -161,6 +168,7 @@ function renderizarVisaoDoDia() {
       <div class="fh-item fh-meta"><span>Hoje</span><b>${feitasHoje}<small>/${metaDia}</small></b><div class="barra-progresso"><div class="barra-progresso-interna" style="width:${pct}%"></div></div></div>
       <div class="fh-item"><span>A receber</span><b>${txt("painel-a-receber")}</b></div>
       <div class="fh-item"><span>Mês</span><b>${txt("painel-faturamento-mes")}</b><small>${txt("painel-meta-texto")}</small></div>
+      ${(ESTADO.demandas || []).filter((d) => d.urgente && d.status !== "concluida").length ? `<div class="fh-item fh-urgente"><span>🚨 Urgente</span><b>${(ESTADO.demandas || []).filter((d) => d.urgente && d.status !== "concluida").length}</b></div>` : ""}
       ${ativos.length ? `<button class="fh-item fh-lead" data-ir="prospeccao"><span>Novos leads</span><b>${ativos.length}</b></button>` : ""}`;
     faixa.querySelectorAll("[data-ir]").forEach((b) => b.addEventListener("click", () => irParaPagina(b.dataset.ir)));
   }
@@ -192,6 +200,7 @@ function renderizarVisaoDoDia() {
   renderizarAgendaSemana();
 
   /* --- planejar atividade (como a linha pré-pronta da planilha) --- */
+  const _cliPlano = () => { const s = document.getElementById("plano-cliente"); if (s && HOJE_CLIENTE_ID) { if (![...s.options].some((o) => o.value === HOJE_CLIENTE_ID)) s.innerHTML = ESTADO.clientes.map((c) => `<option value="${c.id}">${escaparHtml(c.nome)}</option>`).join(""); s.value = HOJE_CLIENTE_ID; } };
   const btnPlan = document.getElementById("plano-add");
   if (btnPlan && !btnPlan.dataset.ok) {
     btnPlan.dataset.ok = "1";
@@ -205,9 +214,10 @@ function renderizarVisaoDoDia() {
       const escolha = document.getElementById("plano-dia").value;
       const dia = escolha === "amanha" ? somarDiasISO(hojeISO(), 1) : escolha === "ontem" ? somarDiasISO(hojeISO(), -1) : escolha === "outra" ? (document.getElementById("plano-data").value || hojeISO()) : hojeISO();
       const prioridade = document.getElementById("plano-prioridade").value;
+      const urgente = document.getElementById("plano-urgente").checked && dia <= hojeISO();
       const feita = document.getElementById("plano-feita").checked || dia < hojeISO(); // dia passado = atividade já feita
-      atualizarEstado((e) => { const cli = e.clientes.find((c) => c.id === document.getElementById("plano-cliente").value); const camp = document.getElementById("plano-campanha").value.trim(); e.demandas.push({ id: gerarId(), cliente: cli ? cli.nome : "Vespor", clienteId: cli ? cli.id : undefined, titulo: t, data: dia, planejadaPara: dia, status: feita ? "concluida" : "fazer", categoria: sel.value || undefined, prioridade, campanha: camp || undefined }); });
-      inp.value = ""; inp.focus(); atualizarPainel();
+      atualizarEstado((e) => { const cli = e.clientes.find((c) => c.id === document.getElementById("plano-cliente").value); const camp = document.getElementById("plano-campanha").value.trim(); e.demandas.push({ id: gerarId(), cliente: cli ? cli.nome : "Vespor", clienteId: cli ? cli.id : undefined, titulo: t, data: dia, planejadaPara: dia, status: feita ? "concluida" : "fazer", categoria: sel.value || undefined, prioridade: urgente ? "alta" : prioridade, campanha: camp || undefined, urgente: urgente || undefined }); });
+      inp.value = ""; document.getElementById("plano-urgente").checked = false; inp.focus(); atualizarPainel();
     };
     btnPlan.addEventListener("click", enviar);
     document.getElementById("plano-dia").addEventListener("change", (ev) => {
@@ -216,6 +226,7 @@ function renderizarVisaoDoDia() {
     });
     document.getElementById("plano-texto").addEventListener("keydown", (ev) => { if (ev.key === "Enter") enviar(); });
   }
+  _cliPlano();
 
   /* --- ações --- */
   document.querySelectorAll("#painel-leads-filtros [data-busca-toggle], #painel-tarefas-filtros [data-busca-toggle], #painel-clientes-filtros [data-busca-toggle]").forEach((b) => b.addEventListener("click", () => {
@@ -257,6 +268,10 @@ function renderizarVisaoDoDia() {
     });
     atualizarPainel();
   }));
+  alvoTarefas.querySelectorAll("[data-urgente-dia]").forEach((b) => b.addEventListener("click", () => {
+    atualizarEstado((e) => { const d = e.demandas.find((x) => x.id === b.dataset.urgenteDia); if (d) { if (d.urgente) delete d.urgente; else { d.urgente = true; d.prioridade = "alta"; } } });
+    atualizarPainel();
+  }));
   alvoTarefas.querySelectorAll("[data-concluir-dia]").forEach((b) => b.addEventListener("click", () => {
     atualizarEstado((e) => { const d = e.demandas.find((x) => x.id === b.dataset.concluirDia); if (d) concluirDemanda(d); });
     atualizarPainel();
@@ -283,7 +298,7 @@ function renderizarAgendaSemana() {
   const nomes = ["Segunda", "Terça", "Quarta", "Quinta", "Sexta", "Sábado", "Domingo"];
   const porDia = {}; dias.forEach((d) => (porDia[d] = []));
   let noDia = 0, outroDia = 0, abertas = 0;
-  (ESTADO.demandas || []).forEach((d) => {
+  demandasDaRotina().forEach((d) => {
     const plan = d.status === "concluida" ? (d.planejadaPara || d.data) : d.data;
     if (!plan || !porDia[plan]) return;
     let cls = "ag-aberta", marca = "";
@@ -294,7 +309,7 @@ function renderizarAgendaSemana() {
     porDia[plan].push({ d, cls, marca });
   });
   const meta = Number((ESTADO.configuracoes || {}).metaAtividadesDia || 8);
-  const feitasEm = (dia) => (ESTADO.demandas || []).filter((d) => d.status === "concluida" && d.data === dia).length;
+  const feitasEm = (dia) => demandasDaRotina().filter((d) => d.status === "concluida" && d.data === dia).length;
   const uteisPassados = dias.slice(0, 5).filter((dia) => dia <= hoje);
   const totalFeitas = uteisPassados.reduce((t, dia) => t + feitasEm(dia), 0);
   const media = uteisPassados.length ? (totalFeitas / uteisPassados.length).toFixed(1).replace(".", ",") : "0";

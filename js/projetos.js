@@ -13,7 +13,7 @@ function rotuloItem(pj) { return pj.rotulo || "Módulo"; }
 function itemCompleto(pj, m) { return etapasDe(pj).every((_, k) => (m.feitas || []).includes(k)); }
 function proximaEtapa(pj, m) { return etapasDe(pj).findIndex((_, k) => !(m.feitas || []).includes(k)); }
 function projetosDoCliente(cliente) { return (ESTADO.projetosVideo || []).filter((p) => p.clienteId === cliente.id || (!p.clienteId && nomesCorrespondemCliente(p.cliente, cliente.nome))); }
-function projetoEmFoco() { const l = ESTADO.projetosVideo || []; return l.find((p) => p.foco && p.modulos.length) || l.find((p) => p.modulos.length) || null; }
+function projetoEmFoco() { const todos = ESTADO.projetosVideo || []; const l = HOJE_CLIENTE_ID ? todos.filter((p) => p.clienteId === HOJE_CLIENTE_ID) : todos; return l.find((p) => p.foco && p.modulos.length) || l.find((p) => p.modulos.length) || null; }
 
 function concluirEtapaModulo(pjId, modId, idx) {
   atualizarEstado((e) => {
@@ -48,7 +48,9 @@ function renderizarFocoProjeto() {
   if (!pj) { alvo.innerHTML = ""; return; }
   const m = pj.modulos.find((x) => x.id === pj.ativoId) || pj.modulos[0];
   const etapas = etapasDe(pj), feitas = (m.feitas || []).length, idx = proximaEtapa(pj, m);
-  alvo.innerHTML = `<div class="foco">
+  const urgentes = demandasDaRotina().filter((d) => d.urgente && d.status !== "concluida");
+  const aviso = urgentes.length ? `<div class="foco-urgente"><b>🚨 Urgência em andamento</b><span>${escaparHtml(urgentes[0].titulo)}</span><small>${urgentes.length > 1 ? `+ ${urgentes.length - 1} urgente(s) · ` : ""}${escaparHtml(pj.nome)} fica em pausa e volta sozinho quando você concluir.</small></div>` : "";
+  alvo.innerHTML = `${aviso}<div class="foco${urgentes.length ? " pausado" : ""}">
     <div class="foco-topo"><span class="foco-rotulo">🎯 Foco agora · ${escaparHtml(pj.nome)}</span>
       <select id="foco-modulo" title="Trocar ${rotuloItem(pj).toLowerCase()}">${pj.modulos.map((x) => `<option value="${x.id}"${x.id === m.id ? " selected" : ""}>${escaparHtml(x.nome.replace(/ — .*/, ""))}${itemCompleto(pj, x) ? " ✔" : ""}</option>`).join("")}</select></div>
     <h3>${escaparHtml(m.nome)}</h3>

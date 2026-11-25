@@ -6,7 +6,7 @@
  */
 
 let PAINEL_CLIENTE_ABERTO = null;
-let PC_ABA = "atividades";
+let PC_ABA = "hoje";
 
 function abrirPainelCliente(id) {
   const cliente = ESTADO.clientes.find((c) => c.id === id);
@@ -15,7 +15,7 @@ function abrirPainelCliente(id) {
   document.getElementById("pagina-cliente-detalhe").classList.add("ativa");
   document.querySelectorAll(".menu-item").forEach((m) => m.classList.remove("ativo"));
   document.getElementById("titulo-pagina").textContent = cliente.nome;
-  if (PAINEL_CLIENTE_ABERTO !== id) PC_ABA = "atividades";
+  if (PAINEL_CLIENTE_ABERTO !== id) PC_ABA = "hoje";
   PAINEL_CLIENTE_ABERTO = id;
   renderizarPainelCliente(id);
 }
@@ -68,6 +68,7 @@ function renderizarPainelCliente(id) {
       </span>
     </li>`;
 
+  { const est = document.getElementById("hoje-estacionamento"), mod = document.getElementById("hoje-modelo"); if (est && mod && !est.contains(mod)) est.appendChild(mod); } // guarda a rotina "Hoje" antes de redesenhar a página
   container.innerHTML = `
     <button class="botao secundario pequeno" id="pc-voltar" style="margin-bottom:14px;">← Voltar para Clientes</button>
 
@@ -81,8 +82,9 @@ function renderizarPainelCliente(id) {
     </div>
 
     <div class="abas-cli" role="tablist">
-      ${[["atividades", "Atividades"], ["projetos", "Projetos"], ["financeiro", "Financeiro"], ["documentos", "Documentos"], ["notas", "Notas"]].map(([k, r]) => `<button class="aba-btn${PC_ABA === k ? " ativa" : ""}" data-aba-btn="${k}" role="tab">${r}</button>`).join("")}
+      ${[["hoje", "Hoje"], ["atividades", "Atividades"], ["projetos", "Projetos"], ["financeiro", "Financeiro"], ["documentos", "Documentos"], ["notas", "Notas"]].map(([k, r]) => `<button class="aba-btn${PC_ABA === k ? " ativa" : ""}" data-aba-btn="${k}" role="tab">${r}</button>`).join("")}
     </div>
+    <div class="aba-cli ${PC_ABA === "hoje" ? "ativa" : ""}" data-aba="hoje"><div id="pc-hoje-slot"></div></div>
     <div class="aba-cli ${PC_ABA === "financeiro" ? "ativa" : ""}" data-aba="financeiro">
     <div class="painel-grafico-funil" style="margin-bottom:16px;">
       <h3>💰 Faturamento</h3>
@@ -166,6 +168,8 @@ function renderizarPainelCliente(id) {
   renderizarGraficoFaturamentoCliente("pc-grafico-faturamento", cliente);
   ligarContratoCliente(cliente.id);
   ligarExtrasCliente(cliente.id);
+  { const slot = document.getElementById("pc-hoje-slot"), mod = document.getElementById("hoje-modelo");
+    if (slot && mod) { slot.appendChild(mod); HOJE_CLIENTE_ID = cliente.id; renderizarFocoProjeto(); renderizarVisaoDoDia(); } }
   ligarRelatorioCliente(cliente);
   ligarProjetosCliente(cliente);
   container.querySelectorAll("[data-aba-btn]").forEach((b) => b.addEventListener("click", () => {

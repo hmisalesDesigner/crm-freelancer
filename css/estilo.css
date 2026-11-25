@@ -942,3 +942,12 @@ button.fh-lead { cursor: pointer; border-color: var(--cor-primaria); }
 .pp-corpo { padding: 4px 16px 16px; } .pp-item { padding: 12px 0; border-top: 1px solid var(--cor-borda); }
 .pp-item-topo { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; } .pp-item-topo b { flex: 1; }
 .pp-add { display: flex; gap: 8px; margin-top: 12px; } .pp-add input { flex: 1; } .pp-rodape { display: flex; gap: 8px; justify-content: space-between; margin-top: 12px; }
+
+/* ===== Urgência ===== */
+.urgente-toggle { display: flex; align-items: center; gap: 4px; font-size: 13px; white-space: nowrap; color: var(--cor-texto-suave); cursor: pointer; } .urgente-toggle input { min-width: 0; }
+.linha-tarefa.urgente { border-color: #ef4444; background: rgba(239, 68, 68, .08); }
+.chip-urgente { background: #ef4444; color: #fff; border-color: #ef4444; font-weight: 700; }
+.circulo-mini.on { background: #ef4444; border-color: #ef4444; }
+.fh-urgente { border-color: #ef4444; background: rgba(239, 68, 68, .1); } .fh-urgente b { color: #ef4444; }
+.foco-urgente { display: flex; flex-direction: column; gap: 2px; border: 1px solid #ef4444; background: rgba(239, 68, 68, .1); border-radius: 12px; padding: 10px 16px; margin-bottom: 10px; } .foco-urgente b { color: #ef4444; } .foco-urgente small { color: var(--cor-texto-suave); }
+.foco.pausado { opacity: .55; border-color: var(--cor-borda); }

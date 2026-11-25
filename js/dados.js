@@ -244,6 +244,11 @@ function normalizarDados(dados) {
     completo.demandas.push({ id: "vp-18nov-9", cliente: "Vespor", titulo: "Lançamento do vídeo motivacional via Dropbox nas TVs das filiais", data: "2026-11-18", status: "concluida", categoria: "Suporte" });
   }
   completo.atividadeVespor18Nov9 = true;
+  if (!dados.urgenciaFilmeRh25Nov2026 && !completo.demandas.some((x) => x.id === "vp-urg-25nov-filme")) {
+    const vp = completo.clientes.find((c) => /vespor/i.test(c.nome || ""));
+    completo.demandas.push({ id: "vp-urg-25nov-filme", cliente: "Vespor", clienteId: vp ? vp.id : undefined, titulo: "URGENTE — Trocar cenas do filme (projeto RH com os gerentes): RH pediu a troca; refazer o arquivo no Drive e manter o link compartilhado", data: "2026-11-25", planejadaPara: "2026-11-25", status: "andamento", categoria: "Revisão", prioridade: "alta", urgente: true });
+  }
+  completo.urgenciaFilmeRh25Nov2026 = true;
   if (!dados.projetoTreinamentoVespor && !completo.projetosVideo.length) { // projeto de vídeos de treinamento: cada módulo segue as etapas de produção
     const mods = completo.demandas.filter((d) => /^Módulo \d+ — /.test(d.titulo || "") && /vespor/i.test(d.cliente || ""))
       .sort((a, b) => parseInt(a.titulo.match(/\d+/)[0], 10) - parseInt(b.titulo.match(/\d+/)[0], 10));
