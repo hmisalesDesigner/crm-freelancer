@@ -69,6 +69,7 @@ const DADOS_PADRAO = {
   ],
   demandas: [],        // { id, cliente (nome em texto), clienteId?, titulo, data (AAAA-MM-DD), status: "fazer"|"andamento"|"concluida", semana?, categoria? }
   avaliacoesGoogle: [], // { id, data (AAAA-MM-DD), tipo: "positiva"|"negativa", quantidade, cliente (nome em texto) }
+  projetosVideo: [],   // { id, nome, cliente, clienteId, ativoId, modulos: [{ id, nome, feitas: [índices das etapas concluídas] }] }
   cronometroAtivo: null, // { tarefaId, inicio (ISO) }
   modelosOrcamento: [  // { id, nome, descricao, modo, quantidade, valorUnitario }
     { id: "modelo-stories", nome: "5 stories/reels (R$ 40 por peça)", descricao: "Criação de 5 stories/reels para Instagram", modo: "peca", quantidade: 5, valorUnitario: 40 },
@@ -85,7 +86,7 @@ function normalizarDados(dados) {
   // mescla profunda das configurações (chaves novas aparecem em bases antigas)
   completo.configuracoes = { ...padrao.configuracoes, ...(dados.configuracoes || {}) };
   completo.configuracoes.acaoB3 = { ...padrao.configuracoes.acaoB3, ...((dados.configuracoes || {}).acaoB3 || {}) };
-  ["clientes", "orcamentos", "prospeccoes", "leads", "demandasMensais", "pagamentos", "tarefas", "sessoesTempo", "modelosOrcamento", "despesas", "demandas", "avaliacoesGoogle"].forEach((k) => {
+  ["clientes", "orcamentos", "prospeccoes", "leads", "demandasMensais", "pagamentos", "tarefas", "sessoesTempo", "modelosOrcamento", "despesas", "demandas", "avaliacoesGoogle", "projetosVideo"].forEach((k) => {
     if (!Array.isArray(completo[k])) completo[k] = padrao[k];
   });
   // migração: leads antigos da lista simples de prospecção viram leads do novo sistema (uma vez)
@@ -243,6 +244,17 @@ function normalizarDados(dados) {
     completo.demandas.push({ id: "vp-18nov-9", cliente: "Vespor", titulo: "Lançamento do vídeo motivacional via Dropbox nas TVs das filiais", data: "2026-11-18", status: "concluida", categoria: "Suporte" });
   }
   completo.atividadeVespor18Nov9 = true;
+  if (!dados.projetoTreinamentoVespor && !completo.projetosVideo.length) { // projeto de vídeos de treinamento: cada módulo segue as etapas de produção
+    const mods = completo.demandas.filter((d) => /^Módulo \d+ — /.test(d.titulo || "") && /vespor/i.test(d.cliente || ""))
+      .sort((a, b) => parseInt(a.titulo.match(/\d+/)[0], 10) - parseInt(b.titulo.match(/\d+/)[0], 10));
+    if (mods.length) {
+      const cli = completo.clientes.find((c) => /vespor/i.test(c.nome || ""));
+      const abertos = mods.filter((d) => d.status !== "concluida");
+      completo.projetosVideo.push({ id: "pj-treinamento-vespor", nome: "Treinamento Vespor", cliente: "Vespor", clienteId: cli ? cli.id : undefined,
+        ativoId: (abertos[0] || mods[0]).id, modulos: mods.map((d) => ({ id: d.id, nome: d.titulo.replace(/\s*\(Universidade Vespor\)/, ""), feitas: d.status === "concluida" ? [0, 1, 2, 3, 4, 5, 6] : [] })) });
+    }
+  }
+  completo.projetoTreinamentoVespor = true;
   completo.atividadesVespor16a17Nov2026 = true;
   // migração: etapas renomeadas ("Em andamento" -> "Ativos", "Entregue" -> "Inativos")
   completo.clientes.forEach((c) => {

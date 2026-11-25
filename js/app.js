@@ -102,6 +102,7 @@ function atualizarPainel() {
   }
 
   renderizarFollowUpsPainel();
+  if (typeof renderizarFocoProjeto === 'function') renderizarFocoProjeto();
   renderizarVisaoDoDia();
   renderizarSparklineFaturamento();
   renderizarLembretes();

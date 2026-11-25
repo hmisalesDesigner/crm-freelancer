@@ -10,7 +10,7 @@
 <link rel="icon" type="image/png" href="icone-192.png">
 <script>
   // Versão do site: muda a cada publicação (e a cada clique em "Atualizar") para o navegador nunca reaproveitar arquivos antigos.
-  window.VERSAO_SITE = "20261125h";
+  window.VERSAO_SITE = "20261125i";
   (function () {
     var v = new URLSearchParams(location.search).get("_v") || window.VERSAO_SITE;
     window.__v = encodeURIComponent(v);
@@ -18,7 +18,7 @@
 
     // Lista de scripts (em ordem de execução). O histórico de demandas (demandas-seed.js, ~200 KB) só é baixado
     // na primeira vez: depois que o histórico já foi importado ele não é mais necessário.
-    var arquivos = ["js/demandas-seed.js", "js/dados.js", "js/utilitarios.js", "js/calculadora.js", "js/clientes.js", "js/funil.js", "js/orcamentos.js", "js/prospeccao.js", "js/pagamentos.js", "js/tempo.js", "js/despesas.js", "js/demandas.js", "js/avaliacoes.js", "js/followup.js", "js/grafico.js", "js/lembretes.js", "js/exportar.js", "js/documentos.js", "js/contratos-modelos.js", "js/contratos.js", "js/cliente-extras.js", "js/relatorio.js", "js/painel-cliente.js", "js/painel-dia.js", "js/app.js", "js/login.js", "js/google-drive.js"];
+    var arquivos = ["js/demandas-seed.js", "js/dados.js", "js/utilitarios.js", "js/calculadora.js", "js/clientes.js", "js/funil.js", "js/orcamentos.js", "js/prospeccao.js", "js/pagamentos.js", "js/tempo.js", "js/despesas.js", "js/demandas.js", "js/avaliacoes.js", "js/followup.js", "js/grafico.js", "js/lembretes.js", "js/exportar.js", "js/documentos.js", "js/contratos-modelos.js", "js/contratos.js", "js/cliente-extras.js", "js/projetos.js", "js/relatorio.js", "js/painel-cliente.js", "js/painel-dia.js", "js/app.js", "js/login.js", "js/google-drive.js"];
     var jaImportou = false;
     try { jaImportou = (localStorage.getItem("crm_freelancer_dados_v1") || "").indexOf('"demandasVespor":true') !== -1; } catch (e) {}
     if (jaImportou) arquivos.shift();
@@ -73,6 +73,8 @@
 
       <section id="pagina-painel" class="pagina ativa">
         <div class="faixa-hoje" id="faixa-hoje"></div>
+
+        <div id="foco-projeto"></div>
 
         <div class="secao-dia">
           <div class="cabecalho-secao">
